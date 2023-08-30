@@ -35,6 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### Bot creds ###
-src/main/resources/application.properties

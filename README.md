@@ -1,4 +1,5 @@
 # GEBB
+V0.2.0
 
 ## Overview
 ### Group Events Building Bot
@@ -12,6 +13,7 @@
 Language: Java 17\
 Framework: Spring Boot 3.1.3\
 Build tool: Gradle-Groovy 8.2.1\
+Database: PostgreSQL 15
 
 
 [//]: # (## Troubleshooting)
