@@ -1,10 +1,8 @@
 package com.github.patbattb.tgbot.component;
 
-import com.github.patbattb.tgbot.container.MessageContainer;
 import com.github.patbattb.tgbot.service.MessageHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -21,12 +19,14 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        MessageContainer<? extends BotApiMethod<?>> messageContainer = messageHandler.process(update);
-        try {
-            execute(messageContainer.getMethod());
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+        var methods = messageHandler.process(update);
+        methods.forEach(method -> {
+            try {
+                this.execute(method);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override

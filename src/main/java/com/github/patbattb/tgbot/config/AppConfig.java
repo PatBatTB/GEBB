@@ -1,14 +1,11 @@
 package com.github.patbattb.tgbot.config;
 
-import com.github.patbattb.tgbot.component.BotMenu;
 import com.github.patbattb.tgbot.component.TelegramBot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
-import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
@@ -24,13 +21,7 @@ public class AppConfig {
 
     @Bean
     public TelegramBot telegramBot() {
-        TelegramBot bot = new TelegramBot(botName, botToken);
-        try {
-            bot.execute(new SetMyCommands(botMenu().getListOfCommands(), new BotCommandScopeDefault(), null));
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
-        return bot;
+        return new TelegramBot(botName, botToken);
     }
 
     @Bean
@@ -39,10 +30,5 @@ public class AppConfig {
         api.registerBot(telegramBot);
         log.info("Telegram bot is registered.");
         return api;
-    }
-
-    @Bean
-    public BotMenu botMenu() {
-        return new BotMenu();
     }
 }
