@@ -1,17 +1,16 @@
 package com.github.patbattb.tgbot.service;
 
 import com.github.patbattb.tgbot.service.message.MessageType;
-import com.github.patbattb.tgbot.container.MessageContainer;
-import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import lombok.experimental.UtilityClass;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
-@Service
+@UtilityClass
 public class MessageParser {
 
-    public MessageType getType(MessageContainer<SendMessage> container) {
-        String textMessage = container.getUpdate().getMessage().getText();
+    public MessageType getType(Update update) {
+        var textMessage = update.getMessage().getText();
         if (textMessage == null) return MessageType.UNKNOWN;
-        if (textMessage.startsWith("/")) return MessageType.COMMAND;
+        if (textMessage.matches("^/\\S+\\s*$")) return MessageType.COMMAND;
         if (!textMessage.isBlank()) return MessageType.TEXT;
         return MessageType.UNKNOWN;
     }

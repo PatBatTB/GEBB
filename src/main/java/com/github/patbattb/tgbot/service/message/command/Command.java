@@ -1,9 +1,8 @@
 package com.github.patbattb.tgbot.service.message.command;
 
-import com.github.patbattb.tgbot.container.MessageContainer;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import com.github.patbattb.tgbot.container.MethodContainer;
 
 @FunctionalInterface
 public interface Command {
-    void execute(MessageContainer<SendMessage> messageContainer);
+    void execute(MethodContainer methodContainer);
 }

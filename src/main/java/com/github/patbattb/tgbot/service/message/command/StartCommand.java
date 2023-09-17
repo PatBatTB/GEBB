@@ -1,43 +1,33 @@
 package com.github.patbattb.tgbot.service.message.command;
 
-import com.github.patbattb.tgbot.container.MessageContainer;
-import com.github.patbattb.tgbot.model.User;
+import com.github.patbattb.tgbot.component.DefaultUserMenu;
+import com.github.patbattb.tgbot.container.MethodContainer;
 import com.github.patbattb.tgbot.model.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.Value;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Optional;
+import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeChat;
 
 @Service
+@Value
 public class StartCommand implements Command {
 
-    @Autowired
     UserRepository userRepository;
+    DefaultUserMenu defaultUserMenu;
 
     @Override
-    public void execute(MessageContainer<SendMessage> messageContainer) {
-        messageContainer.getMethod().setText("Hi, you run start command.");
-        var chatId = messageContainer.getUpdate().getMessage().getChatId();
-        String username = messageContainer.getUpdate().getMessage().getChat().getUserName();
-        Optional<User> optional = userRepository.findById(chatId);
-        if (optional.isEmpty()) {
-            optional = Optional.of(User.builder()
-                    .id(chatId)
-                    .name(username)
-                    .active(true)
-                    .registerDate(Timestamp.valueOf(LocalDateTime.now()))
-                    .build());
-            messageContainer.getMethod().setText("New user created");
-        } else {
-            User user = optional.get().toBuilder()
-                    .name(username)
-                    .build();
-            optional = Optional.of(user);
-            messageContainer.getMethod().setText("User updated");
+    public void execute(MethodContainer methodContainer) {
+        var chatId = methodContainer.getUpdate().getMessage().getChatId().toString();
+        var message = "Добро пожаловать! Вам теперь доступно меню пользователя.";
+        var user = methodContainer.getUser();
+        if (!user.isActive()) {
+            user = user.toBuilder().active(true).build();
+            userRepository.save(user);
         }
-        userRepository.save(optional.get());
+        methodContainer.getMethods().add(new SendMessage(chatId, message));
+        methodContainer.getMethods().add(
+                new SetMyCommands(
+                        defaultUserMenu.getListOfCommands(), new BotCommandScopeChat(chatId), null));
     }
 }
