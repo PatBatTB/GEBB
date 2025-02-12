@@ -2,9 +2,10 @@
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        Console.WriteLine("Hello");
+        App app = new(); 
+        await app.Run();
     }
 }
 
