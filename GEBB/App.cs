@@ -32,7 +32,7 @@ internal class App
         {
             await Task.Delay(-1, token).WaitAsync(token);
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
             Console.WriteLine("Exiting...");
         }

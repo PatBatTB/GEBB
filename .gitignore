@@ -2,4 +2,6 @@
 /.git/
 /*/bin/
 /*/obj/
-
+/GEBB.sln.DotSettings.user
+/GEBB/tgbot.sqlite
+/GEBB/appsettings.json
