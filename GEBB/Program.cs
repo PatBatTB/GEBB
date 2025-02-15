@@ -2,7 +2,7 @@
 
 namespace Com.GitHub.PatBatTB.GEBB;
 
-public class Program
+public static class Program
 {
     public static async Task Main(string[] args)
     {
@@ -10,8 +10,8 @@ public class Program
         {
             await db.Database.EnsureCreatedAsync();
         }
-        App app = new(); 
+
+        App app = new();
         await app.Run();
     }
 }
-
