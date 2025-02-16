@@ -70,9 +70,9 @@ public static class UpdateTypeHandler
     {
         string text;
         //проверка, что пользователи не могут вызывать команду, если ее нет в их меню.
-        if (!Command.Start.Scope().Contains(container.UserStatus))
+        if (!Command.Start.Scope().Contains(container.UserEntity.UserStatus))
         {
-            text = "Вам недоступна данная команда, воспользуйтесь кнопкой \"меню\".";
+            text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
                 container.ChatId,
                 text,
@@ -81,7 +81,7 @@ public static class UpdateTypeHandler
         }
 
         //отправить сообщение (разделить на сообщения для новых пользователей и для старых (по статусу можно))
-        text = container.UserStatus switch
+        text = container.UserEntity.UserStatus switch
         {
             UserStatus.Newuser => "Добро пожаловать, новый пользователь.",
             UserStatus.Stop => "С возвращением, старый пользователь.",
@@ -92,14 +92,13 @@ public static class UpdateTypeHandler
             text,
             cancellationToken: container.Token);
 
-        //изменить статус isActive и userStatus
-        container.UserEntity.IsActive = true;
+        //изменить userStatus, обновить БД
+        container.UserEntity.UserStatus = UserStatus.Active;
         container.DatabaseHandler.Update(container.UserEntity);
-        container.UserStatus = UserStatus.Active;
 
         //отправить меню
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token
         );
@@ -109,13 +108,14 @@ public static class UpdateTypeHandler
     {
         string text;
         //верификация пользователя
-        if (!Command.Stop.Scope().Contains(container.UserStatus))
+        if (!Command.Stop.Scope().Contains(container.UserEntity.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
                 container.ChatId,
                 text,
                 cancellationToken: container.Token);
+            return;
         }
 
         //     - отправляется прощальное сообщение
@@ -126,14 +126,13 @@ public static class UpdateTypeHandler
             container.ChatId,
             text,
             cancellationToken: container.Token);
-        //         - меняется статус в базе на false
-        container.UserEntity.IsActive = false;
-        container.DatabaseHandler.Update(container.UserEntity);
         //         - меняется usersstatus на stop
-        container.UserStatus = UserStatus.Stop;
+        container.UserEntity.UserStatus = UserStatus.Stop;
+        //         - меняется статус в базе
+        container.DatabaseHandler.Update(container.UserEntity);
         //         - отправляется меню
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
     }
@@ -141,7 +140,7 @@ public static class UpdateTypeHandler
     private static void CommandMenuHandle(UpdateContainer container)
     {
         string text;
-        if (!Command.Menu.Scope().Contains(container.UserStatus))
+        if (!Command.Menu.Scope().Contains(container.UserEntity.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -151,7 +150,8 @@ public static class UpdateTypeHandler
             return;
         }
 
-        text = "Меню пользователя.\nВ котором в дальнейшем будут кнопки с самим меню.";
+        text = "Меню пользователя.\n" +
+               "В котором в дальнейшем будут кнопки с самим меню.";
         container.BotClient.SendMessage(
             container.ChatId,
             text,

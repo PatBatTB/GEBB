@@ -2,7 +2,7 @@
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
 
-public class EventEntity
+public sealed class EventEntity
 {
     [Key] public int EventId { get; set; }
 
@@ -20,5 +20,5 @@ public class EventEntity
 
     public bool IsActive { get; set; }
 
-    public virtual ICollection<UserEntity> Users { get; set; } = new List<UserEntity>();
+    public ICollection<UserEntity> Users { get; set; } = new List<UserEntity>();
 }

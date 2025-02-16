@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Com.Github.PatBatTB.GEBB.Domain;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
 
-public class UserEntity
+public sealed class UserEntity
 {
     [Key] public long UserId { get; set; }
 
@@ -10,7 +11,7 @@ public class UserEntity
 
     public DateTime RegisteredAt { get; set; }
 
-    public bool IsActive { get; set; }
+    public UserStatus UserStatus { get; set; }
 
-    public virtual ICollection<EventEntity> Events { get; set; } = new List<EventEntity>();
+    public ICollection<EventEntity> Events { get; set; } = new List<EventEntity>();
 }

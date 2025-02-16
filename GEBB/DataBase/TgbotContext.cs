@@ -33,7 +33,7 @@ public partial class TgbotContext : DbContext
             entity.Property(e => e.UserId)
                 .ValueGeneratedNever()
                 .HasColumnType("BIGINT");
-            entity.Property(e => e.IsActive).HasColumnType("bool");
+            entity.Property(e => e.UserStatus).HasColumnType("INT");
             entity.Property(e => e.RegisteredAt).HasColumnType("timestamp");
             entity.Property(e => e.Username).HasColumnType("varchar");
 

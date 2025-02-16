@@ -26,7 +26,8 @@ public static class CommandExtension
         {
             Command.Start => "Запустить",
             Command.Stop => "Остановить",
-            Command.Menu => "Открыть меню"
+            Command.Menu => "Открыть меню",
+            _ => throw new ArgumentException("Incorrect command enum")
         };
     }
 

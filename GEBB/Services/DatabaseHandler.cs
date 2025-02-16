@@ -7,14 +7,13 @@ namespace Com.Github.PatBatTB.GEBB.Services;
 
 public class DatabaseHandler
 {
-    public UserEntity Update(User tgUser, out UserStatus userStatus)
+    public UserEntity Update(User tgUser)
     {
         using TgbotContext db = new();
         var user = db.Find<UserEntity>(tgUser.Id);
         if (user is not null)
         {
             user.Username = tgUser.Username ?? "";
-            userStatus = user.IsActive ? UserStatus.Active : UserStatus.Stop;
         }
         else
         {
@@ -22,11 +21,10 @@ public class DatabaseHandler
             {
                 UserId = tgUser.Id,
                 Username = tgUser.Username,
-                IsActive = true,
+                UserStatus = UserStatus.Newuser,
                 RegisteredAt = DateTime.Now
             };
             db.Add(user);
-            userStatus = UserStatus.Newuser;
         }
 
         db.SaveChanges();

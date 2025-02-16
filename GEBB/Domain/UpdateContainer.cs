@@ -17,8 +17,7 @@ public class UpdateContainer
         DatabaseHandler = new DatabaseHandler();
         User = user;
         Message = message;
-        UserEntity = DatabaseHandler.Update(user, out var status);
-        UserStatus = status;
+        UserEntity = DatabaseHandler.Update(user);
     }
 
     public ITelegramBotClient BotClient { get; init; }
@@ -29,5 +28,4 @@ public class UpdateContainer
     public DatabaseHandler DatabaseHandler { get; init; }
     public Message Message { get; init; }
     public UserEntity UserEntity { get; init; }
-    public UserStatus UserStatus { get; set; }
 }
