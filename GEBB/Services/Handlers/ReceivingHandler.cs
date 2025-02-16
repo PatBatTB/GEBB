@@ -38,7 +38,7 @@ internal class ReceivingHandler
                         return Task.CompletedTask;
                     }
 
-                    updateContainer = new UpdateContainer(botClient, update, token, chatId, user, message);
+                    updateContainer = new UpdateContainer(botClient, update, chatId, user, message, token);
                     break;
                 case UpdateType.CallbackQuery:
                     if (update.CallbackQuery is not { } callbackQuery)
@@ -57,19 +57,18 @@ internal class ReceivingHandler
 
                     message = callbackQuery.Message;
                     chatId = callbackQuery.Message.Chat.Id;
-                    updateContainer = new UpdateContainer(botClient, update, token, chatId, user, message);
+                    updateContainer = new UpdateContainer(botClient, update, chatId, user, message, token);
                     break;
                 default:
                     Console.WriteLine("Unknown update type. Ignoring.");
                     return Task.CompletedTask;
             }
 
-            UpdateTypeHandler updateTypeHandler = new();
-            updateTypeHandler.Handle(updateContainer);
+            UpdateTypeHandler.Handle(updateContainer);
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(e);
         }
 
         return Task.CompletedTask;

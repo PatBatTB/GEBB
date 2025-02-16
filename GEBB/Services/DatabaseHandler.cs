@@ -1,23 +1,24 @@
 using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.DataBase.Entity;
-using TgUser = Telegram.Bot.Types.User;
+using Com.Github.PatBatTB.GEBB.Domain;
+using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services;
 
 public class DatabaseHandler
 {
-    public async Task Update(TgUser tgUser)
+    public UserEntity Update(User tgUser, out UserStatus userStatus)
     {
         using TgbotContext db = new();
-        var user = db.Find<User>(tgUser.Id);
+        var user = db.Find<UserEntity>(tgUser.Id);
         if (user is not null)
         {
             user.Username = tgUser.Username ?? "";
-            db.Update(user);
+            userStatus = user.IsActive ? UserStatus.Active : UserStatus.Stop;
         }
         else
         {
-            user = new User
+            user = new UserEntity
             {
                 UserId = tgUser.Id,
                 Username = tgUser.Username,
@@ -25,7 +26,17 @@ public class DatabaseHandler
                 RegisteredAt = DateTime.Now
             };
             db.Add(user);
-            await db.SaveChangesAsync();
+            userStatus = UserStatus.Newuser;
         }
+
+        db.SaveChanges();
+        return user;
+    }
+
+    public void Update(UserEntity user)
+    {
+        using TgbotContext db = new();
+        db.Update(user);
+        db.SaveChanges();
     }
 }

@@ -1,3 +1,4 @@
+using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Services;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -7,7 +8,7 @@ namespace Com.Github.PatBatTB.GEBB.Domain;
 public class UpdateContainer
 {
     public UpdateContainer(ITelegramBotClient botClient, Update update,
-        CancellationToken token, long chatId, User user, Message message)
+        long chatId, User user, Message message, CancellationToken token)
     {
         BotClient = botClient;
         Update = update;
@@ -16,7 +17,8 @@ public class UpdateContainer
         DatabaseHandler = new DatabaseHandler();
         User = user;
         Message = message;
-        _ = DatabaseHandler.Update(user);
+        UserEntity = DatabaseHandler.Update(user, out var status);
+        UserStatus = status;
     }
 
     public ITelegramBotClient BotClient { get; init; }
@@ -26,4 +28,6 @@ public class UpdateContainer
     public User User { get; init; }
     public DatabaseHandler DatabaseHandler { get; init; }
     public Message Message { get; init; }
+    public UserEntity UserEntity { get; init; }
+    public UserStatus UserStatus { get; set; }
 }

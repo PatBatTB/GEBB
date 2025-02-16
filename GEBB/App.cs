@@ -27,7 +27,7 @@ internal class App
             _receivingHandler.ErrorHandler,
             receiverOptions: BotConfig.ReceiverOptions,
             cancellationToken: token);
-
+        Console.WriteLine("Bot is running.");
         try
         {
             await Task.Delay(-1, token).WaitAsync(token);
