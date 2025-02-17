@@ -33,7 +33,7 @@ public static class UpdateTypeHandler
 
     public static void Handle(UpdateContainer container)
     {
-        UpdateTypeHandlerDict.GetValueOrDefault(container.Update.Type, UpdateTypeUnknown).Invoke(container);
+        UpdateTypeHandlerDict.GetValueOrDefault(container.UpdateType, UpdateTypeUnknown).Invoke(container);
     }
 
     private static void MessageHandle(UpdateContainer container)
@@ -43,7 +43,8 @@ public static class UpdateTypeHandler
 
     private static void CallbackQueryHandle(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("CallbackQuery was taken: " + container.CallbackData!.Data);
+        MenuButtonHandler.Handle(container);
     }
 
     private static void UpdateTypeUnknown(UpdateContainer container)
@@ -150,11 +151,11 @@ public static class UpdateTypeHandler
             return;
         }
 
-        text = "Меню пользователя.\n" +
-               "В котором в дальнейшем будут кнопки с самим меню.";
+        text = CallbackMenu.Main.Message();
         container.BotClient.SendMessage(
             container.ChatId,
             text,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.Main),
             cancellationToken: container.Token);
     }
 
