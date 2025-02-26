@@ -5,10 +5,10 @@ namespace Com.Github.PatBatTB.GEBB.Services.Providers;
 
 public static class InlineButtonProvider
 {
-    public static InlineKeyboardButton GetButton(CallbackMenu callbackMenu, CallBackButton callBackButton)
+    public static InlineKeyboardButton GetButton(CallbackMenu callbackMenu, CallbackButton callbackButton)
     {
         return InlineKeyboardButton.WithCallbackData(
-            callBackButton.Text(),
-            CallbackData.GetDataString(callbackMenu, callBackButton));
+            callbackButton.Text(),
+            CallbackData.GetDataString(callbackMenu, callbackButton));
     }
 }

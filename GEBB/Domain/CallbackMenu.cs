@@ -3,20 +3,23 @@ namespace Com.Github.PatBatTB.GEBB.Domain;
 public enum CallbackMenu
 {
     Main,
-    MyEvents
+    MyEvents,
+    CreateEvent
 }
 
 public static class CallbackMenuExtension
 {
-    private const string MainMessage = "Меню пользователя";
-    private const string MyEvents = MainMessage + "\n \u21b3 Мои мероприятия";
+    private const string MainTitle = "Меню пользователя";
+    private const string MyEventsTitle = MainTitle + "\n \u21b3 Мои мероприятия";
+    private const string CreateEventTitle = MyEventsTitle + "\n    \u21b3 Создание нового мероприятия";
 
-    public static string Message(this CallbackMenu callbackMenu)
+    public static string Title(this CallbackMenu callbackMenu)
     {
         return callbackMenu switch
         {
-            CallbackMenu.Main => MainMessage,
-            CallbackMenu.MyEvents => MyEvents,
+            CallbackMenu.Main => MainTitle,
+            CallbackMenu.MyEvents => MyEventsTitle,
+            CallbackMenu.CreateEvent => CreateEventTitle,
             _ => throw new ArgumentException("Incorrect CallbackMenu enum")
         };
     }

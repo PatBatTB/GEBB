@@ -16,16 +16,19 @@ public partial class TgbotContext : DbContext
     {
         modelBuilder.Entity<EventEntity>(entity =>
         {
-            entity.Property(e => e.EventId)
-                .ValueGeneratedNever()
-                .HasColumnType("INT");
+            entity.Property(e => e.EventId).HasColumnType("INTEGER");
+            entity.Property(e => e.CreatorId).HasColumnType("BIGINT");
             entity.Property(e => e.Address).HasColumnType("varchar");
-            entity.Property(e => e.Cost).HasColumnType("INT");
+            entity.Property(e => e.Cost).HasColumnType("INTEGER");
             entity.Property(e => e.DateTimeOf).HasColumnType("timestamp");
             entity.Property(e => e.Description).HasColumnType("varchar");
             entity.Property(e => e.IsActive).HasColumnType("bool");
-            entity.Property(e => e.ParticipantLimit).HasColumnType("INT");
+            entity.Property(e => e.IsCreateCompleted).HasColumnType("bool");
+            entity.Property(e => e.ParticipantLimit).HasColumnType("INTEGER");
             entity.Property(e => e.Title).HasColumnType("varchar");
+
+            entity.HasKey(e => new { e.EventId, e.CreatorId });
+            entity.HasOne(d => d.Creator).WithMany(p => p.Events).HasForeignKey(d => d.CreatorId);
         });
 
         modelBuilder.Entity<UserEntity>(entity =>
@@ -33,25 +36,28 @@ public partial class TgbotContext : DbContext
             entity.Property(e => e.UserId)
                 .ValueGeneratedNever()
                 .HasColumnType("BIGINT");
-            entity.Property(e => e.UserStatus).HasColumnType("INT");
+            entity.Property(e => e.UserStatus).HasColumnType("INTEGER");
             entity.Property(e => e.RegisteredAt).HasColumnType("timestamp");
             entity.Property(e => e.Username).HasColumnType("varchar");
 
-            entity.HasMany(d => d.Events).WithMany(p => p.Users)
+            entity.HasKey(e => e.UserId);
+
+            entity.HasMany(d => d.EventsNavigation).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(
-                    "UsersXEvent",
+                    "Registrations",
                     r => r.HasOne<EventEntity>().WithMany()
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("EventId", "CreatorId")
                         .OnDelete(DeleteBehavior.ClientSetNull),
                     l => l.HasOne<UserEntity>().WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.ClientSetNull),
                     j =>
                     {
-                        j.HasKey("UserId", "EventId");
-                        j.ToTable("Users_x_Events");
+                        j.HasKey("UserId", "EventId", "CreatorId");
+                        j.ToTable("Registrations");
                         j.IndexerProperty<long>("UserId").HasColumnType("BIGINT");
-                        j.IndexerProperty<int>("EventId").HasColumnType("INT");
+                        j.IndexerProperty<int>("EventId").HasColumnType("INTEGER");
+                        j.IndexerProperty<long>("CreatorId").HasColumnType("BIGINT");
                     });
         });
 

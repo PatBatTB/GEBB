@@ -1,22 +1,28 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
+﻿namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
 
 public sealed class EventEntity
 {
-    [Key] public int EventId { get; set; }
+    //EventId = MessageId from chat, that initialized event.
+    public int EventId { get; set; }
 
-    public string Title { get; set; }
+    public long CreatorId { get; set; }
+    public UserEntity Creator { get; set; }
 
-    public DateTime DateTimeOf { get; set; }
+    public string? Title { get; set; }
 
-    public string Address { get; set; }
+    public DateTime? DateTimeOf { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public string? Address { get; set; }
 
     public int? ParticipantLimit { get; set; }
 
     public int? Cost { get; set; }
 
     public string? Description { get; set; }
+
+    public bool IsCreateCompleted { get; set; }
 
     public bool IsActive { get; set; }
 

@@ -1,3 +1,5 @@
+using Com.Github.PatBatTB.GEBB.DataBase;
+using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
@@ -9,22 +11,30 @@ public static class MenuButtonHandler
     private static readonly Dictionary<CallbackMenu, Action<UpdateContainer>> CallbackMenuHandlerDict = new()
     {
         [CallbackMenu.Main] = MainMenuHandle,
-        [CallbackMenu.MyEvents] = MyEventsMenuHandle
+        [CallbackMenu.MyEvents] = MyEventsMenuHandle,
+        [CallbackMenu.CreateEvent] = CreateEventMenuHandle
     };
 
-    private static readonly Dictionary<CallBackButton, Action<UpdateContainer>> MainMenuHandlerDict = new()
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MainMenuHandlerDict = new()
     {
-        [CallBackButton.MyEvents] = MainMenuMyEventsButtonHandle,
-        [CallBackButton.MyRegistrations] = MainMenuMyRegistrationsButtonHandle,
-        [CallBackButton.AvailableEvents] = MainMenuAvailableEventsButtonHandle,
-        [CallBackButton.Close] = MainMenuCloseButtonHandle
+        [CallbackButton.MyEvents] = MainMenuMyEventsButtonHandle,
+        [CallbackButton.MyRegistrations] = MainMenuMyRegistrationsButtonHandle,
+        [CallbackButton.AvailableEvents] = MainMenuAvailableEventsButtonHandle,
+        [CallbackButton.Close] = MenuCloseButtonHandle
     };
 
-    private static readonly Dictionary<CallBackButton, Action<UpdateContainer>> MyEventsMenuHandlerDict = new()
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyEventsMenuHandlerDict = new()
     {
-        [CallBackButton.Create] = MyEventsMenuCreateButtonHandle,
-        [CallBackButton.List] = MyEventsMenuListButtonHandle,
-        [CallBackButton.Back] = MyEventsMenuBackButtonHandle
+        [CallbackButton.Create] = MyEventsMenuCreateButtonHandle,
+        [CallbackButton.List] = MyEventsMenuListButtonHandle,
+        [CallbackButton.Back] = MyEventsMenuBackButtonHandle
+    };
+
+    //TODO
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> CreateEventMenuHandlerDict = new()
+    {
+        [CallbackButton.Title] = CreateEventMenuTitleButton,
+        [CallbackButton.Close] = MenuCloseButtonHandle
     };
 
     public static void Handle(UpdateContainer container)
@@ -45,6 +55,12 @@ public static class MenuButtonHandler
             .Invoke(container);
     }
 
+    private static void CreateEventMenuHandle(UpdateContainer container)
+    {
+        //TODO
+        CreateEventMenuHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton)!.Invoke(container);
+    }
+
     private static void CallbackUnknownMenu(UpdateContainer container)
     {
         Console.WriteLine("CallbackMenuUnknown");
@@ -56,7 +72,7 @@ public static class MenuButtonHandler
         container.BotClient.EditMessageText(
             container.ChatId,
             container.Message.Id,
-            CallbackMenu.MyEvents.Message(),
+            CallbackMenu.MyEvents.Title(),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.MyEvents),
             cancellationToken: container.Token);
     }
@@ -71,12 +87,24 @@ public static class MenuButtonHandler
         throw new NotImplementedException();
     }
 
-    private static void MainMenuCloseButtonHandle(UpdateContainer container)
+    private static void MenuCloseButtonHandle(UpdateContainer container)
     {
+        var chatId = container.ChatId;
+        var messageId = container.Message.Id;
         container.BotClient.DeleteMessage(
-            container.ChatId,
-            container.Message.Id,
+            chatId,
+            messageId,
             container.Token);
+
+        container.UserEntity.UserStatus = UserStatus.Active;
+        container.DatabaseHandler.Update(container.UserEntity);
+
+        using TgbotContext db = new();
+        if (db.Find<EventEntity>(messageId, chatId) is { } currentEvent)
+        {
+            db.Remove(currentEvent);
+            db.SaveChanges();
+        }
     }
 
     private static void MainMenuUnknownButtonHandle(UpdateContainer container)
@@ -85,9 +113,44 @@ public static class MenuButtonHandler
         throw new NotImplementedException();
     }
 
-    private static void MyEventsMenuCreateButtonHandle(UpdateContainer container)
+    private static async void MyEventsMenuCreateButtonHandle(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var chatId = container.ChatId;
+            var messageId = container.Message.Id;
+            var token = container.Token;
+
+            await container.BotClient.DeleteMessage(
+                chatId,
+                messageId,
+                token);
+
+            var sent = await container.BotClient.SendMessage(
+                chatId,
+                CallbackMenu.CreateEvent.Title(),
+                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
+                cancellationToken: token);
+
+            container.UserEntity.UserStatus = UserStatus.CreateEvent;
+            container.DatabaseHandler.Update(container.UserEntity);
+
+            await using TgbotContext db = new();
+            EventEntity newEvent = new()
+            {
+                EventId = sent.Id,
+                CreatorId = container.User.Id,
+                CreatedAt = DateTime.Now,
+                IsActive = false,
+                IsCreateCompleted = false
+            };
+            db.Add(newEvent);
+            await db.SaveChangesAsync(token);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     private static void MyEventsMenuListButtonHandle(UpdateContainer container)
@@ -100,7 +163,7 @@ public static class MenuButtonHandler
         container.BotClient.EditMessageText(
             container.ChatId,
             container.Message.Id,
-            CallbackMenu.Main.Message(),
+            CallbackMenu.Main.Title(),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.Main),
             cancellationToken: container.Token);
     }
@@ -109,5 +172,9 @@ public static class MenuButtonHandler
     {
         Console.WriteLine("MyEventsMenuUnknownButton");
         throw new NotImplementedException();
+    }
+
+    private static void CreateEventMenuTitleButton(UpdateContainer container)
+    {
     }
 }

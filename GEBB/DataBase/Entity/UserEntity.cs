@@ -1,11 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Com.Github.PatBatTB.GEBB.Domain;
+﻿using Com.Github.PatBatTB.GEBB.Domain;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
 
 public sealed class UserEntity
 {
-    [Key] public long UserId { get; set; }
+    public long UserId { get; set; }
 
     public string? Username { get; set; }
 
@@ -14,4 +13,6 @@ public sealed class UserEntity
     public UserStatus UserStatus { get; set; }
 
     public ICollection<EventEntity> Events { get; set; } = new List<EventEntity>();
+
+    public ICollection<EventEntity> EventsNavigation { get; set; } = new List<EventEntity>();
 }

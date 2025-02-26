@@ -7,5 +7,6 @@ public enum UserStatus
 {
     Newuser,
     Active,
-    Stop
+    Stop,
+    CreateEvent
 }

@@ -4,9 +4,9 @@ namespace Com.Github.PatBatTB.GEBB.Domain;
 
 public class CallbackData
 {
-    public string Data { get; private set; }
+    public string? Data { get; private set; }
     public CallbackMenu DataMenu { get; private set; }
-    public CallBackButton DataButton { get; private set; }
+    public CallbackButton DataButton { get; private set; }
 
     public static CallbackData? GetInstance(CallbackQuery? callbackQuery)
     {
@@ -16,12 +16,12 @@ public class CallbackData
         {
             Data = callbackQuery.Data,
             DataMenu = Enum.Parse<CallbackMenu>(dataString[0]),
-            DataButton = Enum.Parse<CallBackButton>(dataString[1])
+            DataButton = Enum.Parse<CallbackButton>(dataString[1])
         };
     }
 
-    public static string GetDataString(CallbackMenu callbackMenu, CallBackButton callBackButton)
+    public static string GetDataString(CallbackMenu callbackMenu, CallbackButton callbackButton)
     {
-        return callbackMenu + "_" + callBackButton;
+        return callbackMenu + "_" + callbackButton;
     }
 }

@@ -29,10 +29,16 @@ public static class UpdateTypeHandler
         [Command.Start.Name()] = CommandStartHandle,
         [Command.Stop.Name()] = CommandStopHandle,
         [Command.Menu.Name()] = CommandMenuHandle
+        //TODO Реализовать команду CreateCancel, отменяющую создание мероприятия.
     };
 
     public static void Handle(UpdateContainer container)
     {
+        container.BotClient.SetMyCommands(
+            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token
+        );
         UpdateTypeHandlerDict.GetValueOrDefault(container.UpdateType, UpdateTypeUnknown).Invoke(container);
     }
 
@@ -59,7 +65,22 @@ public static class UpdateTypeHandler
 
     private static void TextHandle(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("text");
+        // var mes = container.BotClient.EditMessageText(
+        //     chatId: container.ChatId,
+        //     messageId: container.Message.ReplyToMessage!.Id,
+        //     text: "",
+        //     cancellationToken: container.Token).Result;
+
+        // Console.WriteLine(mes);
+
+        var mes2 = container.BotClient.EditMessageText(
+            container.ChatId,
+            2355,
+            "",
+            cancellationToken: container.Token).Result;
+
+        Console.WriteLine(mes2);
     }
 
     private static void MessageTypeUnknownHandle(UpdateContainer container)
@@ -81,6 +102,7 @@ public static class UpdateTypeHandler
             return;
         }
 
+        //TODO
         //отправить сообщение (разделить на сообщения для новых пользователей и для старых (по статусу можно))
         text = container.UserEntity.UserStatus switch
         {
@@ -131,6 +153,7 @@ public static class UpdateTypeHandler
         container.UserEntity.UserStatus = UserStatus.Stop;
         //         - меняется статус в базе
         container.DatabaseHandler.Update(container.UserEntity);
+
         //         - отправляется меню
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
@@ -151,7 +174,7 @@ public static class UpdateTypeHandler
             return;
         }
 
-        text = CallbackMenu.Main.Message();
+        text = CallbackMenu.Main.Title();
         container.BotClient.SendMessage(
             container.ChatId,
             text,

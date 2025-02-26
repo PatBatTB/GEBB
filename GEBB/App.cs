@@ -4,18 +4,18 @@ using Telegram.Bot;
 
 namespace Com.GitHub.PatBatTB.GEBB;
 
-internal class App
+public class App
 {
     private readonly ITelegramBotClient _botClient;
     private readonly ReceivingHandler _receivingHandler;
 
-    internal App()
+    public App()
     {
         _botClient = new TelegramBotClient(BotConfig.BotToken);
         _receivingHandler = new ReceivingHandler();
     }
 
-    internal async Task Run()
+    public async Task Run()
     {
         using CancellationTokenSource cts = new();
         CancellationToken token = cts.Token;
