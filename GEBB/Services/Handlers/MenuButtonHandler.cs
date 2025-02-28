@@ -3,6 +3,8 @@ using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
 
@@ -30,7 +32,7 @@ public static class MenuButtonHandler
         [CallbackButton.Back] = MyEventsMenuBackButtonHandle
     };
 
-    //TODO
+    //TODO реализовать все кнопки (включая кнопки Done)
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> CreateEventMenuHandlerDict = new()
     {
         [CallbackButton.Title] = CreateEventMenuTitleButton,
@@ -57,7 +59,8 @@ public static class MenuButtonHandler
 
     private static void CreateEventMenuHandle(UpdateContainer container)
     {
-        //TODO
+        //TODO проверка количества эвентов в режиме создания (если больше одного - предложить удалить и начать заново).
+
         CreateEventMenuHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton)!.Invoke(container);
     }
 
@@ -97,9 +100,9 @@ public static class MenuButtonHandler
             container.Token);
 
         container.UserEntity.UserStatus = UserStatus.Active;
-        container.DatabaseHandler.Update(container.UserEntity);
+        DatabaseHandler.Update(container.UserEntity);
 
-        using TgbotContext db = new();
+        using TgBotDBContext db = new();
         if (db.Find<EventEntity>(messageId, chatId) is { } currentEvent)
         {
             db.Remove(currentEvent);
@@ -117,6 +120,7 @@ public static class MenuButtonHandler
     {
         try
         {
+            //TODO проверка количества эвентов в режиме создания (если больше одного - предложить удалить и начать заново).
             var chatId = container.ChatId;
             var messageId = container.Message.Id;
             var token = container.Token;
@@ -126,16 +130,16 @@ public static class MenuButtonHandler
                 messageId,
                 token);
 
-            var sent = await container.BotClient.SendMessage(
+            Message sent = await container.BotClient.SendMessage(
                 chatId,
                 CallbackMenu.CreateEvent.Title(),
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
                 cancellationToken: token);
 
             container.UserEntity.UserStatus = UserStatus.CreateEvent;
-            container.DatabaseHandler.Update(container.UserEntity);
+            DatabaseHandler.Update(container.UserEntity);
 
-            await using TgbotContext db = new();
+            await using TgBotDBContext db = new();
             EventEntity newEvent = new()
             {
                 EventId = sent.Id,
@@ -176,5 +180,21 @@ public static class MenuButtonHandler
 
     private static void CreateEventMenuTitleButton(UpdateContainer container)
     {
+        container.BotClient.SendMessage(
+            container.ChatId,
+            CreateEventStatus.Title.Message(),
+            replyMarkup: new ForceReplyMarkup(),
+            cancellationToken: container.Token);
+        //TODO обновить меню создания (кнопки done на заполненные данные)
+        //TODO если название уже было указано - предложить отменить или заменить?
+        //TODO отправить сообщение "введите название мероприятия"
+        //TODO установить статус в EventEntity что следующее сообщение - будет названием мероприятия
+        Console.WriteLine("debug");
+    }
+
+    private static void CreateEventMenuUnknownButton(UpdateContainer container)
+    {
+        Console.WriteLine("CreateEventMenuUnknownButton");
+        throw new NotImplementedException();
     }
 }

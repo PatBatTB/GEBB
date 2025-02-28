@@ -1,3 +1,4 @@
+using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -17,13 +18,61 @@ public static class InlineKeyboardProvider
         return InlineReplyMarkupDict.GetValueOrDefault(callbackMenu, UnknownMarkup).Invoke();
     }
 
+    public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(EventEntity entity)
+    {
+        var menu = CallbackMenu.CreateEvent;
+        var markup = GetMarkup(CallbackMenu.CreateEvent);
+
+        Dictionary<string, InlineKeyboardButton> buttonsMappingDict = new();
+        if (entity.Title is not null)
+            buttonsMappingDict.Add(
+                CallbackData.GetDataString(menu, CallbackButton.Title),
+                InlineButtonProvider.GetButton(menu, CallbackButton.TitleDone)
+            );
+
+        if (entity.DateTimeOf is not null)
+            buttonsMappingDict.Add(
+                CallbackData.GetDataString(menu, CallbackButton.DateTimeOf),
+                InlineButtonProvider.GetButton(menu, CallbackButton.DateTimeOfDone)
+            );
+
+        if (entity.Address is not null)
+            buttonsMappingDict.Add(
+                CallbackData.GetDataString(menu, CallbackButton.Address),
+                InlineButtonProvider.GetButton(menu, CallbackButton.AddressDone)
+            );
+
+        if (entity.ParticipantLimit is not null)
+            buttonsMappingDict.Add(
+                CallbackData.GetDataString(menu, CallbackButton.ParticipantLimit),
+                InlineButtonProvider.GetButton(menu, CallbackButton.ParticipantLimitDone)
+            );
+
+        if (entity.Cost is not null)
+            buttonsMappingDict.Add(
+                CallbackData.GetDataString(menu, CallbackButton.Cost),
+                InlineButtonProvider.GetButton(menu, CallbackButton.CostDone)
+            );
+
+        if (entity.Description is not null)
+            buttonsMappingDict.Add(
+                CallbackData.GetDataString(menu, CallbackButton.Description),
+                InlineButtonProvider.GetButton(menu, CallbackButton.DescriptionDone));
+
+        var newKeyboard = markup.InlineKeyboard.Select(row =>
+            row.Select(button =>
+                buttonsMappingDict!.GetValueOrDefault(button.CallbackData, button))).ToList();
+        return new InlineKeyboardMarkup(newKeyboard);
+    }
+
     private static InlineKeyboardMarkup GetMainMarkup()
     {
-        var myEvents = InlineButtonProvider.GetButton(CallbackMenu.Main, CallbackButton.MyEvents);
-        var myRegs = InlineButtonProvider.GetButton(CallbackMenu.Main, CallbackButton.MyRegistrations);
+        var menu = CallbackMenu.Main;
+        var myEvents = InlineButtonProvider.GetButton(menu, CallbackButton.MyEvents);
+        var myRegs = InlineButtonProvider.GetButton(menu, CallbackButton.MyRegistrations);
         var availEvents =
-            InlineButtonProvider.GetButton(CallbackMenu.Main, CallbackButton.AvailableEvents);
-        var close = InlineButtonProvider.GetButton(CallbackMenu.Main, CallbackButton.Close);
+            InlineButtonProvider.GetButton(menu, CallbackButton.AvailableEvents);
+        var close = InlineButtonProvider.GetButton(menu, CallbackButton.Close);
         return new InlineKeyboardMarkup(
             [
                 [myEvents],
@@ -35,9 +84,10 @@ public static class InlineKeyboardProvider
 
     private static InlineKeyboardMarkup GetMyEventsMarkup()
     {
-        var create = InlineButtonProvider.GetButton(CallbackMenu.MyEvents, CallbackButton.Create);
-        var list = InlineButtonProvider.GetButton(CallbackMenu.MyEvents, CallbackButton.List);
-        var back = InlineButtonProvider.GetButton(CallbackMenu.MyEvents, CallbackButton.Back);
+        var menu = CallbackMenu.MyEvents;
+        var create = InlineButtonProvider.GetButton(menu, CallbackButton.Create);
+        var list = InlineButtonProvider.GetButton(menu, CallbackButton.List);
+        var back = InlineButtonProvider.GetButton(menu, CallbackButton.Back);
         return new InlineKeyboardMarkup(
             [
                 [create, list],
@@ -48,15 +98,15 @@ public static class InlineKeyboardProvider
 
     private static InlineKeyboardMarkup GetCreateEventMarkup()
     {
-        var title = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.Title);
-        var dateTimeOf = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.DateTimeOf);
-        var address = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.Address);
-        var cost = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.Cost);
-        var participantLimit =
-            InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.ParticipantLimit);
-        var description = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.Description);
-        var done = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.Done);
-        var close = InlineButtonProvider.GetButton(CallbackMenu.CreateEvent, CallbackButton.Close);
+        var menu = CallbackMenu.CreateEvent;
+        var title = InlineButtonProvider.GetButton(menu, CallbackButton.Title);
+        var dateTimeOf = InlineButtonProvider.GetButton(menu, CallbackButton.DateTimeOf);
+        var address = InlineButtonProvider.GetButton(menu, CallbackButton.Address);
+        var cost = InlineButtonProvider.GetButton(menu, CallbackButton.Cost);
+        var participantLimit = InlineButtonProvider.GetButton(menu, CallbackButton.ParticipantLimit);
+        var description = InlineButtonProvider.GetButton(menu, CallbackButton.Description);
+        var done = InlineButtonProvider.GetButton(menu, CallbackButton.Done);
+        var close = InlineButtonProvider.GetButton(menu, CallbackButton.Close);
         return new InlineKeyboardMarkup(
             [
                 [title],

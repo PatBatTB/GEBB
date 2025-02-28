@@ -65,22 +65,14 @@ public static class UpdateTypeHandler
 
     private static void TextHandle(UpdateContainer container)
     {
-        Console.WriteLine("text");
-        // var mes = container.BotClient.EditMessageText(
-        //     chatId: container.ChatId,
-        //     messageId: container.Message.ReplyToMessage!.Id,
-        //     text: "",
-        //     cancellationToken: container.Token).Result;
+        //Проверить, что пользователь в статусе создания мероприятия
+        if (container.UserEntity.UserStatus != UserStatus.CreateEvent)
+        {
+            Console.WriteLine($"{container.User.Username} [{container.User.Id}] : {container.Message.Text}");
+            return;
+        }
 
-        // Console.WriteLine(mes);
-
-        var mes2 = container.BotClient.EditMessageText(
-            container.ChatId,
-            2355,
-            "",
-            cancellationToken: container.Token).Result;
-
-        Console.WriteLine(mes2);
+        CreateEventHandler.Handle(container);
     }
 
     private static void MessageTypeUnknownHandle(UpdateContainer container)
@@ -117,7 +109,7 @@ public static class UpdateTypeHandler
 
         //изменить userStatus, обновить БД
         container.UserEntity.UserStatus = UserStatus.Active;
-        container.DatabaseHandler.Update(container.UserEntity);
+        DatabaseHandler.Update(container.UserEntity);
 
         //отправить меню
         container.BotClient.SetMyCommands(
@@ -152,7 +144,7 @@ public static class UpdateTypeHandler
         //         - меняется usersstatus на stop
         container.UserEntity.UserStatus = UserStatus.Stop;
         //         - меняется статус в базе
-        container.DatabaseHandler.Update(container.UserEntity);
+        DatabaseHandler.Update(container.UserEntity);
 
         //         - отправляется меню
         container.BotClient.SetMyCommands(

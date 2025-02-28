@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase;
 
-public partial class TgbotContext : DbContext
+public partial class TgBotDBContext : DbContext
 {
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
@@ -20,7 +20,6 @@ public partial class TgbotContext : DbContext
             entity.Property(e => e.CreatorId).HasColumnType("BIGINT");
             entity.Property(e => e.Address).HasColumnType("varchar");
             entity.Property(e => e.Cost).HasColumnType("INTEGER");
-            entity.Property(e => e.DateTimeOf).HasColumnType("timestamp");
             entity.Property(e => e.Description).HasColumnType("varchar");
             entity.Property(e => e.IsActive).HasColumnType("bool");
             entity.Property(e => e.IsCreateCompleted).HasColumnType("bool");

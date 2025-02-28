@@ -5,11 +5,11 @@ using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services;
 
-public class DatabaseHandler
+public static class DatabaseHandler
 {
-    public UserEntity Update(User tgUser)
+    public static UserEntity Update(User tgUser)
     {
-        using TgbotContext db = new();
+        using TgBotDBContext db = new();
         var user = db.Find<UserEntity>(tgUser.Id);
         if (user is not null)
         {
@@ -31,9 +31,9 @@ public class DatabaseHandler
         return user;
     }
 
-    public void Update(UserEntity user)
+    public static void Update(UserEntity user)
     {
-        using TgbotContext db = new();
+        using TgBotDBContext db = new();
         db.Update(user);
         db.SaveChanges();
     }

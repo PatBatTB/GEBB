@@ -39,9 +39,9 @@ public static class CommandExtension
         return com switch
         {
             Command.Start => [UserStatus.Newuser, UserStatus.Stop],
-            Command.Stop => [UserStatus.Active, UserStatus.CreateEvent],
             Command.Menu => [UserStatus.Active],
             Command.CreateCancel => [UserStatus.CreateEvent],
+            Command.Stop => [UserStatus.Active, UserStatus.CreateEvent],
             _ => throw new ArgumentException("Incorrect command enum")
         };
     }
