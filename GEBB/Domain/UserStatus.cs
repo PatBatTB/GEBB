@@ -5,8 +5,9 @@ namespace Com.Github.PatBatTB.GEBB.Domain;
 /// </summary>
 public enum UserStatus
 {
+    Stop,
     Newuser,
     Active,
-    Stop,
-    CreateEvent
+    OpenedMenu,
+    CreatingEvent,
 }

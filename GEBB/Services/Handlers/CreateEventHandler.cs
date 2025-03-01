@@ -1,4 +1,5 @@
 using Com.Github.PatBatTB.GEBB.DataBase;
+using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Microsoft.EntityFrameworkCore;
@@ -21,16 +22,35 @@ public static class CreateEventHandler
         //Получить список EventEntity
         using (TgBotDBContext db = new())
         {
-            //TODO добавить в запрос фильтр по открытым
             container.EventEntity.AddRange(db.Events.FromSqlInterpolated(
-                $"SELECT * FROM Events WHERE CreatorId = {container.User.Id} AND IsCreateCompleted == 0").ToList());
+                $@"
+                    SELECT * 
+                    FROM Events 
+                    WHERE CreatorId = {container.User.Id} 
+                    AND IsCreateCompleted == 0
+                ").ToList());
         }
 
         //проверить, что у пользователя создается только одно мероприятие
         if (container.EventEntity.Count > 1)
-            //TODO Метод удаляющий все мероприятия пользователя в режиме создания.
-            //TODO Оповещение, что мероприятия были удалены. Создайте заново.
+        {
+            using (TgBotDBContext db = new())
+            {
+                db.Events.FromSqlInterpolated(
+                    $@"
+                        DELETE FROM Events
+                        WHERE CreatorId = {container.User.Id} 
+                        AND IsCreateCompleted == 0
+                    ");
+            }
+
+            container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: "Возможно произошла ошибка.\n" +
+                      "Вы пытаетесь создать более одного мероприятия одновременно.\n" +
+                      "Режим создания был очищен, воспользуйтесь меню для создания нового мероприятия.");
             return;
+        }
 
         if (container.EventEntity.Count == 0)
         {
@@ -42,6 +62,7 @@ public static class CreateEventHandler
             return;
         }
 
+        EventEntity currentEvent = container.EventEntity[0];
         using (TgBotDBContext db = new())
         {
             //Распарсить текст исходного сообщения, обновить поле
@@ -50,9 +71,11 @@ public static class CreateEventHandler
                 throw new InvalidOperationException();
 
             //Сохранить EventEntity
-            db.Update(container.EventEntity[0]);
+            db.Update(currentEvent);
             db.SaveChanges();
         }
+
+        Thread.Sleep(500);
 
         //Удалить 2 сообщения: Вопрос и ответ пользователя.
         container.BotClient.DeleteMessages(
@@ -60,11 +83,11 @@ public static class CreateEventHandler
             [container.Message.Id, container.Message.ReplyToMessage.Id],
             container.Token);
 
-        //TODO заменить кнопки в меню на кнопки с галочками.
+        //заменить кнопки в меню на кнопки с галочками.
         container.BotClient.EditMessageReplyMarkup(
             container.ChatId,
-            container.EventEntity[0].EventId,
-            InlineKeyboardProvider.GetDynamicCreateEventMarkup(container.EventEntity[0]),
+            currentEvent.EventId,
+            InlineKeyboardProvider.GetDynamicCreateEventMarkup(currentEvent),
             cancellationToken: container.Token);
     }
 
@@ -86,6 +109,7 @@ public static class CreateEventHandler
 
     private static bool UnknownField(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("CreateEventHandler.UnknownField()");
+        return false;
     }
 }

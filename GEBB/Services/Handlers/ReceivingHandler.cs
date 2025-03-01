@@ -6,9 +6,9 @@ using UpdateContainer = Com.Github.PatBatTB.GEBB.Domain.UpdateContainer;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
 
-internal class ReceivingHandler
+public class ReceivingHandler
 {
-    internal Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken token)
+    public Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken token)
     {
         try
         {

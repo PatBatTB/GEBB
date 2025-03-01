@@ -1,4 +1,5 @@
 using System.Data;
+using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.GitHub.PatBatTB.GEBB.Extensions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -14,22 +15,22 @@ public static class UpdateTypeHandler
     private static readonly Dictionary<UpdateType, Action<UpdateContainer>> UpdateTypeHandlerDict = new()
     {
         [UpdateType.Message] = MessageHandle,
-        [UpdateType.CallbackQuery] = CallbackQueryHandle
+        [UpdateType.CallbackQuery] = CallbackQueryHandle,
     };
 
     private static readonly Dictionary<MessageType, Action<UpdateContainer>> MessageTypeHandlerDict = new()
     {
         [MessageType.Command] = CommandHandle,
         [MessageType.Text] = TextHandle,
-        [MessageType.Unknown] = MessageTypeUnknownHandle
+        [MessageType.Unknown] = MessageTypeUnknownHandle,
     };
 
     private static readonly Dictionary<string, Action<UpdateContainer>> CommandTypeHandlerDict = new()
     {
         [Command.Start.Name()] = CommandStartHandle,
         [Command.Stop.Name()] = CommandStopHandle,
-        [Command.Menu.Name()] = CommandMenuHandle
-        //TODO Реализовать команду CreateCancel, отменяющую создание мероприятия.
+        [Command.Menu.Name()] = CommandMenuHandle,
+        [Command.CreateCancel.Name()] = CommandCreateCancelHandle,
     };
 
     public static void Handle(UpdateContainer container)
@@ -49,6 +50,15 @@ public static class UpdateTypeHandler
 
     private static void CallbackQueryHandle(UpdateContainer container)
     {
+        if (container.UserEntity.UserStatus == UserStatus.Stop)
+        {
+            container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: "Вы приостановили активность бота.\n" +
+                      "Для возобновления воспользуйтесь командой /start");
+            return;
+        }
+
         Console.WriteLine("CallbackQuery was taken: " + container.CallbackData!.Data);
         MenuButtonHandler.Handle(container);
     }
@@ -65,8 +75,17 @@ public static class UpdateTypeHandler
 
     private static void TextHandle(UpdateContainer container)
     {
+        if (container.UserEntity.UserStatus == UserStatus.Stop)
+        {
+            container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: "Вы приостановили активность бота.\n" +
+                      "Для возобновления воспользуйтесь командой /start");
+            return;
+        }
+
         //Проверить, что пользователь в статусе создания мероприятия
-        if (container.UserEntity.UserStatus != UserStatus.CreateEvent)
+        if (container.UserEntity.UserStatus != UserStatus.CreatingEvent)
         {
             Console.WriteLine($"{container.User.Username} [{container.User.Id}] : {container.Message.Text}");
             return;
@@ -77,7 +96,7 @@ public static class UpdateTypeHandler
 
     private static void MessageTypeUnknownHandle(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        Console.WriteLine("UpdateTypeHandler.MessageTypeUnknownHandle()");
     }
 
     private static void CommandStartHandle(UpdateContainer container)
@@ -98,8 +117,8 @@ public static class UpdateTypeHandler
         //отправить сообщение (разделить на сообщения для новых пользователей и для старых (по статусу можно))
         text = container.UserEntity.UserStatus switch
         {
-            UserStatus.Newuser => "Добро пожаловать, новый пользователь.",
-            UserStatus.Stop => "С возвращением, старый пользователь.",
+            UserStatus.Newuser => "Добро пожаловать!\nДля вызова меню воспользуйтесь командой /menu",
+            UserStatus.Stop => "С возвращением!\nДля вызова меню воспользуйтесь командой /menu",
             _ => throw new InvalidConstraintException("Value must be newuser or stop")
         };
         container.BotClient.SendMessage(
@@ -151,6 +170,8 @@ public static class UpdateTypeHandler
             BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
+
+        //TODO удаляются все незавершенные создания мероприятий с удалением сообщений с меню.
     }
 
     private static void CommandMenuHandle(UpdateContainer container)
@@ -166,6 +187,13 @@ public static class UpdateTypeHandler
             return;
         }
 
+        container.UserEntity.UserStatus = UserStatus.OpenedMenu;
+        DatabaseHandler.Update(container.UserEntity);
+        container.BotClient.SetMyCommands(
+            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token);
+
         text = CallbackMenu.Main.Title();
         container.BotClient.SendMessage(
             container.ChatId,
@@ -176,7 +204,39 @@ public static class UpdateTypeHandler
 
     private static void CommandUnknownHandle(UpdateContainer container)
     {
-        Console.WriteLine("Unknown command.");
-        throw new NotImplementedException();
+        Console.WriteLine("UpdateTypeHandler.CommandUnknownHandle()");
+    }
+
+    private static void CommandCreateCancelHandle(UpdateContainer container)
+    {
+        List<int> idList = [];
+        //получить список мероприятий в режиме создания.
+        using (TgBotDBContext db = new())
+        {
+            container.EventEntity.AddRange(
+                db.Events.AsEnumerable()
+                    .Where(elem =>
+                        elem.CreatorId == container.UserEntity.UserId &&
+                        elem.IsCreateCompleted == false));
+            //записать ID
+            idList.AddRange(container.EventEntity.Select(elem => elem.EventId).ToList());
+            //удалить все мероприятия в базе в режиме создания.
+            db.RemoveRange(container.EventEntity);
+            //изменить юзерстатус на Active
+            container.UserEntity.UserStatus = UserStatus.Active;
+            db.Update(container.UserEntity);
+            db.SaveChanges();
+        }
+
+        //удалить связанные с мероприятиями сообщения.
+        container.BotClient.DeleteMessages(
+            chatId: container.ChatId,
+            messageIds: idList,
+            cancellationToken: container.Token);
+        //отправить актуальное меню
+        container.BotClient.SetMyCommands(
+            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token);
     }
 }

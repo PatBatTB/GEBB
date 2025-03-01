@@ -6,7 +6,7 @@ public sealed class EventEntity
     public int EventId { get; set; }
 
     public long CreatorId { get; set; }
-    public UserEntity Creator { get; set; }
+    public UserEntity? Creator { get; set; }
 
     public string? Title { get; set; }
 

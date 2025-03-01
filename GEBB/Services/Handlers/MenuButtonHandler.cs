@@ -60,14 +60,14 @@ public static class MenuButtonHandler
     private static void CreateEventMenuHandle(UpdateContainer container)
     {
         //TODO проверка количества эвентов в режиме создания (если больше одного - предложить удалить и начать заново).
+        //TODO если нет эвентов (например командой stop создание прервалось, меню по каким-то причинам осталось открытым) - закрыть меню, предложить создать заново.
 
         CreateEventMenuHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton)!.Invoke(container);
     }
 
     private static void CallbackUnknownMenu(UpdateContainer container)
     {
-        Console.WriteLine("CallbackMenuUnknown");
-        throw new NotImplementedException();
+        Console.WriteLine("MenuButtonHandler.CallbackMenuUnknown()");
     }
 
     private static void MainMenuMyEventsButtonHandle(UpdateContainer container)
@@ -102,6 +102,11 @@ public static class MenuButtonHandler
         container.UserEntity.UserStatus = UserStatus.Active;
         DatabaseHandler.Update(container.UserEntity);
 
+        container.BotClient.SetMyCommands(
+            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token);
+
         using TgBotDBContext db = new();
         if (db.Find<EventEntity>(messageId, chatId) is { } currentEvent)
         {
@@ -112,8 +117,7 @@ public static class MenuButtonHandler
 
     private static void MainMenuUnknownButtonHandle(UpdateContainer container)
     {
-        Console.WriteLine("MainMenuUnknownButton");
-        throw new NotImplementedException();
+        Console.WriteLine("MenuButtonHandler.MainMenuUnknownButtonHandle()");
     }
 
     private static async void MyEventsMenuCreateButtonHandle(UpdateContainer container)
@@ -136,8 +140,13 @@ public static class MenuButtonHandler
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
                 cancellationToken: token);
 
-            container.UserEntity.UserStatus = UserStatus.CreateEvent;
+            container.UserEntity.UserStatus = UserStatus.CreatingEvent;
             DatabaseHandler.Update(container.UserEntity);
+
+            await container.BotClient.SetMyCommands(
+                BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+                BotCommandScope.Chat(container.ChatId),
+                cancellationToken: container.Token);
 
             await using TgBotDBContext db = new();
             EventEntity newEvent = new()
@@ -174,8 +183,7 @@ public static class MenuButtonHandler
 
     private static void MyEventsMenuUnknownButtonHandle(UpdateContainer container)
     {
-        Console.WriteLine("MyEventsMenuUnknownButton");
-        throw new NotImplementedException();
+        Console.WriteLine("MenuButtonHandler.MyEventsMenuUnknownButton()");
     }
 
     private static void CreateEventMenuTitleButton(UpdateContainer container)
@@ -194,7 +202,6 @@ public static class MenuButtonHandler
 
     private static void CreateEventMenuUnknownButton(UpdateContainer container)
     {
-        Console.WriteLine("CreateEventMenuUnknownButton");
-        throw new NotImplementedException();
+        Console.WriteLine("MenuButtonHandler.CreateEventMenuUnknownButton()");
     }
 }
