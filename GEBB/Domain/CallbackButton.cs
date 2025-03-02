@@ -21,7 +21,9 @@ public enum CallbackButton
     ParticipantLimitDone,
     Description,
     DescriptionDone,
-    Done
+    FinishCreating,
+    Yes,
+    No,
 }
 
 public static class CallbackButtonExtension
@@ -49,7 +51,9 @@ public static class CallbackButtonExtension
             CallbackButton.ParticipantLimitDone => CallbackButton.ParticipantLimit.Text() + " \u2705",
             CallbackButton.Description => "Описание",
             CallbackButton.DescriptionDone => CallbackButton.Description.Text() + " \u2705",
-            CallbackButton.Done => "Завершить и создать",
+            CallbackButton.FinishCreating => "Завершить и создать",
+            CallbackButton.Yes => "Да",
+            CallbackButton.No => "Нет",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }

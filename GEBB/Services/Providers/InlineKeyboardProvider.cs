@@ -6,16 +6,24 @@ namespace Com.Github.PatBatTB.GEBB.Services.Providers;
 
 public static class InlineKeyboardProvider
 {
-    private static readonly Dictionary<CallbackMenu, Func<InlineKeyboardMarkup>> InlineReplyMarkupDict = new()
-    {
-        [CallbackMenu.Main] = GetMainMarkup,
-        [CallbackMenu.MyEvents] = GetMyEventsMarkup,
-        [CallbackMenu.CreateEvent] = GetCreateEventMarkup
-    };
+    private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, InlineKeyboardMarkup>> InlineReplyMarkupDict =
+        new()
+        {
+            [CallbackMenu.Main] = GetMainMarkup,
+            [CallbackMenu.MyEvents] = GetMyEventsMarkup,
+            [CallbackMenu.CreateEvent] = GetCreateEventMarkup,
+            [CallbackMenu.EventTitleReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventDateTimeOfAgain] = GetYesNoMarkup,
+            [CallbackMenu.EventDateTimeOfReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventAddressReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventCostReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventParticipantLimitReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventDescriptionReplace] = GetYesNoMarkup,
+        };
 
     public static InlineKeyboardMarkup GetMarkup(CallbackMenu callbackMenu)
     {
-        return InlineReplyMarkupDict.GetValueOrDefault(callbackMenu, UnknownMarkup).Invoke();
+        return InlineReplyMarkupDict.GetValueOrDefault(callbackMenu, UnknownMarkup).Invoke(callbackMenu);
     }
 
     public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(EventEntity entity)
@@ -65,7 +73,7 @@ public static class InlineKeyboardProvider
         return new InlineKeyboardMarkup(newKeyboard);
     }
 
-    private static InlineKeyboardMarkup GetMainMarkup()
+    private static InlineKeyboardMarkup GetMainMarkup(CallbackMenu callbackMenu)
     {
         var menu = CallbackMenu.Main;
         var myEvents = InlineButtonProvider.GetButton(menu, CallbackButton.MyEvents);
@@ -82,9 +90,8 @@ public static class InlineKeyboardProvider
         );
     }
 
-    private static InlineKeyboardMarkup GetMyEventsMarkup()
+    private static InlineKeyboardMarkup GetMyEventsMarkup(CallbackMenu menu)
     {
-        var menu = CallbackMenu.MyEvents;
         var create = InlineButtonProvider.GetButton(menu, CallbackButton.Create);
         var list = InlineButtonProvider.GetButton(menu, CallbackButton.List);
         var back = InlineButtonProvider.GetButton(menu, CallbackButton.Back);
@@ -96,16 +103,15 @@ public static class InlineKeyboardProvider
         );
     }
 
-    private static InlineKeyboardMarkup GetCreateEventMarkup()
+    private static InlineKeyboardMarkup GetCreateEventMarkup(CallbackMenu menu)
     {
-        var menu = CallbackMenu.CreateEvent;
         var title = InlineButtonProvider.GetButton(menu, CallbackButton.Title);
         var dateTimeOf = InlineButtonProvider.GetButton(menu, CallbackButton.DateTimeOf);
         var address = InlineButtonProvider.GetButton(menu, CallbackButton.Address);
         var cost = InlineButtonProvider.GetButton(menu, CallbackButton.Cost);
         var participantLimit = InlineButtonProvider.GetButton(menu, CallbackButton.ParticipantLimit);
         var description = InlineButtonProvider.GetButton(menu, CallbackButton.Description);
-        var done = InlineButtonProvider.GetButton(menu, CallbackButton.Done);
+        var done = InlineButtonProvider.GetButton(menu, CallbackButton.FinishCreating);
         var close = InlineButtonProvider.GetButton(menu, CallbackButton.Close);
         return new InlineKeyboardMarkup(
             [
@@ -121,7 +127,18 @@ public static class InlineKeyboardProvider
         );
     }
 
-    private static InlineKeyboardMarkup UnknownMarkup()
+    private static InlineKeyboardMarkup GetYesNoMarkup(CallbackMenu menu)
+    {
+        var yes = InlineButtonProvider.GetButton(menu, CallbackButton.Yes);
+        var no = InlineButtonProvider.GetButton(menu, CallbackButton.No);
+        return new InlineKeyboardMarkup(
+            [
+                [yes, no]
+            ]
+        );
+    }
+
+    private static InlineKeyboardMarkup UnknownMarkup(CallbackMenu menu)
     {
         throw new ArgumentException("Unknown CallbackMenu");
     }

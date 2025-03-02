@@ -23,5 +23,5 @@ public class UpdateContainer(
     public CallbackData? CallbackData { get; } = callbackData;
     public UserEntity UserEntity { get; } = userEntity;
     public CancellationToken Token { get; } = token;
-    public List<EventEntity> EventEntity { get; } = [];
+    public List<EventEntity> EventEntities { get; } = [];
 }

@@ -14,7 +14,14 @@ public static class MenuButtonHandler
     {
         [CallbackMenu.Main] = MainMenuHandle,
         [CallbackMenu.MyEvents] = MyEventsMenuHandle,
-        [CallbackMenu.CreateEvent] = CreateEventMenuHandle
+        [CallbackMenu.CreateEvent] = CreateEventMenuHandle,
+        [CallbackMenu.EventTitleReplace] = EventTitleReplaceHandle,
+        [CallbackMenu.EventDateTimeOfAgain] = EventDateTimeOfReplaceHandle,
+        [CallbackMenu.EventDateTimeOfReplace] = EventDateTimeOfReplaceHandle,
+        [CallbackMenu.EventAddressReplace] = EventAddressReplaceHandle,
+        [CallbackMenu.EventCostReplace] = EventCostReplaceHandle,
+        [CallbackMenu.EventParticipantLimitReplace] = EventParticipantLimitReplaceHandle,
+        [CallbackMenu.EventDescriptionReplace] = EventDescriptionReplaceHandle,
     };
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MainMenuHandlerDict = new()
@@ -22,21 +29,32 @@ public static class MenuButtonHandler
         [CallbackButton.MyEvents] = MainMenuMyEventsButtonHandle,
         [CallbackButton.MyRegistrations] = MainMenuMyRegistrationsButtonHandle,
         [CallbackButton.AvailableEvents] = MainMenuAvailableEventsButtonHandle,
-        [CallbackButton.Close] = MenuCloseButtonHandle
+        [CallbackButton.Close] = MenuCloseButtonHandle,
     };
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyEventsMenuHandlerDict = new()
     {
         [CallbackButton.Create] = MyEventsMenuCreateButtonHandle,
         [CallbackButton.List] = MyEventsMenuListButtonHandle,
-        [CallbackButton.Back] = MyEventsMenuBackButtonHandle
+        [CallbackButton.Back] = MyEventsMenuBackButtonHandle,
     };
 
-    //TODO реализовать все кнопки (включая кнопки Done)
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> CreateEventMenuHandlerDict = new()
     {
-        [CallbackButton.Title] = CreateEventMenuTitleButton,
-        [CallbackButton.Close] = MenuCloseButtonHandle
+        [CallbackButton.Title] = CreateEventMenuTitleButtonHandle,
+        [CallbackButton.TitleDone] = CreateEventMenuTitleDoneButtonHandle,
+        [CallbackButton.DateTimeOf] = CreateEventMenuDateTimeButtonHandle,
+        [CallbackButton.DateTimeOfDone] = CreateEventMenuDateTimeDoneButtonHandle,
+        [CallbackButton.Address] = CreateEventMenuAddressButtonHandle,
+        [CallbackButton.AddressDone] = CreateEventMenuAddressDoneButtonHandle,
+        [CallbackButton.Cost] = CreateEventMenuCostButtonHandle,
+        [CallbackButton.CostDone] = CreateEventMenuCostDoneButtonHandle,
+        [CallbackButton.ParticipantLimit] = CreateEventMenuParticipantLimitButtonHandle,
+        [CallbackButton.ParticipantLimitDone] = CreateEventMenuParticipantLimitDoneButtonHandle,
+        [CallbackButton.Description] = CreateEventMenuDescriptionButtonHandle,
+        [CallbackButton.DescriptionDone] = CreateEventMenuDescriptionDoneButtonHandle,
+        [CallbackButton.FinishCreating] = CreateEventMenuFinishCreatingButtonHandle,
+        [CallbackButton.Close] = CreateEventMenuCloseButtonHandle,
     };
 
     public static void Handle(UpdateContainer container)
@@ -59,10 +77,112 @@ public static class MenuButtonHandler
 
     private static void CreateEventMenuHandle(UpdateContainer container)
     {
-        //TODO проверка количества эвентов в режиме создания (если больше одного - предложить удалить и начать заново).
-        //TODO если нет эвентов (например командой stop создание прервалось, меню по каким-то причинам осталось открытым) - закрыть меню, предложить создать заново.
+        using (TgBotDBContext db = new())
+        {
+            container.EventEntities.AddRange(
+                db.Events.AsEnumerable()
+                    .Where(elem => elem.CreatorId == container.UserEntity.UserId &&
+                                   elem.IsCreateCompleted == false));
+        }
+
+        int count = container.EventEntities.Count;
+        if (count is 0 or > 1)
+        {
+            container.BotClient.DeleteMessage(
+                container.ChatId,
+                container.Message.MessageId,
+                container.Token);
+            container.UserEntity.UserStatus = UserStatus.Active;
+            DatabaseHandler.Update(container.UserEntity);
+            string message = (count == 0)
+                ? "Ошибка. Не обнаружено мероприятий в режиме создания.\nПопробуте снова через команду /menu"
+                : "Ошибка. Обнаружено несколько мероприятий в режиме создания.\nПопробуйте снова через команду /menu";
+            container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: message,
+                cancellationToken: container.Token);
+            return;
+        }
 
         CreateEventMenuHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton)!.Invoke(container);
+    }
+
+    private static void EventTitleReplaceHandle(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            cancellationToken: container.Token);
+        if (container.CallbackData!.DataButton == CallbackButton.Yes)
+        {
+            CreateEventMenuTitleButtonHandle(container);
+        }
+    }
+
+    private static void EventDateTimeOfReplaceHandle(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            cancellationToken: container.Token);
+        if (container.CallbackData!.DataButton == CallbackButton.Yes)
+        {
+            CreateEventMenuDateTimeButtonHandle(container);
+        }
+    }
+
+    private static void EventAddressReplaceHandle(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            container.ChatId,
+            container.Message.Id,
+            container.Token);
+        if (container.CallbackData!.DataButton == CallbackButton.Yes)
+        {
+            CreateEventMenuAddressButtonHandle(container);
+        }
+    }
+
+    private static void EventCostReplaceHandle(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            container.ChatId,
+            container.Message.Id,
+            container.Token);
+        if (container.CallbackData!.DataButton == CallbackButton.Yes)
+        {
+            CreateEventMenuCostButtonHandle(container);
+        }
+    }
+
+    private static void EventParticipantLimitReplaceHandle(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            container.ChatId,
+            container.Message.Id,
+            container.Token);
+        if (container.CallbackData!.DataButton == CallbackButton.Yes)
+        {
+            CreateEventMenuParticipantLimitButtonHandle(container);
+        }
+    }
+
+    private static void EventDescriptionReplaceHandle(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            container.ChatId,
+            container.Message.Id,
+            container.Token);
+        if (container.CallbackData!.DataButton == CallbackButton.Yes)
+        {
+            CreateEventMenuDescriptionButtonHandle(container);
+        }
     }
 
     private static void CallbackUnknownMenu(UpdateContainer container)
@@ -75,7 +195,7 @@ public static class MenuButtonHandler
         container.BotClient.EditMessageText(
             container.ChatId,
             container.Message.Id,
-            CallbackMenu.MyEvents.Title(),
+            CallbackMenu.MyEvents.Text(),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.MyEvents),
             cancellationToken: container.Token);
     }
@@ -106,13 +226,6 @@ public static class MenuButtonHandler
             BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
-
-        using TgBotDBContext db = new();
-        if (db.Find<EventEntity>(messageId, chatId) is { } currentEvent)
-        {
-            db.Remove(currentEvent);
-            db.SaveChanges();
-        }
     }
 
     private static void MainMenuUnknownButtonHandle(UpdateContainer container)
@@ -136,7 +249,7 @@ public static class MenuButtonHandler
 
             Message sent = await container.BotClient.SendMessage(
                 chatId,
-                CallbackMenu.CreateEvent.Title(),
+                CallbackMenu.CreateEvent.Text(),
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
                 cancellationToken: token);
 
@@ -176,7 +289,7 @@ public static class MenuButtonHandler
         container.BotClient.EditMessageText(
             container.ChatId,
             container.Message.Id,
-            CallbackMenu.Main.Title(),
+            CallbackMenu.Main.Text(),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.Main),
             cancellationToken: container.Token);
     }
@@ -186,18 +299,130 @@ public static class MenuButtonHandler
         Console.WriteLine("MenuButtonHandler.MyEventsMenuUnknownButton()");
     }
 
-    private static void CreateEventMenuTitleButton(UpdateContainer container)
+    private static void CreateEventMenuTitleButtonHandle(UpdateContainer container)
+    {
+        SendEnterDataRequest(container, CreateEventStatus.Title);
+    }
+
+    private static void CreateEventMenuTitleDoneButtonHandle(UpdateContainer container)
+    {
+        SendReplaceDataMenu(container, CallbackMenu.EventTitleReplace);
+    }
+
+    private static void CreateEventMenuDateTimeButtonHandle(UpdateContainer container)
+    {
+        SendEnterDataRequest(container, CreateEventStatus.DateTimeOf);
+    }
+
+    private static void CreateEventMenuDateTimeDoneButtonHandle(UpdateContainer container)
+    {
+        SendReplaceDataMenu(container, CallbackMenu.EventDateTimeOfReplace);
+    }
+
+    private static void CreateEventMenuAddressButtonHandle(UpdateContainer container)
+    {
+        SendEnterDataRequest(container, CreateEventStatus.Address);
+    }
+
+    private static void CreateEventMenuAddressDoneButtonHandle(UpdateContainer container)
+    {
+        SendReplaceDataMenu(container, CallbackMenu.EventAddressReplace);
+    }
+
+    private static void CreateEventMenuCostButtonHandle(UpdateContainer container)
+    {
+        SendEnterDataRequest(container, CreateEventStatus.Cost);
+    }
+
+    private static void CreateEventMenuCostDoneButtonHandle(UpdateContainer container)
+    {
+        SendReplaceDataMenu(container, CallbackMenu.EventCostReplace);
+    }
+
+    private static void CreateEventMenuParticipantLimitButtonHandle(UpdateContainer container)
+    {
+        SendEnterDataRequest(container, CreateEventStatus.ParticipantLimit);
+    }
+
+    private static void CreateEventMenuParticipantLimitDoneButtonHandle(UpdateContainer container)
+    {
+        SendReplaceDataMenu(container, CallbackMenu.EventParticipantLimitReplace);
+    }
+
+    private static void CreateEventMenuDescriptionButtonHandle(UpdateContainer container)
+    {
+        SendEnterDataRequest(container, CreateEventStatus.Description);
+    }
+
+    private static void CreateEventMenuDescriptionDoneButtonHandle(UpdateContainer container)
+    {
+        SendReplaceDataMenu(container, CallbackMenu.EventDescriptionReplace);
+    }
+
+    private static void CreateEventMenuFinishCreatingButtonHandle(UpdateContainer container)
+    {
+        //Проверить все ли данные введены в EventEntity?
+        EventEntity entity = container.EventEntities[0];
+        string message;
+        if (entity.Title is null ||
+            entity.DateTimeOf is null ||
+            entity.Address is null ||
+            entity.Cost is null ||
+            entity.ParticipantLimit is null)
+        {
+            message = "Сначала укажите все данные для мероприятия.";
+            container.BotClient.AnswerCallbackQuery(container.CallbackData!.Id, message, true,
+                cancellationToken: container.Token);
+            return;
+        }
+
+        //отправить уведомление, что мероприятие создано
+        message = "Мероприятие создано. Рассылаю приглашения.";
+        container.BotClient.AnswerCallbackQuery(container.CallbackData!.Id, message, true,
+            cancellationToken: container.Token);
+        //Изменить статус IsCreateComplete на true
+        entity.IsCreateCompleted = true;
+        DatabaseHandler.Update(entity);
+        //изменить статус пользователя
+        container.UserEntity.UserStatus = UserStatus.Active;
+        DatabaseHandler.Update(container.UserEntity);
+        //Закрыть меню
+        container.BotClient.DeleteMessage(
+            container.ChatId,
+            container.Message.Id,
+            container.Token);
+
+        //TODO Запросить лист пользователей (все пользователи, кроме инициатора, не со статусом stop)
+        //TODO Отправить приглашения всем пользователям из списка.
+    }
+
+    private static void SendEnterDataRequest(UpdateContainer container, CreateEventStatus status)
     {
         container.BotClient.SendMessage(
-            container.ChatId,
-            CreateEventStatus.Title.Message(),
+            chatId: container.ChatId,
+            text: status.Message(),
             replyMarkup: new ForceReplyMarkup(),
             cancellationToken: container.Token);
-        //TODO обновить меню создания (кнопки done на заполненные данные)
-        //TODO если название уже было указано - предложить отменить или заменить?
-        //TODO отправить сообщение "введите название мероприятия"
-        //TODO установить статус в EventEntity что следующее сообщение - будет названием мероприятия
-        Console.WriteLine("debug");
+    }
+
+    private static void SendReplaceDataMenu(UpdateContainer container, CallbackMenu menu)
+    {
+        container.BotClient.SendMessage(
+            chatId: container.ChatId,
+            text: menu.Text(),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(menu),
+            cancellationToken: container.Token);
+    }
+
+    private static void CreateEventMenuCloseButtonHandle(UpdateContainer container)
+    {
+        MenuCloseButtonHandle(container);
+        using TgBotDBContext db = new();
+        if (db.Find<EventEntity>(container.Message.MessageId, container.ChatId) is { } currentEvent)
+        {
+            db.Remove(currentEvent);
+            db.SaveChanges();
+        }
     }
 
     private static void CreateEventMenuUnknownButton(UpdateContainer container)

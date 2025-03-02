@@ -1,5 +1,4 @@
 using System.Data;
-using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.GitHub.PatBatTB.GEBB.Extensions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -85,13 +84,13 @@ public static class UpdateTypeHandler
         }
 
         //Проверить, что пользователь в статусе создания мероприятия
-        if (container.UserEntity.UserStatus != UserStatus.CreatingEvent)
+        if (container.UserEntity.UserStatus == UserStatus.CreatingEvent)
         {
-            Console.WriteLine($"{container.User.Username} [{container.User.Id}] : {container.Message.Text}");
+            CreateEventHandler.Handle(container);
             return;
         }
 
-        CreateEventHandler.Handle(container);
+        Console.WriteLine($"{container.User.Username} [{container.User.Id}] : {container.Message.Text}");
     }
 
     private static void MessageTypeUnknownHandle(UpdateContainer container)
@@ -113,8 +112,6 @@ public static class UpdateTypeHandler
             return;
         }
 
-        //TODO
-        //отправить сообщение (разделить на сообщения для новых пользователей и для старых (по статусу можно))
         text = container.UserEntity.UserStatus switch
         {
             UserStatus.Newuser => "Добро пожаловать!\nДля вызова меню воспользуйтесь командой /menu",
@@ -171,7 +168,12 @@ public static class UpdateTypeHandler
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
 
-        //TODO удаляются все незавершенные создания мероприятий с удалением сообщений с меню.
+        //удаляются все незавершенные создания мероприятий с удалением сообщений с меню.
+        List<int> idList = DatabaseHandler.DeleteCreatingEvents(container.UserEntity.UserId);
+        container.BotClient.DeleteMessages(
+            chatId: container.ChatId,
+            messageIds: idList,
+            cancellationToken: container.Token);
     }
 
     private static void CommandMenuHandle(UpdateContainer container)
@@ -194,7 +196,7 @@ public static class UpdateTypeHandler
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
 
-        text = CallbackMenu.Main.Title();
+        text = CallbackMenu.Main.Text();
         container.BotClient.SendMessage(
             container.ChatId,
             text,
@@ -209,26 +211,14 @@ public static class UpdateTypeHandler
 
     private static void CommandCreateCancelHandle(UpdateContainer container)
     {
-        List<int> idList = [];
         //получить список мероприятий в режиме создания.
-        using (TgBotDBContext db = new())
-        {
-            container.EventEntity.AddRange(
-                db.Events.AsEnumerable()
-                    .Where(elem =>
-                        elem.CreatorId == container.UserEntity.UserId &&
-                        elem.IsCreateCompleted == false));
-            //записать ID
-            idList.AddRange(container.EventEntity.Select(elem => elem.EventId).ToList());
-            //удалить все мероприятия в базе в режиме создания.
-            db.RemoveRange(container.EventEntity);
-            //изменить юзерстатус на Active
-            container.UserEntity.UserStatus = UserStatus.Active;
-            db.Update(container.UserEntity);
-            db.SaveChanges();
-        }
-
+        List<int> idList = DatabaseHandler.DeleteCreatingEvents(container.UserEntity.UserId);
         //удалить связанные с мероприятиями сообщения.
+
+        //изменить юзерстатус на Active
+        container.UserEntity.UserStatus = UserStatus.Active;
+        DatabaseHandler.Update(container.UserEntity);
+
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
