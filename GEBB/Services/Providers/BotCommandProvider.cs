@@ -1,4 +1,4 @@
-using Com.Github.PatBatTB.GEBB.Domain;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Providers;

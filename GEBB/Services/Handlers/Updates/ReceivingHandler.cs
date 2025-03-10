@@ -2,13 +2,12 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using UpdateContainer = Com.Github.PatBatTB.GEBB.Domain.UpdateContainer;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates;
 
 public class ReceivingHandler
 {
-    public Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken token)
+    public Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken token)
     {
         try
         {
@@ -73,7 +72,7 @@ public class ReceivingHandler
             var callbackData = CallbackData.GetInstance(callbackQuery);
             UpdateContainer updateContainer =
                 new(botClient, update, chatId, user, message, userEntity, token, callbackData);
-            UpdateTypeHandler.Handle(updateContainer);
+            TypeHandler.Handle(updateContainer);
         }
         catch (Exception e)
         {
@@ -83,13 +82,14 @@ public class ReceivingHandler
         return Task.CompletedTask;
     }
 
-    internal Task ErrorHandler(ITelegramBotClient botClient, Exception ex, CancellationToken token)
+    internal Task HandleError(ITelegramBotClient botClient, Exception ex, CancellationToken token)
     {
         Console.WriteLine(ex.Message);
         return Task.CompletedTask;
     }
 
-    internal void ExitHandler(CancellationTokenSource cts)
+    internal void HandleExitSignal
+        (CancellationTokenSource cts)
     {
         cts.Cancel();
     }

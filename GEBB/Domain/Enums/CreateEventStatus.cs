@@ -1,4 +1,4 @@
-namespace Com.Github.PatBatTB.GEBB.Domain;
+namespace Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 public enum CreateEventStatus
 {

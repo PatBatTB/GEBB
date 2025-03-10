@@ -1,15 +1,14 @@
-using System.Globalization;
 using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain;
-using Com.GitHub.PatBatTB.GEBB.Exceptions;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Text;
 
-public static class CreateEventHandler
+public static class CreateEventStatusHandler
 {
     private static readonly Dictionary<string, Func<UpdateContainer, bool>> UpdateEventFieldDict = new()
     {
@@ -118,16 +117,14 @@ public static class CreateEventHandler
     private static bool UpdateDateTimeOfField(UpdateContainer container)
     {
         string dateTimeString = container.Message.Text!;
-        string format = "dd.MM.yyyy HH.mm";
-        DateTime date;
-        try
-        {
-            date = DateTime.ParseExact(dateTimeString, format, CultureInfo.InvariantCulture);
-            container.EventEntities[0].DateTimeOf = date;
-            if (date <= DateTime.Now)
-                throw new IncorrectDateException("Ошибка. Дата события указана в прошлом. Указать еще раз?");
-        }
-        catch (FormatException e)
+
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessages(
+            chatId: container.ChatId,
+            messageIds: [container.Message.Id, container.Message.ReplyToMessage!.Id],
+            cancellationToken: container.Token);
+
+        if (!DateTimeParser.TryParse(dateTimeString, out var nDate) || nDate is not { } date)
         {
             Console.WriteLine("Incorrect date format");
             container.BotClient.SendMessage(
@@ -135,28 +132,20 @@ public static class CreateEventHandler
                 text: CallbackMenu.EventDateTimeOfAgain.Text(),
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EventDateTimeOfAgain),
                 cancellationToken: container.Token);
-            container.BotClient.DeleteMessages(
-                chatId: container.ChatId,
-                messageIds: [container.Message.Id, container.Message.ReplyToMessage!.Id],
-                cancellationToken: container.Token);
-
-            throw;
+            return false;
         }
-        catch (IncorrectDateException e)
+
+        if (date <= DateTime.Now)
         {
             container.BotClient.SendMessage(
                 chatId: container.ChatId,
-                text: e.Message,
+                text: "Ошибка. Дата события указана в прошлом. Указать еще раз?",
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EventDateTimeOfAgain),
                 cancellationToken: container.Token);
-            container.BotClient.DeleteMessages(
-                chatId: container.ChatId,
-                messageIds: [container.Message.Id, container.Message.ReplyToMessage!.Id],
-                cancellationToken: container.Token);
-
-            throw;
+            return false;
         }
 
+        container.EventEntities[0].DateTimeOf = date;
         return true;
     }
 

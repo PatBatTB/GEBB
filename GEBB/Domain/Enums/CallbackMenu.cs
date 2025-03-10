@@ -1,4 +1,4 @@
-namespace Com.Github.PatBatTB.GEBB.Domain;
+namespace Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 public enum CallbackMenu
 {
@@ -11,7 +11,8 @@ public enum CallbackMenu
     EventAddressReplace,
     EventCostReplace,
     EventParticipantLimitReplace,
-    EventDescriptionReplace
+    EventDescriptionReplace,
+    EventRegister,
 }
 
 public static class CallbackMenuExtension
@@ -41,6 +42,7 @@ public static class CallbackMenuExtension
             CallbackMenu.EventCostReplace => EventCostReplaceText,
             CallbackMenu.EventParticipantLimitReplace => EventParticipantLimitReplaceText,
             CallbackMenu.EventDescriptionReplace => EventDescriptionReplaceText,
+            CallbackMenu.EventRegister => throw new ArgumentException("EventRegister has no text"),
             _ => throw new ArgumentException("Incorrect CallbackMenu enum")
         };
     }

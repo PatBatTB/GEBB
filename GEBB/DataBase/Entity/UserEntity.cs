@@ -1,4 +1,4 @@
-﻿using Com.Github.PatBatTB.GEBB.Domain;
+﻿using Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
 

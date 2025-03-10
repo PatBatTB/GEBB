@@ -1,6 +1,6 @@
 using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.DataBase.Entity;
-using Com.Github.PatBatTB.GEBB.Domain;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services;
@@ -31,17 +31,10 @@ public static class DatabaseHandler
         return user;
     }
 
-    public static void Update(UserEntity user)
+    public static void Update<TEntity>(TEntity entity)
     {
         using TgBotDBContext db = new();
-        db.Update(user);
-        db.SaveChanges();
-    }
-
-    public static void Update(EventEntity eventEntity)
-    {
-        using TgBotDBContext db = new();
-        db.Update(eventEntity);
+        db.Update(entity);
         db.SaveChanges();
     }
 
@@ -68,11 +61,24 @@ public static class DatabaseHandler
                 .Where(elem =>
                     elem.CreatorId == userId &&
                     elem.IsCreateCompleted == false));
-        //записать ID
         idList.AddRange(eventList.Select(elem => elem.EventId).ToList());
-        //удалить все мероприятия в базе в режиме создания.
         db.RemoveRange(eventList);
         db.SaveChanges();
         return idList;
+    }
+
+    /// <summary>
+    /// Returns a list of all active users from the database, excluding the creator, to be invited to the event.
+    /// </summary>
+    /// <param name="entity">Event</param>
+    /// <returns>List of usersID</returns>
+    public static List<long> GetInviteList(EventEntity entity)
+    {
+        using TgBotDBContext db = new();
+        return db.Users
+            .Where(user => user.UserStatus != UserStatus.Stop) // &&
+            //user.UserId != entity.CreatorId) //TODO Debug
+            .Select(user => user.UserId)
+            .ToList();
     }
 }

@@ -1,104 +1,28 @@
 using System.Data;
 using Com.Github.PatBatTB.GEBB.Domain;
-using Com.GitHub.PatBatTB.GEBB.Extensions;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using MessageType = Com.Github.PatBatTB.GEBB.Domain.MessageType;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types;
 
-public static class UpdateTypeHandler
+public static class CommandHandler
 {
-    private static readonly Dictionary<UpdateType, Action<UpdateContainer>> UpdateTypeHandlerDict = new()
+    private static readonly Dictionary<string, Action<UpdateContainer>> TypeHandlerDict = new()
     {
-        [UpdateType.Message] = MessageHandle,
-        [UpdateType.CallbackQuery] = CallbackQueryHandle,
-    };
-
-    private static readonly Dictionary<MessageType, Action<UpdateContainer>> MessageTypeHandlerDict = new()
-    {
-        [MessageType.Command] = CommandHandle,
-        [MessageType.Text] = TextHandle,
-        [MessageType.Unknown] = MessageTypeUnknownHandle,
-    };
-
-    private static readonly Dictionary<string, Action<UpdateContainer>> CommandTypeHandlerDict = new()
-    {
-        [Command.Start.Name()] = CommandStartHandle,
-        [Command.Stop.Name()] = CommandStopHandle,
-        [Command.Menu.Name()] = CommandMenuHandle,
-        [Command.CreateCancel.Name()] = CommandCreateCancelHandle,
+        [Command.Start.Name()] = HandleStart,
+        [Command.Stop.Name()] = HandleStop,
+        [Command.Menu.Name()] = HandleMenu,
+        [Command.CancelCreate.Name()] = HandleCancel,
     };
 
     public static void Handle(UpdateContainer container)
     {
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token
-        );
-        UpdateTypeHandlerDict.GetValueOrDefault(container.UpdateType, UpdateTypeUnknown).Invoke(container);
+        TypeHandlerDict.GetValueOrDefault(container.Message.Text!, HandleUnknown).Invoke(container);
     }
 
-    private static void MessageHandle(UpdateContainer container)
-    {
-        MessageTypeHandlerDict[container.Message.TextType()].Invoke(container);
-    }
-
-    private static void CallbackQueryHandle(UpdateContainer container)
-    {
-        if (container.UserEntity.UserStatus == UserStatus.Stop)
-        {
-            container.BotClient.SendMessage(
-                chatId: container.ChatId,
-                text: "Вы приостановили активность бота.\n" +
-                      "Для возобновления воспользуйтесь командой /start");
-            return;
-        }
-
-        Console.WriteLine("CallbackQuery was taken: " + container.CallbackData!.Data);
-        MenuButtonHandler.Handle(container);
-    }
-
-    private static void UpdateTypeUnknown(UpdateContainer container)
-    {
-        Console.WriteLine("UpdateTypeHandler - unknown");
-    }
-
-    private static void CommandHandle(UpdateContainer container)
-    {
-        CommandTypeHandlerDict.GetValueOrDefault(container.Message.Text!, CommandUnknownHandle).Invoke(container);
-    }
-
-    private static void TextHandle(UpdateContainer container)
-    {
-        if (container.UserEntity.UserStatus == UserStatus.Stop)
-        {
-            container.BotClient.SendMessage(
-                chatId: container.ChatId,
-                text: "Вы приостановили активность бота.\n" +
-                      "Для возобновления воспользуйтесь командой /start");
-            return;
-        }
-
-        //Проверить, что пользователь в статусе создания мероприятия
-        if (container.UserEntity.UserStatus == UserStatus.CreatingEvent)
-        {
-            CreateEventHandler.Handle(container);
-            return;
-        }
-
-        Console.WriteLine($"{container.User.Username} [{container.User.Id}] : {container.Message.Text}");
-    }
-
-    private static void MessageTypeUnknownHandle(UpdateContainer container)
-    {
-        Console.WriteLine("UpdateTypeHandler.MessageTypeUnknownHandle()");
-    }
-
-    private static void CommandStartHandle(UpdateContainer container)
+    private static void HandleStart(UpdateContainer container)
     {
         string text;
         //проверка, что пользователи не могут вызывать команду, если ее нет в их меню.
@@ -135,7 +59,7 @@ public static class UpdateTypeHandler
         );
     }
 
-    private static void CommandStopHandle(UpdateContainer container)
+    private static void HandleStop(UpdateContainer container)
     {
         string text;
         //верификация пользователя
@@ -176,7 +100,7 @@ public static class UpdateTypeHandler
             cancellationToken: container.Token);
     }
 
-    private static void CommandMenuHandle(UpdateContainer container)
+    private static void HandleMenu(UpdateContainer container)
     {
         string text;
         if (!Command.Menu.Scope().Contains(container.UserEntity.UserStatus))
@@ -204,12 +128,12 @@ public static class UpdateTypeHandler
             cancellationToken: container.Token);
     }
 
-    private static void CommandUnknownHandle(UpdateContainer container)
+    private static void HandleUnknown(UpdateContainer container)
     {
         Console.WriteLine("UpdateTypeHandler.CommandUnknownHandle()");
     }
 
-    private static void CommandCreateCancelHandle(UpdateContainer container)
+    private static void HandleCancel(UpdateContainer container)
     {
         //получить список мероприятий в режиме создания.
         List<int> idList = DatabaseHandler.DeleteCreatingEvents(container.UserEntity.UserId);

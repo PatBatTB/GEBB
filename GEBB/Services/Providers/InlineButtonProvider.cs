@@ -1,4 +1,5 @@
 using Com.Github.PatBatTB.GEBB.Domain;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Providers;

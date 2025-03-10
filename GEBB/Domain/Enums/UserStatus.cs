@@ -1,4 +1,4 @@
-namespace Com.Github.PatBatTB.GEBB.Domain;
+namespace Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 /// <summary>
 ///     These statuses are serializable as INT. Don't change these order!

@@ -1,5 +1,5 @@
 using Com.GitHub.PatBatTB.GEBB.Domain;
-using Com.Github.PatBatTB.GEBB.Services.Handlers;
+using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates;
 using Telegram.Bot;
 
 namespace Com.GitHub.PatBatTB.GEBB;
@@ -19,12 +19,12 @@ public class App
     {
         using CancellationTokenSource cts = new();
         CancellationToken token = cts.Token;
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => _receivingHandler.ExitHandler(cts);
-        Console.CancelKeyPress += (_, _) => cts.Cancel();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => _receivingHandler.HandleExitSignal(cts);
+        Console.CancelKeyPress += (_, _) => _receivingHandler.HandleExitSignal(cts);
 
         _botClient.StartReceiving(
-            _receivingHandler.UpdateHandler,
-            _receivingHandler.ErrorHandler,
+            _receivingHandler.HandleUpdate,
+            _receivingHandler.HandleError,
             receiverOptions: BotConfig.ReceiverOptions,
             cancellationToken: token);
         Console.WriteLine("Bot is running.");

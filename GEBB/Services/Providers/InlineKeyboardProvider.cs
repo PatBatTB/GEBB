@@ -1,5 +1,6 @@
 using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -19,6 +20,7 @@ public static class InlineKeyboardProvider
             [CallbackMenu.EventCostReplace] = GetYesNoMarkup,
             [CallbackMenu.EventParticipantLimitReplace] = GetYesNoMarkup,
             [CallbackMenu.EventDescriptionReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventRegister] = RegistrationMarkup,
         };
 
     public static InlineKeyboardMarkup GetMarkup(CallbackMenu callbackMenu)
@@ -37,31 +39,26 @@ public static class InlineKeyboardProvider
                 CallbackData.GetDataString(menu, CallbackButton.Title),
                 InlineButtonProvider.GetButton(menu, CallbackButton.TitleDone)
             );
-
         if (entity.DateTimeOf is not null)
             buttonsMappingDict.Add(
                 CallbackData.GetDataString(menu, CallbackButton.DateTimeOf),
                 InlineButtonProvider.GetButton(menu, CallbackButton.DateTimeOfDone)
             );
-
         if (entity.Address is not null)
             buttonsMappingDict.Add(
                 CallbackData.GetDataString(menu, CallbackButton.Address),
                 InlineButtonProvider.GetButton(menu, CallbackButton.AddressDone)
             );
-
         if (entity.ParticipantLimit is not null)
             buttonsMappingDict.Add(
                 CallbackData.GetDataString(menu, CallbackButton.ParticipantLimit),
                 InlineButtonProvider.GetButton(menu, CallbackButton.ParticipantLimitDone)
             );
-
         if (entity.Cost is not null)
             buttonsMappingDict.Add(
                 CallbackData.GetDataString(menu, CallbackButton.Cost),
                 InlineButtonProvider.GetButton(menu, CallbackButton.CostDone)
             );
-
         if (entity.Description is not null)
             buttonsMappingDict.Add(
                 CallbackData.GetDataString(menu, CallbackButton.Description),
@@ -136,6 +133,11 @@ public static class InlineKeyboardProvider
                 [yes, no]
             ]
         );
+    }
+
+    private static InlineKeyboardMarkup RegistrationMarkup(CallbackMenu menu)
+    {
+        return new InlineKeyboardMarkup([[InlineButtonProvider.GetButton(menu, CallbackButton.Registration)]]);
     }
 
     private static InlineKeyboardMarkup UnknownMarkup(CallbackMenu menu)
