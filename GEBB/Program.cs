@@ -6,7 +6,7 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
-        await using (TgBotDBContext db = new())
+        await using (TgBotDbContext db = new())
         {
             await db.Database.EnsureCreatedAsync();
         }

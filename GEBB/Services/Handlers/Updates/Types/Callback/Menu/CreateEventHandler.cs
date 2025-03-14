@@ -6,7 +6,6 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
 
@@ -32,7 +31,7 @@ public static class CreateEventHandler
 
     public static void Handle(UpdateContainer container)
     {
-        using (TgBotDBContext db = new())
+        using (TgBotDbContext db = new())
         {
             container.EventEntities.AddRange(
                 db.Events.AsEnumerable()
@@ -157,7 +156,6 @@ public static class CreateEventHandler
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
         Thread.Sleep(200);
-        //Закрыть меню
         container.BotClient.DeleteMessage(
             container.ChatId,
             container.Message.Id,
@@ -175,6 +173,7 @@ public static class CreateEventHandler
                       (string.IsNullOrEmpty(entity.Description)
                           ? ""
                           : $"Дополнительная информация: {entity.Description}");
+        //TODO Test sending message
         foreach (long id in DatabaseHandler.GetInviteList(entity))
         {
             Thread.Sleep(200);
@@ -182,7 +181,6 @@ public static class CreateEventHandler
                 chatId: id,
                 text: text,
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EventRegister),
-                entities: [new MessageEntity() { Type = MessageEntityType.Hashtag, Length = 5, Offset = 1 }],
                 cancellationToken: container.Token);
         }
     }
@@ -203,7 +201,7 @@ public static class CreateEventHandler
             BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
-        using TgBotDBContext db = new();
+        using TgBotDbContext db = new();
         if (db.Find<EventEntity>(container.Message.MessageId, container.ChatId) is { } currentEvent)
         {
             db.Remove(currentEvent);

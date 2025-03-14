@@ -56,7 +56,7 @@ public static class MyEventsHandler
                 BotCommandScope.Chat(container.ChatId),
                 cancellationToken: container.Token);
 
-            await using TgBotDBContext db = new();
+            await using TgBotDbContext db = new();
             EventEntity newEvent = new()
             {
                 EventId = sent.Id,

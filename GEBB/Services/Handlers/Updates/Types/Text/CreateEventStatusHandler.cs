@@ -26,7 +26,7 @@ public static class CreateEventStatusHandler
         if (container.Message.ReplyToMessage?.From?.Id != container.BotClient.BotId) return;
 
         //Получить список EventEntity
-        using (TgBotDBContext db = new())
+        using (TgBotDbContext db = new())
         {
             container.EventEntities.AddRange(
                 db.Events.AsEnumerable()
@@ -73,7 +73,7 @@ public static class CreateEventStatusHandler
         if (container.EventEntities.Count > 1)
         {
             List<int> idList = container.EventEntities.Select(elem => elem.EventId).ToList();
-            using (TgBotDBContext db = new())
+            using (TgBotDbContext db = new())
             {
                 DatabaseHandler.Remove(container.EventEntities);
             }

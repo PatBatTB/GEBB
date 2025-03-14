@@ -3,13 +3,13 @@ using Com.Github.PatBatTB.GEBB.DataBase.Entity;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Telegram.Bot.Types;
 
-namespace Com.Github.PatBatTB.GEBB.Services;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
 
 public static class DatabaseHandler
 {
     public static UserEntity Update(User tgUser)
     {
-        using TgBotDBContext db = new();
+        using TgBotDbContext db = new();
         var user = db.Find<UserEntity>(tgUser.Id);
         if (user is not null)
         {
@@ -33,14 +33,14 @@ public static class DatabaseHandler
 
     public static void Update<TEntity>(TEntity entity)
     {
-        using TgBotDBContext db = new();
+        using TgBotDbContext db = new();
         db.Update(entity);
         db.SaveChanges();
     }
 
     public static void Remove<TEntity>(IEnumerable<TEntity> entities)
     {
-        using TgBotDBContext db = new();
+        using TgBotDbContext db = new();
         db.RemoveRange(entities);
         db.SaveChanges();
     }
@@ -55,7 +55,7 @@ public static class DatabaseHandler
     {
         List<EventEntity> eventList = [];
         List<int> idList = [];
-        using TgBotDBContext db = new();
+        using TgBotDbContext db = new();
         eventList.AddRange(
             db.Events.AsEnumerable()
                 .Where(elem =>
@@ -74,10 +74,10 @@ public static class DatabaseHandler
     /// <returns>List of usersID</returns>
     public static List<long> GetInviteList(EventEntity entity)
     {
-        using TgBotDBContext db = new();
+        using TgBotDbContext db = new();
         return db.Users
             .Where(user => user.UserStatus != UserStatus.Stop) // &&
-            //user.UserId != entity.CreatorId) //TODO Debug
+            //user.UserId != entity.CreatorId) //TODO Debug (отправляю себе же приглашение для отладки)
             .Select(user => user.UserId)
             .ToList();
     }

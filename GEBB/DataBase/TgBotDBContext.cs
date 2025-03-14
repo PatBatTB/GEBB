@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase;
 
-public partial class TgBotDBContext : DbContext
+public partial class TgBotDbContext : DbContext
 {
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
