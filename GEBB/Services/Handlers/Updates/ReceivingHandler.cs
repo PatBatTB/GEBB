@@ -70,6 +70,7 @@ public class ReceivingHandler
 
             var userEntity = DatabaseHandler.Update(user);
             var callbackData = CallbackData.GetInstance(callbackQuery);
+            var alterCbData = new AlterCbData(callbackQuery);
             UpdateContainer updateContainer =
                 new(botClient, update, chatId, user, message, userEntity, token, callbackData);
             TypeHandler.Handle(updateContainer);

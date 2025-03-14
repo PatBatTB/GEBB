@@ -13,7 +13,8 @@ public class UpdateContainer(
     Message message,
     UserEntity userEntity,
     CancellationToken token,
-    CallbackData? callbackData = null)
+    CallbackData? callbackData = null,
+    AlterCbData? alterCbData = null)
 {
     public ITelegramBotClient BotClient { get; } = botClient;
     public UpdateType UpdateType { get; } = update.Type;
@@ -21,6 +22,7 @@ public class UpdateContainer(
     public User User { get; } = user;
     public Message Message { get; } = message;
     public CallbackData? CallbackData { get; } = callbackData;
+    public AlterCbData? AlterCbData { get; } = alterCbData;
     public UserEntity UserEntity { get; } = userEntity;
     public CancellationToken Token { get; } = token;
     public List<EventEntity> EventEntities { get; } = [];
