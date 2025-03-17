@@ -21,7 +21,6 @@ public class UpdateContainer(
     public long ChatId { get; } = chatId;
     public User User { get; } = user;
     public Message Message { get; } = message;
-    public CallbackData? CallbackData { get; } = callbackData;
     public AlterCbData? AlterCbData { get; } = alterCbData;
     public UserEntity UserEntity { get; } = userEntity;
     public CancellationToken Token { get; } = token;

@@ -39,7 +39,7 @@ public static class TypeHandler
             return;
         }
 
-        Console.WriteLine("CallbackQuery was taken: " + container.CallbackData!.Data);
+        Console.WriteLine("CallbackQuery was taken: " + container.AlterCbData!.GetDataString());
         MenuHandler.Handle(container);
     }
 

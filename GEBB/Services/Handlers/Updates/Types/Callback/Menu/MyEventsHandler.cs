@@ -19,7 +19,9 @@ public static class MyEventsHandler
 
     public static void Handle(UpdateContainer container)
     {
-        ButtonHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton, HandleUnknown).Invoke(container);
+        if (container.AlterCbData?.Button is not { } button) 
+            throw new NullReferenceException("CallbackData doesn't have button");
+        ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
     private static async void HandleCreate(UpdateContainer container)

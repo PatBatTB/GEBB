@@ -3,124 +3,121 @@ using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Domain;
 
+
 public class AlterCbData
 {
-    [Flags]
-    public enum Param
+    private readonly CallbackButton? _button;
+    private readonly CallbackMenu? _menu;
+    private readonly string? _eventId;
+
+    private readonly Dictionary<Prop, object?> _mappingDict = new();
+    private const string Separator = "_";
+    
+    [Flags] private enum Prop
     {
-        Button = 0b_001,
-        Menu = 0b_010,
-        EventId = 0b_100,
+        Menu = 0b1,
+        Button = 0b10,
+        EventId = 0b100,
+    }
+    
+    public CallbackButton? Button
+    {
+        get => _button;
+        init
+        {
+            _button = value;
+            _mappingDict[Prop.Button] = _button;
+        }
     }
 
-    private const string Separator = "_";
-
-    private static readonly Dictionary<Param, Func<string, bool>> _constraints = new()
+    public CallbackMenu? Menu
     {
-    };
+        get => _menu;
+        init
+        {
+            _menu = value;
+            _mappingDict[Prop.Menu] = _menu;
+        }
+    }
 
-    private Param _par;
-
-    public AlterCbData(string callbackString)
+    public string? EventId
     {
-        if (string.IsNullOrEmpty(callbackString)) throw new ArgumentException("Argument cannot be empty");
-        _parameters = new();
-        string[] arr = callbackString.Split(Separator);
+        get => _eventId;
+        init
+        {
+            _eventId = value;
+            _mappingDict[Prop.EventId] = _eventId;
+        }
+    }
+
+    public string? CallbackId { get; private set; }
+
+    public AlterCbData()
+    {
+    }
+
+    public AlterCbData(CallbackQuery callbackQuery)
+    {
+        if (string.IsNullOrEmpty(callbackQuery.Data)) return;
+        CallbackId = callbackQuery.Id;
+        string[] propsArr = callbackQuery.Data.Split(Separator);
+        Prop cbProp;
         try
         {
-            _par = (Param)Convert.ToInt32(arr[0], 2);
+            cbProp = (Prop)Convert.ToInt32(propsArr[0], 2);
         }
         catch (FormatException e)
         {
             throw new ArgumentException("First argument must be binary number", e);
         }
-
-        if (!ValidateCount(arr)) throw new ArgumentException("Incorrect number of arguments");
-        for (int i = 1; i < arr.Length; i++)
+        if (!ValidateCount(propsArr)) throw new ArgumentException("Incorrect number of arguments");
+        for (int i = 1; i < propsArr.Length; i++)
         {
-            string value = arr[i];
-            AddParam(value);
-        }
-
-        DataString = callbackString;
-    }
-
-    public AlterCbData(CallbackQuery? callbackQuery) : this(callbackQuery?.Data ?? string.Empty)
-    {
-        Id = callbackQuery!.Id;
-    }
-
-    public AlterCbData(Dictionary<Param, string> parameters)
-    {
-        _parameters = new();
-        foreach (Param flag in Enum.GetValues<Param>())
-        {
-            if (parameters.TryGetValue(flag, out string? value))
+            foreach (Prop prop in Enum.GetValues<Prop>())
             {
-                if (_constraints.TryGetValue(flag, out var func) && !func.Invoke(value))
-                    throw new ArgumentException($"Invalid value for {flag} param");
-                _parameters.Add(flag, value);
+                if (cbProp.HasFlag(prop))
+                {
+                    switch (prop)
+                    {
+                        case Prop.Menu:
+                            Menu = Enum.Parse<CallbackMenu>(propsArr[i]);
+                            cbProp -= (int)prop;
+                            break;
+                        case Prop.Button:
+                            Button = Enum.Parse<CallbackButton>(propsArr[i]);
+                            cbProp -= (int)prop;
+                            break;
+                        case Prop.EventId:
+                            EventId = propsArr[i];
+                            cbProp -= (int)prop;
+                            break;
+                        default:
+                            throw new KeyNotFoundException("unknown prop");
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    public string GetDataString()
+    {
+        Prop flagProp = 0;
+        List<string> objList = new();
+        foreach (Prop prop in Enum.GetValues<Prop>())
+        {
+            if (_mappingDict.TryGetValue(prop, out object? obj))
+            {
+                flagProp += (int)prop;
+                objList.Add(obj?.ToString()!);
             }
         }
 
-        DataString = InitializeDataString();
+        string binaryCode = Convert.ToString((int)flagProp, 2).PadLeft(Enum.GetValues<Prop>().Length, '0');
+        return binaryCode + Separator + string.Join(Separator, objList);
     }
-
-    private Dictionary<Param, string> _parameters { get; }
-
-    public CallbackButton Button
-    {
-        get
-        {
-            if (!_parameters.TryGetValue(Param.Button, out string? buttonString))
-                throw new KeyNotFoundException();
-
-            return Enum.Parse<CallbackButton>(buttonString);
-        }
-    }
-
-    public CallbackMenu Menu
-    {
-        get
-        {
-            if (!_parameters.TryGetValue(Param.Menu, out string? menuSting))
-                throw new KeyNotFoundException();
-            return Enum.Parse<CallbackMenu>(menuSting);
-        }
-    }
-
-    public string EventId
-    {
-        get
-        {
-            if (!_parameters.TryGetValue(Param.EventId, out string? idString))
-                throw new KeyNotFoundException();
-            return idString;
-        }
-    }
-
-    public string? Id { get; }
-
-    public string DataString { get; }
-
-    private string InitializeDataString()
-    {
-        Param myPar = 0;
-        List<string> valueList = new();
-        foreach (var param in Enum.GetValues<Param>())
-        {
-            if (_parameters.TryGetValue(param, out string? value))
-            {
-                myPar += (int)param;
-                valueList.Add(value);
-            }
-        }
-
-        string binaryCode = Convert.ToString((int)myPar, 2).PadLeft(Enum.GetNames<Param>().Length, '0');
-
-        return binaryCode + Separator + string.Join(Separator, valueList);
-    }
-
+    
     private bool ValidateCount(string[] arr)
     {
         int count = 1;
@@ -130,25 +127,5 @@ public class AlterCbData
         }
 
         return count == arr.Length;
-    }
-
-    private static bool ValidateLongType(string value)
-    {
-        return long.TryParse(value, out _);
-    }
-
-    private void AddParam(string value)
-    {
-        foreach (Param flag in Enum.GetValues<Param>())
-        {
-            if (_par.HasFlag(flag))
-            {
-                if (_constraints.TryGetValue(flag, out var func) && !func.Invoke(value))
-                    throw new ArgumentException($"Invalid value for {flag} param");
-                _parameters.Add(flag, value);
-                _par &= ~flag;
-                return;
-            }
-        }
     }
 }

@@ -59,7 +59,9 @@ public static class CreateEventHandler
             return;
         }
 
-        ButtonHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton, CreateEventMenuUnknownButton)
+        if (container.AlterCbData?.Button is not { } button)
+            throw new NullReferenceException("CallbackData doesn't have button");
+        ButtonHandlerDict.GetValueOrDefault(button, CreateEventMenuUnknownButton)
             .Invoke(container);
     }
 
@@ -135,14 +137,14 @@ public static class CreateEventHandler
             entity.ParticipantLimit is null)
         {
             message = "Сначала укажите все данные для мероприятия.";
-            container.BotClient.AnswerCallbackQuery(container.CallbackData!.Id, message, true,
+            container.BotClient.AnswerCallbackQuery(container.AlterCbData!.CallbackId!, message, true,
                 cancellationToken: container.Token);
             return;
         }
 
         //отправить уведомление, что мероприятие создано
         message = "Мероприятие создано. Рассылаю приглашения.";
-        container.BotClient.AnswerCallbackQuery(container.CallbackData!.Id, message, true,
+        container.BotClient.AnswerCallbackQuery(container.AlterCbData!.CallbackId!, message, true,
             cancellationToken: container.Token);
         Thread.Sleep(200);
         //Изменить статус IsCreateComplete на true
@@ -174,13 +176,15 @@ public static class CreateEventHandler
                           ? ""
                           : $"Дополнительная информация: {entity.Description}");
         //TODO Test sending message
+        AlterCbData data = new()
+            { Button = CallbackButton.Registration, Menu = CallbackMenu.EventRegister, EventId = entity.EventId.ToString() };
         foreach (long id in DatabaseHandler.GetInviteList(entity))
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(
                 chatId: id,
                 text: text,
-                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EventRegister),
+                replyMarkup: InlineKeyboardProvider.RegistrationMarkup(data),
                 cancellationToken: container.Token);
         }
     }

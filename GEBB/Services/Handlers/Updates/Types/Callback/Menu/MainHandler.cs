@@ -18,7 +18,9 @@ public static class MainHandler
 
     public static void Handle(UpdateContainer container)
     {
-        ButtonHandlerDict.GetValueOrDefault(container.CallbackData!.DataButton, HandleUnknown)
+        if (container.AlterCbData?.Button is not { } button) 
+            throw new NullReferenceException("CallbackData doesn't have button");
+        ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown)
             .Invoke(container);
     }
 
