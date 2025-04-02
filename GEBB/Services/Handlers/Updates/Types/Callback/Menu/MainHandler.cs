@@ -1,3 +1,4 @@
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -16,9 +17,11 @@ public static class MainHandler
         [CallbackButton.Close] = HandleClose,
     };
 
+    private static readonly IUserService UService = new DbUserService();
+
     public static void Handle(UpdateContainer container)
     {
-        if (container.AlterCbData?.Button is not { } button) 
+        if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
         ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown)
             .Invoke(container);
@@ -52,12 +55,10 @@ public static class MainHandler
             chatId,
             messageId,
             container.Token);
-
-        container.UserEntity.UserStatus = UserStatus.Active;
-        DatabaseHandler.Update(container.UserEntity);
-
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
     }

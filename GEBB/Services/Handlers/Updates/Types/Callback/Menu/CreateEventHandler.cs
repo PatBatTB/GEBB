@@ -1,6 +1,6 @@
 using System.Globalization;
-using Com.Github.PatBatTB.GEBB.DataBase;
-using Com.Github.PatBatTB.GEBB.DataBase.Entity;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -29,26 +29,26 @@ public static class CreateEventHandler
         [CallbackButton.Close] = HandleClose,
     };
 
+    private static readonly IUserService UService = new DbUserService();
+    private static readonly IEventService EService = new DbEventService();
+
     public static void Handle(UpdateContainer container)
     {
-        using (TgBotDbContext db = new())
-        {
-            container.EventEntities.AddRange(
-                db.Events.AsEnumerable()
-                    .Where(elem => elem.CreatorId == container.UserEntity.UserId &&
-                                   elem.IsCreateCompleted == false));
-        }
+        container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
 
-        int count = container.EventEntities.Count;
+        int count = container.Events.Count;
         if (count is 0 or > 1)
         {
             container.BotClient.DeleteMessage(
                 container.ChatId,
                 container.Message.MessageId,
                 container.Token);
-            container.UserEntity.UserStatus = UserStatus.Active;
             Thread.Sleep(200);
-            DatabaseHandler.Update(container.UserEntity);
+
+            EService.Remove(container.Events);
+
+            container.UserDto.UserStatus = UserStatus.Active;
+            UService.Merge(container.UserDto);
             string message = (count == 0)
                 ? "Ошибка. Не обнаружено мероприятий в режиме создания.\nПопробуйте снова через команду /menu"
                 : "Ошибка. Обнаружено несколько мероприятий в режиме создания.\nПопробуйте снова через команду /menu";
@@ -59,7 +59,7 @@ public static class CreateEventHandler
             return;
         }
 
-        if (container.AlterCbData?.Button is not { } button)
+        if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
         ButtonHandlerDict.GetValueOrDefault(button, CreateEventMenuUnknownButton)
             .Invoke(container);
@@ -128,33 +128,32 @@ public static class CreateEventHandler
     private static void HandleFinishCreating(UpdateContainer container)
     {
         //Проверить все ли данные введены в EventEntity?
-        EventEntity entity = container.EventEntities[0];
+        EventDto eventDto = container.Events[0];
         string message;
-        if (entity.Title is null ||
-            entity.DateTimeOf is null ||
-            entity.Address is null ||
-            entity.Cost is null ||
-            entity.ParticipantLimit is null)
+        if (eventDto.Title is null ||
+            eventDto.DateTimeOf is null ||
+            eventDto.Address is null ||
+            eventDto.Cost is null ||
+            eventDto.ParticipantLimit is null)
         {
             message = "Сначала укажите все данные для мероприятия.";
-            container.BotClient.AnswerCallbackQuery(container.AlterCbData!.CallbackId!, message, true,
+            container.BotClient.AnswerCallbackQuery(container.CallbackData!.CallbackId!, message, true,
                 cancellationToken: container.Token);
             return;
         }
 
         //отправить уведомление, что мероприятие создано
         message = "Мероприятие создано. Рассылаю приглашения.";
-        container.BotClient.AnswerCallbackQuery(container.AlterCbData!.CallbackId!, message, true,
+        container.BotClient.AnswerCallbackQuery(container.CallbackData!.CallbackId!, message, true,
             cancellationToken: container.Token);
         Thread.Sleep(200);
         //Изменить статус IsCreateComplete на true
-        entity.IsCreateCompleted = true;
-        DatabaseHandler.Update(entity);
+        EService.FinishCreating(eventDto);
         //изменить статус пользователя
-        container.UserEntity.UserStatus = UserStatus.Active;
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
         Thread.Sleep(200);
@@ -165,24 +164,25 @@ public static class CreateEventHandler
 
         //Запросить лист пользователей (все пользователи, кроме инициатора, со статусом не stop)
         //Отправить приглашения всем пользователям из списка.
-        string text = $"@{container.UserEntity.Username} приглашает на мероприятие!\n" +
-                      $"Название: {entity.Title}\n" +
-                      $"Дата: {entity.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"Время: {entity.DateTimeOf!.Value:HH:mm}\n" +
-                      $"Место: {entity.Address}\n" +
-                      $"Максимум человек: {entity.ParticipantLimit}\n" +
-                      $"Планируемые затраты: {entity.Cost}\n" +
-                      (string.IsNullOrEmpty(entity.Description)
+        string text = $"@{container.UserDto.Username} приглашает на мероприятие!\n" +
+                      $"Название: {eventDto.Title}\n" +
+                      $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                      $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
+                      $"Место: {eventDto.Address}\n" +
+                      $"Максимум человек: {eventDto.ParticipantLimit}\n" +
+                      $"Планируемые затраты: {eventDto.Cost}\n" +
+                      (string.IsNullOrEmpty(eventDto.Description)
                           ? ""
-                          : $"Дополнительная информация: {entity.Description}");
+                          : $"Дополнительная информация: {eventDto.Description}");
         //TODO Test sending message
-        AlterCbData data = new()
-            { Button = CallbackButton.Registration, Menu = CallbackMenu.EventRegister, EventId = entity.EventId.ToString() };
-        foreach (long id in DatabaseHandler.GetInviteList(entity))
+        CallbackData data = new()
+            { Button = CallbackButton.Registration, Menu = CallbackMenu.EventRegister, EventId = eventDto.EventId };
+
+        foreach (UserDto user in UService.GetInviteList(eventDto))
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(
-                chatId: id,
+                chatId: user.UserId,
                 text: text,
                 replyMarkup: InlineKeyboardProvider.RegistrationMarkup(data),
                 cancellationToken: container.Token);
@@ -193,24 +193,20 @@ public static class CreateEventHandler
     {
         var chatId = container.ChatId;
         var messageId = container.Message.Id;
+        var eventId = container.CallbackData!.EventId!;
         container.BotClient.DeleteMessage(
             chatId,
             messageId,
             container.Token);
 
-        container.UserEntity.UserStatus = UserStatus.Active;
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
 
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
-        using TgBotDbContext db = new();
-        if (db.Find<EventEntity>(container.Message.MessageId, container.ChatId) is { } currentEvent)
-        {
-            db.Remove(currentEvent);
-            db.SaveChanges();
-        }
+        EService.Remove(eventId);
     }
 
     private static void CreateEventMenuUnknownButton(UpdateContainer container)

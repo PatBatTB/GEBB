@@ -1,5 +1,5 @@
-using Com.Github.PatBatTB.GEBB.DataBase;
-using Com.Github.PatBatTB.GEBB.DataBase.Entity;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -20,19 +20,16 @@ public static class CreateEventStatusHandler
         [CreateEventStatus.Description.Message()] = UpdateDescriptionField,
     };
 
+    private static readonly IEventService EService = new DbEventService();
+    private static readonly IUserService UService = new DbUserService();
+
     public static void Handle(UpdateContainer container)
     {
         //Проверить, что пользователь отвечает на сообщение бота.
         if (container.Message.ReplyToMessage?.From?.Id != container.BotClient.BotId) return;
 
         //Получить список EventEntity
-        using (TgBotDbContext db = new())
-        {
-            container.EventEntities.AddRange(
-                db.Events.AsEnumerable()
-                    .Where(elem => elem.CreatorId == container.UserEntity.UserId &&
-                                   elem.IsCreateCompleted == false));
-        }
+        container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
 
         Thread.Sleep(500);
         //Удалить 2 сообщения: Вопрос и ответ пользователя.
@@ -43,40 +40,37 @@ public static class CreateEventStatusHandler
 
 
         //проверить, что у пользователя создается только одно мероприятие
-        if (container.EventEntities.Count == 1)
+        if (container.Events.Count == 1)
         {
-            EventEntity currentEvent = container.EventEntities[0];
+            EventDto currentEvent = container.Events[0];
             //Распарсить текст исходного сообщения, обновить поле
             if (UpdateEventFieldDict.GetValueOrDefault(container.Message.ReplyToMessage!.Text!, UnknownField)
                 .Invoke(container))
             {
-                DatabaseHandler.Update(currentEvent);
+                EService.Merge(currentEvent);
             }
 
             //заменить кнопки в меню на кнопки с галочками.
             container.BotClient.EditMessageReplyMarkup(
                 container.ChatId,
-                currentEvent.EventId,
+                currentEvent.MessageId,
                 InlineKeyboardProvider.GetDynamicCreateEventMarkup(currentEvent),
                 cancellationToken: container.Token);
             return;
         }
 
-        container.UserEntity.UserStatus = UserStatus.Active;
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
 
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
 
-        if (container.EventEntities.Count > 1)
+        if (container.Events.Count > 1)
         {
-            List<int> idList = container.EventEntities.Select(elem => elem.EventId).ToList();
-            using (TgBotDbContext db = new())
-            {
-                DatabaseHandler.Remove(container.EventEntities);
-            }
+            List<int> idList = container.Events.Select(elem => elem.MessageId).ToList();
+            EService.Remove(container.Events);
 
             container.BotClient.DeleteMessages(
                 chatId: container.ChatId,
@@ -90,7 +84,7 @@ public static class CreateEventStatusHandler
                       "Режим создания был очищен, воспользуйтесь меню для создания нового мероприятия.");
         }
 
-        if (container.EventEntities.Count == 0)
+        if (container.Events.Count == 0)
         {
             container.BotClient.SendMessage(
                 container.ChatId,
@@ -110,7 +104,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        container.EventEntities[0].Title = container.Message.Text;
+        container.Events[0].Title = container.Message.Text;
         return true;
     }
 
@@ -145,7 +139,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        container.EventEntities[0].DateTimeOf = date;
+        container.Events[0].DateTimeOf = date;
         return true;
     }
 
@@ -161,7 +155,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        container.EventEntities[0].Address = container.Message.Text;
+        container.Events[0].Address = container.Message.Text;
         return true;
     }
 
@@ -181,7 +175,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        container.EventEntities[0].Cost = cost;
+        container.Events[0].Cost = cost;
         return true;
     }
 
@@ -201,7 +195,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        container.EventEntities[0].ParticipantLimit = count;
+        container.Events[0].ParticipantLimit = count;
         return true;
     }
 
@@ -214,7 +208,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        container.EventEntities[0].Description = container.Message.Text;
+        container.Events[0].Description = container.Message.Text;
         return true;
     }
 

@@ -34,7 +34,7 @@ public static class MenuHandler
 
     public static void Handle(UpdateContainer container)
     {
-        if (container.AlterCbData?.Menu is not { } menu)
+        if (container.CallbackData?.Menu is not { } menu)
             throw new NullReferenceException("CallbackData doesn't have menu");
         MenuHandlerDict.GetValueOrDefault(menu, CallbackUnknownMenu)
             .Invoke(container);
@@ -43,7 +43,7 @@ public static class MenuHandler
     private static void HandleEventReplaceMenu(UpdateContainer container)
     {
         //TODO add unknown
-        if (!ReplaceStatusDict.TryGetValue(container.AlterCbData!.Menu!.Value, out CreateEventStatus status))
+        if (!ReplaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out CreateEventStatus status))
         {
             throw new ArgumentException("Unknown CallbackMenu");
         }
@@ -53,7 +53,7 @@ public static class MenuHandler
             chatId: container.ChatId,
             messageId: container.Message.Id,
             cancellationToken: container.Token);
-        if (container.AlterCbData!.Button! == CallbackButton.Yes)
+        if (container.CallbackData!.Button! == CallbackButton.Yes)
         {
             MessageSender.SendEnterDataRequest(container, status);
         }

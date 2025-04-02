@@ -1,4 +1,5 @@
-﻿using Com.Github.PatBatTB.GEBB.DataBase.Entity;
+﻿using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.GitHub.PatBatTB.GEBB.Domain;
 using Microsoft.EntityFrameworkCore;
 

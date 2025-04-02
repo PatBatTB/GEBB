@@ -1,4 +1,5 @@
-using Com.Github.PatBatTB.GEBB.DataBase.Entity;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -9,20 +10,17 @@ public class UpdateContainer(
     ITelegramBotClient botClient,
     Update update,
     long chatId,
-    User user,
     Message message,
-    UserEntity userEntity,
+    UserDto userDto,
     CancellationToken token,
-    CallbackData? callbackData = null,
-    AlterCbData? alterCbData = null)
+    CallbackData? callbackData = null)
 {
     public ITelegramBotClient BotClient { get; } = botClient;
     public UpdateType UpdateType { get; } = update.Type;
     public long ChatId { get; } = chatId;
-    public User User { get; } = user;
     public Message Message { get; } = message;
-    public AlterCbData? AlterCbData { get; } = alterCbData;
-    public UserEntity UserEntity { get; } = userEntity;
+    public CallbackData? CallbackData { get; } = callbackData;
+    public UserDto UserDto { get; } = userDto;
     public CancellationToken Token { get; } = token;
-    public List<EventEntity> EventEntities { get; } = [];
+    public List<EventDto> Events { get; } = [];
 }

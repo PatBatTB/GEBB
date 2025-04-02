@@ -1,3 +1,4 @@
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -7,6 +8,8 @@ namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates;
 
 public class ReceivingHandler
 {
+    private IUserService UService = new DbUserService();
+
     public Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken token)
     {
         try
@@ -68,11 +71,10 @@ public class ReceivingHandler
                     return Task.CompletedTask;
             }
 
-            var userEntity = DatabaseHandler.Update(user);
-            var callbackData = CallbackData.GetInstance(callbackQuery);
-            var alterCbData = new AlterCbData(callbackQuery);
+            UserDto userDto = UService.Merge(user);
+            CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
-                new(botClient, update, chatId, user, message, userEntity, token, callbackData);
+                new(botClient, update, chatId, message, userDto, token, callbackData);
             TypeHandler.Handle(updateContainer);
         }
         catch (Exception e)

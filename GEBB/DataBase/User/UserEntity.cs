@@ -1,6 +1,7 @@
-﻿using Com.Github.PatBatTB.GEBB.Domain.Enums;
+﻿using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 
-namespace Com.Github.PatBatTB.GEBB.DataBase.Entity;
+namespace Com.Github.PatBatTB.GEBB.DataBase.User;
 
 public sealed class UserEntity
 {

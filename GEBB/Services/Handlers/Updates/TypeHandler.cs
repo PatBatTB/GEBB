@@ -20,7 +20,7 @@ public static class TypeHandler
     public static void Handle(UpdateContainer container)
     {
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token
         );
@@ -30,7 +30,7 @@ public static class TypeHandler
 
     private static void CallbackQueryHandle(UpdateContainer container)
     {
-        if (container.UserEntity.UserStatus == UserStatus.Stop)
+        if (container.UserDto.UserStatus == UserStatus.Stop)
         {
             container.BotClient.SendMessage(
                 chatId: container.ChatId,
@@ -39,7 +39,7 @@ public static class TypeHandler
             return;
         }
 
-        Console.WriteLine("CallbackQuery was taken: " + container.AlterCbData!.GetDataString());
+        Console.WriteLine("CallbackQuery was taken: " + container.CallbackData!.GetDataString());
         MenuHandler.Handle(container);
     }
 

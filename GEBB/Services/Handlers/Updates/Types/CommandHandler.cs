@@ -1,4 +1,6 @@
 using System.Data;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -17,6 +19,9 @@ public static class CommandHandler
         [Command.CancelCreate.Name()] = HandleCancel,
     };
 
+    private static readonly IUserService UService = new DbUserService();
+    private static readonly IEventService EService = new DbEventService();
+
     public static void Handle(UpdateContainer container)
     {
         TypeHandlerDict.GetValueOrDefault(container.Message.Text!, HandleUnknown).Invoke(container);
@@ -26,7 +31,7 @@ public static class CommandHandler
     {
         string text;
         //проверка, что пользователи не могут вызывать команду, если ее нет в их меню.
-        if (!Command.Start.Scope().Contains(container.UserEntity.UserStatus))
+        if (!Command.Start.Scope().Contains(container.UserDto.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -36,7 +41,7 @@ public static class CommandHandler
             return;
         }
 
-        text = container.UserEntity.UserStatus switch
+        text = container.UserDto.UserStatus switch
         {
             UserStatus.Newuser => "Добро пожаловать!\nДля вызова меню воспользуйтесь командой /menu",
             UserStatus.Stop => "С возвращением!\nДля вызова меню воспользуйтесь командой /menu",
@@ -48,12 +53,12 @@ public static class CommandHandler
             cancellationToken: container.Token);
 
         //изменить userStatus, обновить БД
-        container.UserEntity.UserStatus = UserStatus.Active;
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
 
         //отправить меню
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token
         );
@@ -63,7 +68,7 @@ public static class CommandHandler
     {
         string text;
         //верификация пользователя
-        if (!Command.Stop.Scope().Contains(container.UserEntity.UserStatus))
+        if (!Command.Stop.Scope().Contains(container.UserDto.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -81,19 +86,16 @@ public static class CommandHandler
             container.ChatId,
             text,
             cancellationToken: container.Token);
-        //         - меняется usersstatus на stop
-        container.UserEntity.UserStatus = UserStatus.Stop;
-        //         - меняется статус в базе
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.Stop;
+        UService.Merge(container.UserDto);
 
-        //         - отправляется меню
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
 
         //удаляются все незавершенные создания мероприятий с удалением сообщений с меню.
-        List<int> idList = DatabaseHandler.DeleteCreatingEvents(container.UserEntity.UserId);
+        ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
@@ -103,7 +105,7 @@ public static class CommandHandler
     private static void HandleMenu(UpdateContainer container)
     {
         string text;
-        if (!Command.Menu.Scope().Contains(container.UserEntity.UserStatus))
+        if (!Command.Menu.Scope().Contains(container.UserDto.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -113,10 +115,10 @@ public static class CommandHandler
             return;
         }
 
-        container.UserEntity.UserStatus = UserStatus.OpenedMenu;
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.OpenedMenu;
+        UService.Merge(container.UserDto);
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
 
@@ -135,21 +137,17 @@ public static class CommandHandler
 
     private static void HandleCancel(UpdateContainer container)
     {
-        //получить список мероприятий в режиме создания.
-        List<int> idList = DatabaseHandler.DeleteCreatingEvents(container.UserEntity.UserId);
-        //удалить связанные с мероприятиями сообщения.
+        ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
 
-        //изменить юзерстатус на Active
-        container.UserEntity.UserStatus = UserStatus.Active;
-        DatabaseHandler.Update(container.UserEntity);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
 
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
             cancellationToken: container.Token);
-        //отправить актуальное меню
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
     }

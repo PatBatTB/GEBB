@@ -1,5 +1,5 @@
-using Com.Github.PatBatTB.GEBB.DataBase;
-using Com.Github.PatBatTB.GEBB.DataBase.Entity;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
@@ -17,9 +17,13 @@ public static class MyEventsHandler
         [CallbackButton.Back] = HandleBack,
     };
 
+    private static readonly IUserService UService = new DbUserService();
+
+    private static IEventService EService = new DbEventService();
+
     public static void Handle(UpdateContainer container)
     {
-        if (container.AlterCbData?.Button is not { } button) 
+        if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
         ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
@@ -48,27 +52,17 @@ public static class MyEventsHandler
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
                 cancellationToken: token);
 
-            container.UserEntity.UserStatus = UserStatus.CreatingEvent;
-            DatabaseHandler.Update(container.UserEntity);
+            container.UserDto.UserStatus = UserStatus.CreatingEvent;
+            UService.Merge(container.UserDto);
 
             Thread.Sleep(300);
 
             await container.BotClient.SetMyCommands(
-                BotCommandProvider.GetCommandMenu(container.UserEntity.UserStatus),
+                BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
                 BotCommandScope.Chat(container.ChatId),
                 cancellationToken: container.Token);
 
-            await using TgBotDbContext db = new();
-            EventEntity newEvent = new()
-            {
-                EventId = sent.Id,
-                CreatorId = container.User.Id,
-                CreatedAt = DateTime.Now,
-                IsActive = false,
-                IsCreateCompleted = false
-            };
-            db.Add(newEvent);
-            await db.SaveChangesAsync(token);
+            EService.Add(sent.Id, container.UserDto.UserId);
         }
         catch (Exception e)
         {
