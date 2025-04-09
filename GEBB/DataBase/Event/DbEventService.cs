@@ -1,4 +1,5 @@
 using Com.Github.PatBatTB.GEBB.DataBase.User;
+using Microsoft.EntityFrameworkCore;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
 
@@ -21,7 +22,9 @@ public class DbEventService : IEventService
     {
         (int messageId, long creatorId) = ParseEventId(eventId);
         using TgBotDbContext db = new();
-        return (db.Find<EventEntity>(messageId, creatorId) is not { } entity) ? null : EntityToDto(entity);
+        EventEntity eventEntity = db.Events.Include(elem => elem.RegisteredUsers)
+            .First(elem => elem.EventId == messageId && elem.CreatorId == creatorId);
+        return (eventEntity is not { } entity) ? null : EntityToDto(entity);
     }
 
     public void Merge(EventDto eventDto)
@@ -91,6 +94,16 @@ public class DbEventService : IEventService
         db.SaveChanges();
     }
 
+    public void RegisterUser(EventDto eventDto, UserDto userDto)
+    {
+        EventEntity eventEntity = DtoToEntity(eventDto);
+        UserEntity userEntity = _dbUserService.DtoToEntity(userDto);
+        eventEntity.RegisteredUsers.Add(userEntity);
+        using TgBotDbContext db = new();
+        db.Update(eventEntity);
+        db.SaveChanges();
+    }
+
     private EventEntity DtoToEntity(EventDto dto)
     {
         (int messageId, long creatorId) = ParseEventId(dto.EventId);
@@ -114,8 +127,8 @@ public class DbEventService : IEventService
     private EventDto EntityToDto(EventEntity entity)
     {
         using TgBotDbContext db = new();
-        UserEntity userEntity = db.Find<UserEntity>(entity.CreatorId) ?? throw new KeyNotFoundException();
-        UserDto[] userDtos = entity.Users.Select(user => _dbUserService.EntityToDto(user)).ToArray();
+        UserEntity userEntity = db.Find<UserEntity>(entity.CreatorId) ?? throw new Exception("User not found in DB");
+        UserDto[] userDtos = entity.RegisteredUsers.Select(user => _dbUserService.EntityToDto(user)).ToArray();
         return new()
         {
             EventId = CreateEventId(entity.EventId, entity.CreatorId),

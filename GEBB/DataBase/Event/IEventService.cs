@@ -1,3 +1,5 @@
+using Com.Github.PatBatTB.GEBB.DataBase.User;
+
 namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
 
 public interface IEventService
@@ -10,4 +12,5 @@ public interface IEventService
     void Remove(ICollection<EventDto> events);
     ICollection<int> RemoveInCreating(long creatorId);
     void FinishCreating(EventDto eventDto);
+    void RegisterUser(EventDto eventDto, UserDto userDto);
 }

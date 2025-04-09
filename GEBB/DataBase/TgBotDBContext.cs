@@ -42,7 +42,7 @@ public partial class TgBotDbContext : DbContext
 
             entity.HasKey(e => e.UserId);
 
-            entity.HasMany(d => d.EventsNavigation).WithMany(p => p.Users)
+            entity.HasMany(d => d.EventsNavigation).WithMany(p => p.RegisteredUsers)
                 .UsingEntity<Dictionary<string, object>>(
                     "Registrations",
                     r => r.HasOne<EventEntity>().WithMany()

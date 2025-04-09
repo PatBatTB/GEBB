@@ -28,5 +28,5 @@ public sealed class EventEntity
 
     public bool IsActive { get; set; }
 
-    public ICollection<UserEntity> Users { get; set; } = new List<UserEntity>();
+    public ICollection<UserEntity> RegisteredUsers { get; set; } = new List<UserEntity>();
 }

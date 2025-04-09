@@ -1,7 +1,9 @@
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
 using Telegram.Bot;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback;
 
@@ -32,6 +34,8 @@ public static class MenuHandler
         [CallbackMenu.EventParticipantLimitReplace] = CreateEventStatus.ParticipantLimit,
     };
 
+    private static readonly IEventService EService = new DbEventService(); 
+
     public static void Handle(UpdateContainer container)
     {
         if (container.CallbackData?.Menu is not { } menu)
@@ -61,10 +65,37 @@ public static class MenuHandler
 
     private static void EventRegisterMenuHandle(UpdateContainer container)
     {
-        //TODO распарсить мероприятие.
-        //TODO проверить, есть ли места
-        //TODO если есть - зарегистрировать.
-        //TODO если нет - сообщение, что места закончились.
+        if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
+        {
+            throw new Exception("Event not found in DB");
+        }
+        
+        if (eventDto.ParticipantLimit > 0 && eventDto.ParticipantLimit <= eventDto.RegisteredUsers.Count)
+        {
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "К сожалению, места на это мероприятие закончились.",
+                showAlert: true,
+                cancellationToken: container.Token);
+            Thread.Sleep(200);
+        }
+        else
+        {
+            EService.RegisterUser(eventDto, container.UserDto);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Вы успешно зарегистрировались на мероприятие.",
+                showAlert: true,
+                cancellationToken: container.Token);
+            Thread.Sleep(200);
+        }
+        
+        container.BotClient.EditMessageReplyMarkup(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            replyMarkup: InlineKeyboardMarkup.Empty(),
+            cancellationToken: container.Token);
+        Thread.Sleep(200);
     }
 
     private static void CallbackUnknownMenu(UpdateContainer container)
