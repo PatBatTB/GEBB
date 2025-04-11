@@ -22,6 +22,7 @@ public static class MenuHandler
         [CallbackMenu.EventParticipantLimitReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventDescriptionReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventRegister] = EventRegisterMenuHandle,
+        [CallbackMenu.EventHandle] = EventListHandler.Handle,
     };
 
     private static readonly Dictionary<CallbackMenu, CreateEventStatus> ReplaceStatusDict = new()
@@ -46,7 +47,6 @@ public static class MenuHandler
 
     private static void HandleEventReplaceMenu(UpdateContainer container)
     {
-        //TODO add unknown
         if (!ReplaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out CreateEventStatus status))
         {
             throw new ArgumentException("Unknown CallbackMenu");

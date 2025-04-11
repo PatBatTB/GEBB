@@ -127,7 +127,6 @@ public static class CreateEventHandler
 
     private static void HandleFinishCreating(UpdateContainer container)
     {
-        //Проверить все ли данные введены в EventEntity?
         EventDto eventDto = container.Events[0];
         string message;
         if (eventDto.Title is null ||
@@ -142,14 +141,11 @@ public static class CreateEventHandler
             return;
         }
 
-        //отправить уведомление, что мероприятие создано
         message = "Мероприятие создано. Рассылаю приглашения.";
         container.BotClient.AnswerCallbackQuery(container.CallbackData!.CallbackId!, message, true,
             cancellationToken: container.Token);
         Thread.Sleep(200);
-        //Изменить статус IsCreateComplete на true
         EService.FinishCreating(eventDto);
-        //изменить статус пользователя
         container.UserDto.UserStatus = UserStatus.Active;
         UService.Merge(container.UserDto);
         container.BotClient.SetMyCommands(
@@ -162,8 +158,6 @@ public static class CreateEventHandler
             container.Message.Id,
             container.Token);
 
-        //Запросить лист пользователей (все пользователи, кроме инициатора, со статусом не stop)
-        //Отправить приглашения всем пользователям из списка.
         string text = $"@{container.UserDto.Username} приглашает на мероприятие!\n" +
                       $"Название: {eventDto.Title}\n" +
                       $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
@@ -174,7 +168,6 @@ public static class CreateEventHandler
                       (string.IsNullOrEmpty(eventDto.Description)
                           ? ""
                           : $"Дополнительная информация: {eventDto.Description}");
-        //TODO Test sending message
         CallbackData data = new()
             { Button = CallbackButton.Registration, Menu = CallbackMenu.EventRegister, EventId = eventDto.EventId };
 

@@ -1,5 +1,6 @@
 /.idea/
 /.git/
+.vscode/
 /*/bin/
 /*/obj/
 /GEBB.sln.DotSettings.user

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
@@ -33,18 +34,17 @@ public static class MyEventsHandler
         try
         {
             //TODO проверка количества эвентов в режиме создания (если больше одного - предложить удалить и начать заново).
+            
             var chatId = container.ChatId;
             var messageId = container.Message.Id;
             var token = container.Token;
-
-            Thread.Sleep(300);
 
             await container.BotClient.DeleteMessage(
                 chatId,
                 messageId,
                 token);
 
-            Thread.Sleep(300);
+            Thread.Sleep(200);
 
             Message sent = await container.BotClient.SendMessage(
                 chatId,
@@ -55,7 +55,7 @@ public static class MyEventsHandler
             container.UserDto.UserStatus = UserStatus.CreatingEvent;
             UService.Merge(container.UserDto);
 
-            Thread.Sleep(300);
+            Thread.Sleep(200);
 
             await container.BotClient.SetMyCommands(
                 BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
@@ -72,7 +72,38 @@ public static class MyEventsHandler
 
     private static void HandleList(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            cancellationToken: container.Token);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Merge(container.UserDto);
+        Thread.Sleep(200);
+        container.BotClient.SetMyCommands(
+            commands: BotCommandProvider.GetCommandMenu(UserStatus.Active),
+            scope: BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token);
+        container.Events.AddRange(EService.GetMy(container.UserDto.UserId));
+        foreach (EventDto eventDto in container.Events)
+        {
+            string text = $"Название: {eventDto.Title}\n" +
+                          $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                          $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
+                          $"Место: {eventDto.Address}\n" +
+                          $"Максимум человек: {eventDto.ParticipantLimit}\n" +
+                          $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
+                          $"Планируемые затраты: {eventDto.Cost}\n" +
+                          (string.IsNullOrEmpty(eventDto.Description)
+                              ? ""
+                              : $"Дополнительная информация: {eventDto.Description}");
+            Thread.Sleep(200);
+            container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: text,
+                replyMarkup: InlineKeyboardProvider.GetEventHandleMarkup(CallbackMenu.EventHandle, eventDto.EventId), //TODO изменить, отменить, закрыть
+                cancellationToken: container.Token);
+        }
     }
 
     private static void HandleBack(UpdateContainer container)

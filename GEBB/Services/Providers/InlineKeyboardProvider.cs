@@ -150,6 +150,22 @@ public static class InlineKeyboardProvider
         );
     }
 
+    public static InlineKeyboardMarkup GetEventHandleMarkup(CallbackMenu menu, string eventId)
+    {
+        var edit = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
+        var cancel = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Cancel, Menu = menu, EventId = eventId});
+        var close = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
+        return new InlineKeyboardMarkup(
+            [
+                [edit, cancel],
+                [close]
+            ]
+        );
+    }
+
     public static InlineKeyboardMarkup RegistrationMarkup(CallbackData callbackData)
     {
         return new InlineKeyboardMarkup([[InlineButtonProvider.GetButton(callbackData)]]);

@@ -13,4 +13,5 @@ public interface IEventService
     ICollection<int> RemoveInCreating(long creatorId);
     void FinishCreating(EventDto eventDto);
     void RegisterUser(EventDto eventDto, UserDto userDto);
+    ICollection<EventDto> GetMy(long creatorId);
 }

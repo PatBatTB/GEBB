@@ -13,6 +13,7 @@ public enum CallbackMenu
     EventParticipantLimitReplace,
     EventDescriptionReplace,
     EventRegister,
+    EventHandle,
 }
 
 public static class CallbackMenuExtension
@@ -43,6 +44,7 @@ public static class CallbackMenuExtension
             CallbackMenu.EventParticipantLimitReplace => EventParticipantLimitReplaceText,
             CallbackMenu.EventDescriptionReplace => EventDescriptionReplaceText,
             CallbackMenu.EventRegister => throw new ArgumentException("EventRegister has no text"),
+            CallbackMenu.EventHandle => throw new ArgumentException("EventHandle has no text"),
             _ => throw new ArgumentException("Incorrect CallbackMenu enum")
         };
     }

@@ -25,6 +25,8 @@ public enum CallbackButton
     Yes,
     No,
     Registration,
+    Cancel,
+    Edit,
 }
 
 public static class CallbackButtonExtension
@@ -58,6 +60,8 @@ public static class CallbackButtonExtension
             CallbackButton.Yes => "Да",
             CallbackButton.No => "Нет",
             CallbackButton.Registration => "Зарегистрироваться",
+            CallbackButton.Cancel => "Отменить",
+            CallbackButton.Edit => "Изменить",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }

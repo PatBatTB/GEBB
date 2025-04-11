@@ -38,7 +38,9 @@ public class DbUserService : IUserService
 
     public void Remove(UserDto user)
     {
-        throw new NotImplementedException();
+        using TgBotDbContext db = new();
+        db.Remove(DtoToEntity(user));
+        db.SaveChanges();
     }
 
     /// <summary>

@@ -22,9 +22,20 @@ public class DbEventService : IEventService
     {
         (int messageId, long creatorId) = ParseEventId(eventId);
         using TgBotDbContext db = new();
-        EventEntity eventEntity = db.Events.Include(elem => elem.RegisteredUsers)
+        EventEntity eventEntity = db.Events
+            .Include(elem => elem.RegisteredUsers)
             .First(elem => elem.EventId == messageId && elem.CreatorId == creatorId);
         return (eventEntity is not { } entity) ? null : EntityToDto(entity);
+    }
+
+    public ICollection<EventDto> GetMy(long creatorId)
+    {
+        using TgBotDbContext db = new();
+        ICollection<EventEntity> entities = db.Events
+            .Include(elem => elem.RegisteredUsers)
+            .Where(elem => elem.CreatorId == creatorId && elem.DateTimeOf > DateTime.Now)
+            .ToList();
+        return entities.Select(EntityToDto).ToList();
     }
 
     public void Merge(EventDto eventDto)
