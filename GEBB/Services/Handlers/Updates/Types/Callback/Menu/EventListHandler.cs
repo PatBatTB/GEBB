@@ -1,3 +1,6 @@
+using System.Globalization;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Telegram.Bot;
@@ -12,6 +15,8 @@ public static class EventListHandler
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
     };
+
+    private static readonly IEventService EService = new DbEventService();
     
     public static void Handle(UpdateContainer container)
     {
@@ -27,10 +32,21 @@ public static class EventListHandler
 
     private static void HandleCancel(UpdateContainer container)
     {
-        //TODO Получить список зарегистрированных пользователей
-        //TODO Удалить мероприятие из базы
-        //TODO Удалить всех зарегистрированных на мероприятие пользователей из таблицы Registrations
-        //TODO Отправить всем удаленным пользователям сообщение, что мероприятие удалено.
+        EventDto eventDto = EService.Get(container.CallbackData!.EventId!)!;
+        EService.Remove(container.CallbackData!.EventId!);
+        string text = $"Мероприятие {eventDto.Title}\n" +
+                      $"{eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                      $"{eventDto.DateTimeOf!.Value:HH:mm}\n" +
+                      $"отменено организатором.";
+        foreach (UserDto userDto in eventDto.RegisteredUsers)
+        {
+            Thread.Sleep(200);
+            container.BotClient.SendMessage(
+                chatId: userDto.UserId,
+                text: text,
+                cancellationToken: container.Token);
+        }
+
         HandleClose(container);
     }
 

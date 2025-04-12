@@ -85,23 +85,37 @@ public static class MyEventsHandler
             scope: BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
         container.Events.AddRange(EService.GetMy(container.UserDto.UserId));
-        foreach (EventDto eventDto in container.Events)
+        if (container.Events.Count > 0)
         {
-            string text = $"Название: {eventDto.Title}\n" +
-                          $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                          $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
-                          $"Место: {eventDto.Address}\n" +
-                          $"Максимум человек: {eventDto.ParticipantLimit}\n" +
-                          $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
-                          $"Планируемые затраты: {eventDto.Cost}\n" +
-                          (string.IsNullOrEmpty(eventDto.Description)
-                              ? ""
-                              : $"Дополнительная информация: {eventDto.Description}");
+            foreach (EventDto eventDto in container.Events)
+            {
+                string text = $"Название: {eventDto.Title}\n" +
+                              $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                              $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
+                              $"Место: {eventDto.Address}\n" +
+                              $"Максимум человек: {eventDto.ParticipantLimit}\n" +
+                              $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
+                              $"Планируемые затраты: {eventDto.Cost}\n" +
+                              (string.IsNullOrEmpty(eventDto.Description)
+                                  ? ""
+                                  : $"Дополнительная информация: {eventDto.Description}");
+                Thread.Sleep(200);
+                container.BotClient.SendMessage(
+                    chatId: container.ChatId,
+                    text: text,
+                    replyMarkup:
+                    InlineKeyboardProvider.GetEventHandleMarkup(CallbackMenu.EventHandle,
+                        eventDto.EventId), //TODO изменить, отменить, закрыть
+                    cancellationToken: container.Token);
+            }
+        }
+        else
+        {
             Thread.Sleep(200);
-            container.BotClient.SendMessage(
-                chatId: container.ChatId,
-                text: text,
-                replyMarkup: InlineKeyboardProvider.GetEventHandleMarkup(CallbackMenu.EventHandle, eventDto.EventId), //TODO изменить, отменить, закрыть
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Созданных мероприятий нет.",
+                showAlert: true,
                 cancellationToken: container.Token);
         }
     }

@@ -62,8 +62,15 @@ public class DbEventService : IEventService
 
     public void Remove(string eventId)
     {
+        (int messageId, long creatorId) = ParseEventId(eventId);
         using TgBotDbContext db = new();
-        db.Find<EventEntity>();
+        if (db.Find<EventEntity>(messageId, creatorId) is not { } entity)
+        {
+            throw new Exception("Event not found in DB");
+        }
+
+        db.Remove(entity);
+        db.SaveChanges();
     }
 
     public void Remove(ICollection<EventDto> events)

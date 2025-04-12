@@ -47,10 +47,10 @@ public partial class TgBotDbContext : DbContext
                     "Registrations",
                     r => r.HasOne<EventEntity>().WithMany()
                         .HasForeignKey("EventId", "CreatorId")
-                        .OnDelete(DeleteBehavior.ClientSetNull),
+                        .OnDelete(DeleteBehavior.Cascade),
                     l => l.HasOne<UserEntity>().WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.ClientSetNull),
+                        .OnDelete(DeleteBehavior.Cascade),
                     j =>
                     {
                         j.HasKey("UserId", "EventId", "CreatorId");
