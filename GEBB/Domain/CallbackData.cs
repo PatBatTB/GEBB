@@ -21,6 +21,7 @@ public class CallbackData
         if (string.IsNullOrEmpty(callbackQuery?.Data)) return;
         CallbackId = callbackQuery.Id;
         string[] propsArr = callbackQuery.Data.Split(Separator);
+        //TODO Объединить следующие 2 проверки в единый метод Validate
         Prop cbProp;
         try
         {
@@ -32,6 +33,8 @@ public class CallbackData
         }
 
         if (!ValidateCount(propsArr)) throw new ArgumentException("Incorrect number of arguments");
+        //TODO Посмотреть следующий цикл (что-то очень мудрено, может стоит в методы вынести) 
+        //TODO переписать операции удаления с помощью побитовых операций
         for (int i = 1; i < propsArr.Length; i++)
         {
             foreach (Prop prop in Enum.GetValues<Prop>())
@@ -94,6 +97,7 @@ public class CallbackData
 
     public string? CallbackId { get; private set; }
 
+    //TODO переписать добавление с использованием побитовых операций
     public string GetDataString()
     {
         Prop flagProp = 0;

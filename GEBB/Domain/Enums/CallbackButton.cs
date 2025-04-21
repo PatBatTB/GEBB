@@ -27,6 +27,9 @@ public enum CallbackButton
     Registration,
     Cancel,
     Edit,
+    ParticipantList,
+    CancelRegistration,
+    ToDescription,
 }
 
 public static class CallbackButtonExtension
@@ -62,6 +65,9 @@ public static class CallbackButtonExtension
             CallbackButton.Registration => "Зарегистрироваться",
             CallbackButton.Cancel => "Отменить",
             CallbackButton.Edit => "Изменить",
+            CallbackButton.ParticipantList => "Список участников",
+            CallbackButton.CancelRegistration => "Отменить регистрацию",
+            CallbackButton.ToDescription => "К описанию",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }

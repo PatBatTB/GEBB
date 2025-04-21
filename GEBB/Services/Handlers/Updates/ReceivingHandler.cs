@@ -71,7 +71,7 @@ public class ReceivingHandler
                     return Task.CompletedTask;
             }
 
-            UserDto userDto = UService.Merge(user);
+            UserDto userDto = UService.Update(user);
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
                 new(botClient, update, chatId, message, userDto, token, callbackData);

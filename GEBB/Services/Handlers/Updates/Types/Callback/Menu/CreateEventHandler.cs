@@ -48,7 +48,7 @@ public static class CreateEventHandler
             EService.Remove(container.Events);
 
             container.UserDto.UserStatus = UserStatus.Active;
-            UService.Merge(container.UserDto);
+            UService.Update(container.UserDto);
             string message = (count == 0)
                 ? "Ошибка. Не обнаружено мероприятий в режиме создания.\nПопробуйте снова через команду /menu"
                 : "Ошибка. Обнаружено несколько мероприятий в режиме создания.\nПопробуйте снова через команду /menu";
@@ -147,7 +147,7 @@ public static class CreateEventHandler
         Thread.Sleep(200);
         EService.FinishCreating(eventDto);
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
@@ -169,7 +169,7 @@ public static class CreateEventHandler
                           ? ""
                           : $"Дополнительная информация: {eventDto.Description}");
         CallbackData data = new()
-            { Button = CallbackButton.Registration, Menu = CallbackMenu.EventRegister, EventId = eventDto.EventId };
+            { Button = CallbackButton.Registration, Menu = CallbackMenu.RegisterToEvent, EventId = eventDto.EventId };
 
         foreach (UserDto user in UService.GetInviteList(eventDto))
         {
@@ -193,7 +193,7 @@ public static class CreateEventHandler
             container.Token);
 
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
 
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),

@@ -5,7 +5,7 @@ namespace Com.Github.PatBatTB.GEBB.DataBase.User;
 
 public class DbUserService : IUserService
 {
-    public UserDto Merge(Telegram.Bot.Types.User tgUser)
+    public UserDto Update(Telegram.Bot.Types.User tgUser)
     {
         using TgBotDbContext db = new();
         var user = db.Find<UserEntity>(tgUser.Id);
@@ -29,7 +29,7 @@ public class DbUserService : IUserService
         return EntityToDto(user);
     }
 
-    public void Merge(UserDto user)
+    public void Update(UserDto user)
     {
         using TgBotDbContext db = new();
         db.Update(DtoToEntity(user));

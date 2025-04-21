@@ -53,7 +53,7 @@ public static class MyEventsHandler
                 cancellationToken: token);
 
             container.UserDto.UserStatus = UserStatus.CreatingEvent;
-            UService.Merge(container.UserDto);
+            UService.Update(container.UserDto);
 
             Thread.Sleep(200);
 
@@ -78,13 +78,13 @@ public static class MyEventsHandler
             messageId: container.Message.Id,
             cancellationToken: container.Token);
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
         Thread.Sleep(200);
         container.BotClient.SetMyCommands(
-            commands: BotCommandProvider.GetCommandMenu(UserStatus.Active),
+            commands: BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             scope: BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
-        container.Events.AddRange(EService.GetMy(container.UserDto.UserId));
+        container.Events.AddRange(EService.GetMyOwnEvents(container.UserDto.UserId));
         if (container.Events.Count > 0)
         {
             foreach (EventDto eventDto in container.Events)
@@ -104,8 +104,7 @@ public static class MyEventsHandler
                     chatId: container.ChatId,
                     text: text,
                     replyMarkup:
-                    InlineKeyboardProvider.GetEventHandleMarkup(CallbackMenu.EventHandle,
-                        eventDto.EventId), //TODO изменить, отменить, закрыть
+                    InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, eventDto.EventId),
                     cancellationToken: container.Token);
             }
         }

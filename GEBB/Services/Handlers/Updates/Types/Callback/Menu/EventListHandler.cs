@@ -1,28 +1,44 @@
 using System.Globalization;
+using System.Text;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
 
 public static class EventListHandler
 {
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonHandlerDict = new()
+    private static readonly IEventService EService = new DbEventService();
+
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonHandlerDict = new()
     {
         [CallbackButton.Edit] = HandleEdit,
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
     };
 
-    private static readonly IEventService EService = new DbEventService();
-    
-    public static void Handle(UpdateContainer container)
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonHandlerDict = new()
+    {
+        [CallbackButton.ParticipantList] = HandleParticipantList,
+        [CallbackButton.CancelRegistration] = HandleCancelRegistration,
+        [CallbackButton.Close] = HandleClose,
+    };
+
+    public static void HandleRegistered(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        RegisteredButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+    }
+
+    public static void HandleMyOwn(UpdateContainer container)
+    {
+        if (container.CallbackData?.Button is not { } button)
+            throw new NullReferenceException("CallbackData doesn't have button");
+        MyOwnButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
     private static void HandleEdit(UpdateContainer container)
@@ -48,6 +64,35 @@ public static class EventListHandler
         }
 
         HandleClose(container);
+    }
+
+    private static void HandleParticipantList(UpdateContainer container)
+    {
+        if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
+        {
+            throw new NullReferenceException("Event not found in db");
+        }
+
+        StringBuilder participantList = new();
+        foreach (UserDto userDto in eventDto.RegisteredUsers)
+        {
+            participantList.Append("@" + userDto.Username + "\n");
+        }
+        string text = $"Название: {eventDto.Title}\n" +
+                      $"Организатор: {eventDto.Creator.Username}\n" +
+                      participantList;
+        Thread.Sleep(200);
+        container.BotClient.EditMessageText(
+            container.ChatId,
+            container.Message.Id,
+            text: text,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventPart, eventDto.EventId),
+            cancellationToken: container.Token);
+    }
+
+    private static void HandleCancelRegistration(UpdateContainer container)
+    {
+        throw new NotImplementedException();
     }
 
     private static void HandleClose(UpdateContainer container)

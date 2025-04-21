@@ -54,7 +54,7 @@ public static class CommandHandler
 
         //изменить userStatus, обновить БД
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
 
         //отправить меню
         container.BotClient.SetMyCommands(
@@ -87,7 +87,7 @@ public static class CommandHandler
             text,
             cancellationToken: container.Token);
         container.UserDto.UserStatus = UserStatus.Stop;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
 
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
@@ -116,7 +116,7 @@ public static class CommandHandler
         }
 
         container.UserDto.UserStatus = UserStatus.OpenedMenu;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),
@@ -140,7 +140,7 @@ public static class CommandHandler
         ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
 
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
 
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,

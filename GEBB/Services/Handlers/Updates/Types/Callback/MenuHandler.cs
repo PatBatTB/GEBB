@@ -21,8 +21,10 @@ public static class MenuHandler
         [CallbackMenu.EventCostReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventParticipantLimitReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventDescriptionReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventRegister] = EventRegisterMenuHandle,
-        [CallbackMenu.EventHandle] = EventListHandler.Handle,
+        [CallbackMenu.RegisterToEvent] = HandleEventRegisterMenu,
+        [CallbackMenu.CreatedEvent] = EventListHandler.HandleMyOwn,
+        [CallbackMenu.RegEventDescr] = EventListHandler.HandleRegistered,
+        //TODO реализовать меню RegEventPart
     };
 
     private static readonly Dictionary<CallbackMenu, CreateEventStatus> ReplaceStatusDict = new()
@@ -63,7 +65,7 @@ public static class MenuHandler
         }
     }
 
-    private static void EventRegisterMenuHandle(UpdateContainer container)
+    private static void HandleEventRegisterMenu(UpdateContainer container)
     {
         if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
         {

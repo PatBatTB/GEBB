@@ -1,3 +1,5 @@
+using System.Globalization;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
@@ -18,6 +20,7 @@ public static class MainHandler
     };
 
     private static readonly IUserService UService = new DbUserService();
+    private static readonly IEventService EService = new DbEventService();
 
     public static void Handle(UpdateContainer container)
     {
@@ -39,7 +42,48 @@ public static class MainHandler
 
     private static void HandleMyRegistrations(UpdateContainer container)
     {
-        throw new NotImplementedException();
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Update(container.UserDto);
+        Thread.Sleep(200);
+        container.BotClient.SetMyCommands(
+            commands: BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
+            scope: BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token);
+        List<EventDto> eventList = container.Events;
+        eventList.AddRange(EService.GetRegisterEvents(container.UserDto.UserId));
+        string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
+        if (eventList.Count == 0)
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: noEventsText,
+                showAlert: true,
+                cancellationToken: container.Token);
+            return;
+        }
+        foreach (EventDto eventDto in container.Events)
+        {
+            string text = $"Название: {eventDto.Title}\n" +
+                          $"Организатор: {eventDto.Creator.Username}\n" +
+                          $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                          $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
+                          $"Место: {eventDto.Address}\n" +
+                          $"Максимум человек: {eventDto.ParticipantLimit}\n" +
+                          $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
+                          $"Планируемые затраты: {eventDto.Cost}\n" +
+                          (string.IsNullOrEmpty(eventDto.Description)
+                              ? ""
+                              : $"Дополнительная информация: {eventDto.Description}");
+            Thread.Sleep(200);
+            container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: text,
+                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.EventId),
+                cancellationToken: container.Token);
+        }
     }
 
     private static void HandleAvailableEvents(UpdateContainer container)
@@ -56,7 +100,7 @@ public static class MainHandler
             messageId,
             container.Token);
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
             BotCommandScope.Chat(container.ChatId),

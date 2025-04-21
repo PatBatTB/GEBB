@@ -28,7 +28,7 @@ public class DbEventService : IEventService
         return (eventEntity is not { } entity) ? null : EntityToDto(entity);
     }
 
-    public ICollection<EventDto> GetMy(long creatorId)
+    public ICollection<EventDto> GetMyOwnEvents(long creatorId)
     {
         using TgBotDbContext db = new();
         ICollection<EventEntity> entities = db.Events
@@ -38,7 +38,7 @@ public class DbEventService : IEventService
         return entities.Select(EntityToDto).ToList();
     }
 
-    public void Merge(EventDto eventDto)
+    public void Update(EventDto eventDto)
     {
         using TgBotDbContext db = new();
         db.Update(DtoToEntity(eventDto));
@@ -120,6 +120,20 @@ public class DbEventService : IEventService
         using TgBotDbContext db = new();
         db.Update(eventEntity);
         db.SaveChanges();
+    }
+
+    public ICollection<EventDto> GetRegisterEvents(long userId)
+    {
+        using TgBotDbContext db = new();
+        if (db.Users.Find(userId) is not { } user)
+        {
+            throw new Exception("User not found in DB.");
+        }
+        List<EventEntity> eventEntities = db.Events
+            .Include(elem => elem.RegisteredUsers)
+            .Where(elem => elem.RegisteredUsers.Contains(user) && elem.DateTimeOf > DateTime.Now)
+            .ToList();
+        return eventEntities.Select(EntityToDto).ToList();
     }
 
     private EventEntity DtoToEntity(EventDto dto)

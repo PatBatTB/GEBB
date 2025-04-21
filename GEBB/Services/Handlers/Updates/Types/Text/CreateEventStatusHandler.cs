@@ -25,32 +25,24 @@ public static class CreateEventStatusHandler
 
     public static void Handle(UpdateContainer container)
     {
-        //Проверить, что пользователь отвечает на сообщение бота.
         if (container.Message.ReplyToMessage?.From?.Id != container.BotClient.BotId) return;
 
-        //Получить список EventEntity
         container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
-
         Thread.Sleep(500);
-        //Удалить 2 сообщения: Вопрос и ответ пользователя.
         container.BotClient.DeleteMessages(
             container.ChatId,
             [container.Message.Id, container.Message.ReplyToMessage.Id],
             container.Token);
-
-
-        //проверить, что у пользователя создается только одно мероприятие
+        
         if (container.Events.Count == 1)
         {
             EventDto currentEvent = container.Events[0];
-            //Распарсить текст исходного сообщения, обновить поле
             if (UpdateEventFieldDict.GetValueOrDefault(container.Message.ReplyToMessage!.Text!, UnknownField)
                 .Invoke(container))
             {
-                EService.Merge(currentEvent);
+                EService.Update(currentEvent);
             }
 
-            //заменить кнопки в меню на кнопки с галочками.
             container.BotClient.EditMessageReplyMarkup(
                 container.ChatId,
                 currentEvent.MessageId,
@@ -60,7 +52,7 @@ public static class CreateEventStatusHandler
         }
 
         container.UserDto.UserStatus = UserStatus.Active;
-        UService.Merge(container.UserDto);
+        UService.Update(container.UserDto);
 
         container.BotClient.SetMyCommands(
             BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
@@ -96,7 +88,6 @@ public static class CreateEventStatusHandler
 
     private static bool UpdateTitleField(UpdateContainer container)
     {
-        //проверка, что сообщение не пустое
         if (string.IsNullOrEmpty(container.Message.Text))
         {
             string message = "Название мероприятия не может быть пустым. Ввести еще раз?";
