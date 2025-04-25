@@ -2,6 +2,7 @@ namespace Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 public enum CallbackMenu
 {
+    //TODO Для Callbackdata использовать технические названия, а не имя энама
     Main,
     MyEvents,
     CreateEvent,
@@ -10,8 +11,8 @@ public enum CallbackMenu
     EventDateTimeOfReplace,
     EventAddressReplace,
     EventCostReplace,
-    EventParticipantLimitReplace,
-    EventDescriptionReplace,
+    EventPartLimitReplace,
+    EventDescrReplace,
     RegisterToEvent,
     CreatedEvent,
     RegEventDescr,
@@ -43,8 +44,8 @@ public static class CallbackMenuExtension
             CallbackMenu.EventDateTimeOfReplace => EventDateTimeOfReplaceText,
             CallbackMenu.EventAddressReplace => EventAddressReplaceText,
             CallbackMenu.EventCostReplace => EventCostReplaceText,
-            CallbackMenu.EventParticipantLimitReplace => EventParticipantLimitReplaceText,
-            CallbackMenu.EventDescriptionReplace => EventDescriptionReplaceText,
+            CallbackMenu.EventPartLimitReplace => EventParticipantLimitReplaceText,
+            CallbackMenu.EventDescrReplace => EventDescriptionReplaceText,
             CallbackMenu.RegisterToEvent => throw new ArgumentException("RegisterToEvent has no text"),
             CallbackMenu.CreatedEvent => throw new ArgumentException("CreatedEvent has no text"),
             CallbackMenu.RegEventDescr => throw new ArgumentException("RegisteredEventDescription has no text"),

@@ -11,6 +11,8 @@ namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu
 
 public static class CreateEventHandler
 {
+    //TODO Изменить способ идентификации мероприятия. Не по MessageID, а что бы брался из БД.
+    //Необходимо для унификации формы создания эвента и изменения. 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonHandlerDict = new()
     {
         [CallbackButton.Title] = HandleTitle,
@@ -21,10 +23,10 @@ public static class CreateEventHandler
         [CallbackButton.AddressDone] = HandleAddressDone,
         [CallbackButton.Cost] = HandleCost,
         [CallbackButton.CostDone] = HandleCostDone,
-        [CallbackButton.ParticipantLimit] = HandleParticipantLimit,
-        [CallbackButton.ParticipantLimitDone] = HandleParticipantLimitDone,
-        [CallbackButton.Description] = HandleDescription,
-        [CallbackButton.DescriptionDone] = HandleDescriptionDone,
+        [CallbackButton.PartLimit] = HandleParticipantLimit,
+        [CallbackButton.PartLimitDone] = HandleParticipantLimitDone,
+        [CallbackButton.Descr] = HandleDescription,
+        [CallbackButton.DescrDone] = HandleDescriptionDone,
         [CallbackButton.FinishCreating] = HandleFinishCreating,
         [CallbackButton.Close] = HandleClose,
     };
@@ -112,7 +114,7 @@ public static class CreateEventHandler
 
     private static void HandleParticipantLimitDone(UpdateContainer container)
     {
-        MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventParticipantLimitReplace);
+        MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventPartLimitReplace);
     }
 
     private static void HandleDescription(UpdateContainer container)
@@ -122,11 +124,12 @@ public static class CreateEventHandler
 
     private static void HandleDescriptionDone(UpdateContainer container)
     {
-        MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventDescriptionReplace);
+        MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventDescrReplace);
     }
 
     private static void HandleFinishCreating(UpdateContainer container)
     {
+        //TODO должен быть флаг мероприятие создается или меняется. От этого зависит список рассылки и форма сообщения.
         EventDto eventDto = container.Events[0];
         string message;
         if (eventDto.Title is null ||
@@ -169,7 +172,7 @@ public static class CreateEventHandler
                           ? ""
                           : $"Дополнительная информация: {eventDto.Description}");
         CallbackData data = new()
-            { Button = CallbackButton.Registration, Menu = CallbackMenu.RegisterToEvent, EventId = eventDto.EventId };
+            { Button = CallbackButton.Reg, Menu = CallbackMenu.RegisterToEvent, EventId = eventDto.EventId };
 
         foreach (UserDto user in UService.GetInviteList(eventDto))
         {

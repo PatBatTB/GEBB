@@ -18,8 +18,8 @@ public static class InlineKeyboardProvider
             [CallbackMenu.EventDateTimeOfReplace] = GetYesNoMarkup,
             [CallbackMenu.EventAddressReplace] = GetYesNoMarkup,
             [CallbackMenu.EventCostReplace] = GetYesNoMarkup,
-            [CallbackMenu.EventParticipantLimitReplace] = GetYesNoMarkup,
-            [CallbackMenu.EventDescriptionReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventPartLimitReplace] = GetYesNoMarkup,
+            [CallbackMenu.EventDescrReplace] = GetYesNoMarkup,
         };
 
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, string, InlineKeyboardMarkup>>
@@ -63,9 +63,9 @@ public static class InlineKeyboardProvider
             );
         if (entity.ParticipantLimit is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.ParticipantLimit, Menu = menu }.GetDataString(),
+                new CallbackData() { Button = CallbackButton.PartLimit, Menu = menu }.GetDataString(),
                 InlineButtonProvider.GetButton(new CallbackData
-                    { Button = CallbackButton.ParticipantLimitDone, Menu = menu })
+                    { Button = CallbackButton.PartLimitDone, Menu = menu })
             );
         if (entity.Cost is not null)
             buttonsMappingDict.Add(
@@ -74,9 +74,9 @@ public static class InlineKeyboardProvider
             );
         if (entity.Description is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.Description, Menu = menu }.GetDataString(),
+                new CallbackData() { Button = CallbackButton.Descr, Menu = menu }.GetDataString(),
                 InlineButtonProvider.GetButton(
-                    new CallbackData { Button = CallbackButton.DescriptionDone, Menu = menu })
+                    new CallbackData { Button = CallbackButton.DescrDone, Menu = menu })
             );
 
         var newKeyboard = markup.InlineKeyboard.Select(row =>
@@ -90,9 +90,9 @@ public static class InlineKeyboardProvider
         var myEvents = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.MyEvents, Menu = menu });
         var myRegs = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.MyRegistrations, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.MyRegs, Menu = menu });
         var availEvents = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.AvailableEvents, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.AvailEvents, Menu = menu });
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu });
         return new InlineKeyboardMarkup(
@@ -131,9 +131,9 @@ public static class InlineKeyboardProvider
         var cost = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Cost, Menu = menu });
         var participantLimit = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.ParticipantLimit, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.PartLimit, Menu = menu });
         var description = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Description, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.Descr, Menu = menu });
         var finish = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.FinishCreating, Menu = menu });
         var close = InlineButtonProvider
@@ -182,9 +182,9 @@ public static class InlineKeyboardProvider
     private static InlineKeyboardMarkup GetRegisteredEventMarkup(CallbackMenu menu, string eventId)
     {
         var participantList = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.ParticipantList, Menu = menu, EventId = eventId });
+            .GetButton(new CallbackData { Button = CallbackButton.PartList, Menu = menu, EventId = eventId });
         var cancel = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.CancelRegistration, Menu = menu, EventId = eventId});
+            .GetButton(new CallbackData { Button = CallbackButton.CancelReg, Menu = menu, EventId = eventId});
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId });
         return new InlineKeyboardMarkup(
@@ -199,9 +199,9 @@ public static class InlineKeyboardProvider
     private static InlineKeyboardMarkup GetAlterRegisteredEventMarkup(CallbackMenu menu, string eventId)
     {
         var toDescription = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.ToDescription, Menu = menu, EventId = eventId });
+            .GetButton(new CallbackData { Button = CallbackButton.ToDescr, Menu = menu, EventId = eventId });
         var cancel = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.CancelRegistration, Menu = menu, EventId = eventId });
+            .GetButton(new CallbackData { Button = CallbackButton.CancelReg, Menu = menu, EventId = eventId });
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(

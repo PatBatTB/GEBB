@@ -122,6 +122,18 @@ public class DbEventService : IEventService
         db.SaveChanges();
     }
 
+    public void CancelRegistration(EventDto eventDto, UserDto userDto)
+    {
+        (int messageId, long creatorId) = ParseEventId(eventDto.EventId);
+        long userId = userDto.UserId;
+        using TgBotDbContext db = new();
+        db.Database.ExecuteSqlRaw(
+            """
+            DELETE FROM Registrations
+            WHERE UserId = {0} AND EventId = {1} AND CreatorId = {2}
+            """, userId, messageId, creatorId);
+    }
+
     public ICollection<EventDto> GetRegisterEvents(long userId)
     {
         using TgBotDbContext db = new();
@@ -139,7 +151,7 @@ public class DbEventService : IEventService
     private EventEntity DtoToEntity(EventDto dto)
     {
         (int messageId, long creatorId) = ParseEventId(dto.EventId);
-
+        ICollection<UserEntity> userEntities = dto.RegisteredUsers.Select(_dbUserService.DtoToEntity).ToList();
         return new()
         {
             EventId = messageId,
@@ -153,6 +165,7 @@ public class DbEventService : IEventService
             Description = dto.Description,
             IsCreateCompleted = dto.IsCreateCompleted,
             IsActive = dto.IsActive,
+            RegisteredUsers = userEntities,
         };
     }
 

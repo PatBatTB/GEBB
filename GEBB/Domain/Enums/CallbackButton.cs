@@ -2,9 +2,10 @@ namespace Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 public enum CallbackButton
 {
+    //TODO добавить технический код кнопок для callback, вместо использования имени энама.
     MyEvents,
-    MyRegistrations,
-    AvailableEvents,
+    MyRegs,
+    AvailEvents,
     Close,
     Create,
     List,
@@ -17,19 +18,19 @@ public enum CallbackButton
     AddressDone,
     Cost,
     CostDone,
-    ParticipantLimit,
-    ParticipantLimitDone,
-    Description,
-    DescriptionDone,
+    PartLimit,
+    PartLimitDone,
+    Descr,
+    DescrDone,
     FinishCreating,
     Yes,
     No,
-    Registration,
+    Reg,
     Cancel,
     Edit,
-    ParticipantList,
-    CancelRegistration,
-    ToDescription,
+    PartList,
+    CancelReg,
+    ToDescr,
 }
 
 public static class CallbackButtonExtension
@@ -41,8 +42,8 @@ public static class CallbackButtonExtension
         return callbackButton switch
         {
             CallbackButton.MyEvents => "Мои мероприятия",
-            CallbackButton.MyRegistrations => "Мои регистрации",
-            CallbackButton.AvailableEvents => "Доступные мероприятия",
+            CallbackButton.MyRegs => "Мои регистрации",
+            CallbackButton.AvailEvents => "Доступные мероприятия",
             CallbackButton.Close => "Закрыть",
             CallbackButton.Create => "Создать",
             CallbackButton.List => "Список",
@@ -55,19 +56,19 @@ public static class CallbackButtonExtension
             CallbackButton.AddressDone => CallbackButton.Address.Text() + DoneSymbol,
             CallbackButton.Cost => "Планируемая стоимость",
             CallbackButton.CostDone => CallbackButton.Cost.Text() + DoneSymbol,
-            CallbackButton.ParticipantLimit => "Количество гостей",
-            CallbackButton.ParticipantLimitDone => CallbackButton.ParticipantLimit.Text() + DoneSymbol,
-            CallbackButton.Description => "Описание (не обязательно)",
-            CallbackButton.DescriptionDone => CallbackButton.Description.Text() + DoneSymbol,
+            CallbackButton.PartLimit => "Количество гостей",
+            CallbackButton.PartLimitDone => CallbackButton.PartLimit.Text() + DoneSymbol,
+            CallbackButton.Descr => "Описание (не обязательно)",
+            CallbackButton.DescrDone => CallbackButton.Descr.Text() + DoneSymbol,
             CallbackButton.FinishCreating => "Завершить и создать",
             CallbackButton.Yes => "Да",
             CallbackButton.No => "Нет",
-            CallbackButton.Registration => "Зарегистрироваться",
+            CallbackButton.Reg => "Зарегистрироваться",
             CallbackButton.Cancel => "Отменить",
             CallbackButton.Edit => "Изменить",
-            CallbackButton.ParticipantList => "Список участников",
-            CallbackButton.CancelRegistration => "Отменить регистрацию",
-            CallbackButton.ToDescription => "К описанию",
+            CallbackButton.PartList => "Список участников",
+            CallbackButton.CancelReg => "Отменить регистрацию",
+            CallbackButton.ToDescr => "К описанию",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }

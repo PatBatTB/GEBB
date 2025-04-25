@@ -175,14 +175,14 @@ public static class CreateEventStatusHandler
         if (!int.TryParse(container.Message.Text, out int count))
         {
             string message = "Ошибка. Необходимо ввести число. Ввести еще раз?";
-            SendEnterAgainMenu(container, CallbackMenu.EventParticipantLimitReplace, message);
+            SendEnterAgainMenu(container, CallbackMenu.EventPartLimitReplace, message);
             return false;
         }
 
         if (count < 1)
         {
             string message = "Необходимо пригласить как минимум одного человека. Ввести еще раз?";
-            SendEnterAgainMenu(container, CallbackMenu.EventParticipantLimitReplace, message);
+            SendEnterAgainMenu(container, CallbackMenu.EventPartLimitReplace, message);
             return false;
         }
 
@@ -195,7 +195,7 @@ public static class CreateEventStatusHandler
         if (string.IsNullOrEmpty(container.Message.Text))
         {
             string message = "Описание не может быть пустым. Ввести еще раз?";
-            SendEnterAgainMenu(container, CallbackMenu.EventDescriptionReplace, message);
+            SendEnterAgainMenu(container, CallbackMenu.EventDescrReplace, message);
             return false;
         }
 

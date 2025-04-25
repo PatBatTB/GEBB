@@ -52,8 +52,7 @@ public class DbUserService : IUserService
     {
         using TgBotDbContext db = new();
         ICollection<UserEntity> entities = db.Users
-            .Where(user => user.UserStatus != UserStatus.Stop) // &&
-            //user.UserId != entity.CreatorId) //TODO Debug (отправляю себе же приглашение для отладки)
+            .Where(user => user.UserStatus != UserStatus.Stop && user.UserId != eventDto.Creator.UserId)
             .ToList();
         return entities.Select(EntityToDto).ToList();
     }

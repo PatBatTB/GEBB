@@ -14,8 +14,8 @@ public static class MainHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonHandlerDict = new()
     {
         [CallbackButton.MyEvents] = HandleEvents,
-        [CallbackButton.MyRegistrations] = HandleMyRegistrations,
-        [CallbackButton.AvailableEvents] = HandleAvailableEvents,
+        [CallbackButton.MyRegs] = HandleMyRegistrations,
+        [CallbackButton.AvailEvents] = HandleAvailableEvents,
         [CallbackButton.Close] = HandleClose,
     };
 
@@ -42,15 +42,6 @@ public static class MainHandler
 
     private static void HandleMyRegistrations(UpdateContainer container)
     {
-        Thread.Sleep(200);
-        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-        Thread.Sleep(200);
-        container.BotClient.SetMyCommands(
-            commands: BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            scope: BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
         List<EventDto> eventList = container.Events;
         eventList.AddRange(EService.GetRegisterEvents(container.UserDto.UserId));
         string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
@@ -62,32 +53,45 @@ public static class MainHandler
                 text: noEventsText,
                 showAlert: true,
                 cancellationToken: container.Token);
-            return;
         }
-        foreach (EventDto eventDto in container.Events)
+        else
         {
-            string text = $"Название: {eventDto.Title}\n" +
-                          $"Организатор: {eventDto.Creator.Username}\n" +
-                          $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                          $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
-                          $"Место: {eventDto.Address}\n" +
-                          $"Максимум человек: {eventDto.ParticipantLimit}\n" +
-                          $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
-                          $"Планируемые затраты: {eventDto.Cost}\n" +
-                          (string.IsNullOrEmpty(eventDto.Description)
-                              ? ""
-                              : $"Дополнительная информация: {eventDto.Description}");
-            Thread.Sleep(200);
-            container.BotClient.SendMessage(
-                chatId: container.ChatId,
-                text: text,
-                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.EventId),
-                cancellationToken: container.Token);
+            foreach (EventDto eventDto in container.Events)
+            {
+                string text = $"Название: {eventDto.Title}\n" +
+                              $"Организатор: {eventDto.Creator.Username}\n" +
+                              $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                              $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
+                              $"Место: {eventDto.Address}\n" +
+                              $"Максимум человек: {eventDto.ParticipantLimit}\n" +
+                              $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
+                              $"Планируемые затраты: {eventDto.Cost}\n" +
+                              (string.IsNullOrEmpty(eventDto.Description)
+                                  ? ""
+                                  : $"Дополнительная информация: {eventDto.Description}");
+                Thread.Sleep(200);
+                container.BotClient.SendMessage(
+                    chatId: container.ChatId,
+                    text: text,
+                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.EventId),
+                    cancellationToken: container.Token);
+            }
         }
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+        container.UserDto.UserStatus = UserStatus.Active;
+        UService.Update(container.UserDto);
+        Thread.Sleep(200);
+        container.BotClient.SetMyCommands(
+            commands: BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
+            scope: BotCommandScope.Chat(container.ChatId),
+            cancellationToken: container.Token);
     }
 
     private static void HandleAvailableEvents(UpdateContainer container)
     {
+        //TODO получить список мероприятий с датой в будущем, со свободными местами и куда еще не зарегистрирован.
+        //TODO отправить пользователю списком сообщений (добавить кнопки регистрации и закрыть).
         throw new NotImplementedException();
     }
 

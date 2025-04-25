@@ -19,19 +19,18 @@ public static class DateTimeParser
         {
             list = groupColl.Cast<Group>().Where(e => e is not Match).Select(e => int.Parse(e.Value))
                 .ToList();
+            parsedDateTime = new DateTime(
+                day: list[0],
+                month: list[1],
+                year: list[2],
+                hour: list[3],
+                minute: list[4],
+                second: 0);
         }
         catch (Exception)
         {
             return false;
         }
-
-        parsedDateTime = new DateTime(
-            day: list[0],
-            month: list[1],
-            year: list[2],
-            hour: list[3],
-            minute: list[4],
-            second: 0);
         return true;
     }
 }

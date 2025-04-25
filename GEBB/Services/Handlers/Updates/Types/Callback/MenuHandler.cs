@@ -19,12 +19,12 @@ public static class MenuHandler
         [CallbackMenu.EventDateTimeOfReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventAddressReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventCostReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventParticipantLimitReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventDescriptionReplace] = HandleEventReplaceMenu,
+        [CallbackMenu.EventPartLimitReplace] = HandleEventReplaceMenu,
+        [CallbackMenu.EventDescrReplace] = HandleEventReplaceMenu,
         [CallbackMenu.RegisterToEvent] = HandleEventRegisterMenu,
         [CallbackMenu.CreatedEvent] = EventListHandler.HandleMyOwn,
-        [CallbackMenu.RegEventDescr] = EventListHandler.HandleRegistered,
-        //TODO реализовать меню RegEventPart
+        [CallbackMenu.RegEventDescr] = EventListHandler.HandleRegisteredDescr,
+        [CallbackMenu.RegEventPart] = EventListHandler.HandleRegisteredPart,
     };
 
     private static readonly Dictionary<CallbackMenu, CreateEventStatus> ReplaceStatusDict = new()
@@ -34,7 +34,7 @@ public static class MenuHandler
         [CallbackMenu.EventDateTimeOfReplace] = CreateEventStatus.DateTimeOf,
         [CallbackMenu.EventAddressReplace] = CreateEventStatus.Address,
         [CallbackMenu.EventCostReplace] = CreateEventStatus.Cost,
-        [CallbackMenu.EventParticipantLimitReplace] = CreateEventStatus.ParticipantLimit,
+        [CallbackMenu.EventPartLimitReplace] = CreateEventStatus.ParticipantLimit,
     };
 
     private static readonly IEventService EService = new DbEventService(); 
@@ -67,6 +67,8 @@ public static class MenuHandler
 
     private static void HandleEventRegisterMenu(UpdateContainer container)
     {
+        //TODO если мероприятие не найдено в базе - удалять сообщение и выдавать бабл, что мероприятие уже не актуально.
+        //TODO удалять сообщение после успешной регистрации.
         if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
         {
             throw new Exception("Event not found in DB");
