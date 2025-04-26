@@ -68,13 +68,15 @@ public static class MenuHandler
     private static void HandleEventRegisterMenu(UpdateContainer container)
     {
         //TODO если мероприятие не найдено в базе - удалять сообщение и выдавать бабл, что мероприятие уже не актуально.
-        //TODO удалять сообщение после успешной регистрации.
-        if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
+        if (EService.Get(container.CallbackData!.EventId!) is not { } eventDto)
         {
-            throw new Exception("Event not found in DB");
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Данное мероприятие больше неактуально.",
+                showAlert: true,
+                cancellationToken: container.Token);
         }
-        
-        if (eventDto.ParticipantLimit > 0 && eventDto.ParticipantLimit <= eventDto.RegisteredUsers.Count)
+        else if (eventDto.ParticipantLimit > 0 && eventDto.ParticipantLimit <= eventDto.RegisteredUsers.Count)
         {
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
@@ -94,10 +96,9 @@ public static class MenuHandler
             Thread.Sleep(200);
         }
         
-        container.BotClient.EditMessageReplyMarkup(
+        container.BotClient.DeleteMessage(
             chatId: container.ChatId,
             messageId: container.Message.Id,
-            replyMarkup: InlineKeyboardMarkup.Empty(),
             cancellationToken: container.Token);
         Thread.Sleep(200);
     }

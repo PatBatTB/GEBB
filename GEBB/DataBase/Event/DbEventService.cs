@@ -20,6 +20,7 @@ public class DbEventService : IEventService
 
     public EventDto? Get(string eventId)
     {
+        //TODO обработать ситуацию, если в БД нет евента с нужным ИД, сейчас выкидывается InvalidOperationException
         (int messageId, long creatorId) = ParseEventId(eventId);
         using TgBotDbContext db = new();
         EventEntity eventEntity = db.Events

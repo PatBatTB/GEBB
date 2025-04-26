@@ -62,9 +62,14 @@ public static class EventListHandler
 
     private static void HandleCancel(UpdateContainer container)
     {
-        //TODO Всплывающее сообщение организатору, что мероприятие отменено.
         EventDto eventDto = EService.Get(container.CallbackData!.EventId!)!;
         EService.Remove(container.CallbackData!.EventId!);
+        container.BotClient.AnswerCallbackQuery(
+            callbackQueryId: container.CallbackData.CallbackId!,
+            text: "Мероприятие отменено.",
+            showAlert: true,
+            cancellationToken: container.Token);
+        Thread.Sleep(200);
         string text = $"Мероприятие {eventDto.Title}\n" +
                       $"{eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
                       $"{eventDto.DateTimeOf!.Value:HH:mm}\n" +
@@ -106,8 +111,6 @@ public static class EventListHandler
 
     private static void HandleCancelRegistration(UpdateContainer container)
     {
-        
-        //TODO Пытается добавить новые записи, вместо того, что бы удалить.
         if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
             throw new NullReferenceException("Event not found in db");
         EService.CancelRegistration(eventDto, container.UserDto);
