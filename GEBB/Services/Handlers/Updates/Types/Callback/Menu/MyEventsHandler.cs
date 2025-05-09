@@ -75,12 +75,6 @@ public static class MyEventsHandler
 
     private static void HandleList(UpdateContainer container)
     {
-        Thread.Sleep(200);
-        container.BotClient.DeleteMessage(
-            chatId: container.ChatId,
-            messageId: container.Message.Id,
-            cancellationToken: container.Token);
-        container.UserDto.UserStatus = UserStatus.Active;
         UService.Update(container.UserDto);
         Thread.Sleep(200);
         container.BotClient.SetMyCommands(
@@ -120,6 +114,12 @@ public static class MyEventsHandler
                 showAlert: true,
                 cancellationToken: container.Token);
         }
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            cancellationToken: container.Token);
+        container.UserDto.UserStatus = UserStatus.Active;
     }
 
     private static void HandleBack(UpdateContainer container)
