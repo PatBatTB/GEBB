@@ -24,11 +24,13 @@ public static class InlineKeyboardProvider
 
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, string, InlineKeyboardMarkup>>
         InlineReplyMarkupWithIdDict = new()
-            {
-                [CallbackMenu.CreatedEvent] = GetEventHandleMarkup,
-                [CallbackMenu.RegEventDescr] = GetRegisteredEventMarkup,
-                [CallbackMenu.RegEventPart] = GetAlterRegisteredEventMarkup,
-            };
+        {
+            [CallbackMenu.CreatedEvent] = GetEventHandleMarkup,
+            [CallbackMenu.CreEventPart] = GetAlterEventHandleMarkup,
+            [CallbackMenu.RegEventDescr] = GetRegisteredEventMarkup,
+            [CallbackMenu.RegEventPart] = GetAlterRegisteredEventMarkup,
+            [CallbackMenu.RegisterToEvent] = GetRegisterMarkup,
+        };
 
     public static InlineKeyboardMarkup GetMarkup(CallbackMenu menu)
     {
@@ -99,7 +101,7 @@ public static class InlineKeyboardProvider
             [
                 [myEvents],
                 [myRegs, availEvents],
-                [close]
+                [close],
             ]
         );
     }
@@ -115,7 +117,7 @@ public static class InlineKeyboardProvider
         return new InlineKeyboardMarkup(
             [
                 [create, list],
-                [back]
+                [back],
             ]
         );
     }
@@ -147,7 +149,7 @@ public static class InlineKeyboardProvider
                 [participantLimit],
                 [description],
                 [finish],
-                [close]
+                [close],
             ]
         );
     }
@@ -158,7 +160,7 @@ public static class InlineKeyboardProvider
         var no = InlineButtonProvider.GetButton(new CallbackData { Button = CallbackButton.No, Menu = menu });
         return new InlineKeyboardMarkup(
             [
-                [yes, no]
+                [yes, no],
             ]
         );
     }
@@ -177,7 +179,26 @@ public static class InlineKeyboardProvider
             [
                 [partList],
                 [edit, cancel],
-                [close]
+                [close],
+            ]
+        );
+    }
+
+    private static InlineKeyboardMarkup GetAlterEventHandleMarkup(CallbackMenu menu, string eventId)
+    {
+        var toDescr = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.ToDescr, Menu = menu, EventId = eventId });
+        var edit = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
+        var cancel = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Cancel, Menu = menu, EventId = eventId});
+        var close = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
+        return new InlineKeyboardMarkup(
+            [
+                [toDescr],
+                [edit, cancel],
+                [close],
             ]
         );
     }
@@ -194,7 +215,7 @@ public static class InlineKeyboardProvider
             [
                 [participantList],
                 [cancel],
-                [close]
+                [close],
             ]
         );
     }
@@ -211,7 +232,21 @@ public static class InlineKeyboardProvider
             [
                 [toDescription],
                 [cancel],
-                [close]
+                [close],
+            ]
+        );
+    }
+
+    private static InlineKeyboardMarkup GetRegisterMarkup(CallbackMenu menu, string eventId)
+    {
+        var register = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Reg, Menu = menu, EventId = eventId });
+        var close = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId });
+        return new InlineKeyboardMarkup(
+            [
+                [register],
+                [close],
             ]
         );
     }
@@ -223,11 +258,11 @@ public static class InlineKeyboardProvider
 
     private static InlineKeyboardMarkup UnknownMarkup(CallbackMenu menu)
     {
-        throw new ArgumentException("Unknown CallbackMenu");
+        throw new ArgumentException("InlineKeyboardProvider: Unknown CallbackMenu");
     }
 
     private static InlineKeyboardMarkup UnknownMarkup(CallbackMenu menu, string eventId)
     {
-        throw new ArgumentException("Unknown CallbackMenu");
+        throw new ArgumentException("InlineKeyboardProvider: Unknown CallbackMenu");
     }
 }

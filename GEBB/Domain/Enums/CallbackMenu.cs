@@ -17,6 +17,7 @@ public enum CallbackMenu
     CreatedEvent,
     RegEventDescr,
     RegEventPart,
+    CreEventPart,
 }
 
 public static class CallbackMenuExtension
@@ -50,6 +51,7 @@ public static class CallbackMenuExtension
             CallbackMenu.CreatedEvent => throw new ArgumentException("CreatedEvent has no text"),
             CallbackMenu.RegEventDescr => throw new ArgumentException("RegisteredEventDescription has no text"),
             CallbackMenu.RegEventPart => throw new ArgumentException("RegisteredEventParticipants has no text"),
+            CallbackMenu.CreEventPart => throw new ArgumentException("CreateEventParticipants has no text"),
             _ => throw new ArgumentException("Incorrect CallbackMenu enum")
         };
     }

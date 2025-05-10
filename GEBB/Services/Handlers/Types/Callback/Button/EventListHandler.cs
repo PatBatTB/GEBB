@@ -16,6 +16,15 @@ public static class EventListHandler
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
     {
+        [CallbackButton.PartList] = HandleMyOwnParticipantList,
+        [CallbackButton.Edit] = HandleEdit,
+        [CallbackButton.Cancel] = HandleCancel,
+        [CallbackButton.Close] = HandleClose,
+    };
+
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonPartDict = new()
+    {
+        [CallbackButton.ToDescr] = HandleMyOwnToDescription,
         [CallbackButton.Edit] = HandleEdit,
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
@@ -42,6 +51,13 @@ public static class EventListHandler
         MyOwnButtonDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
+    public static void HandleMyOwnPart(UpdateContainer container)
+    {
+        if (container.CallbackData?.Button is not { } button)
+            throw new NullReferenceException("CallbackData doesn't have button");
+        MyOwnButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+    }
+
     public static void HandleRegisteredDescr(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
@@ -56,6 +72,44 @@ public static class EventListHandler
         RegisteredButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
+    private static void HandleMyOwnParticipantList(UpdateContainer container)
+    {
+        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
+        string participantList = GetParticipantList(appEvent);
+        string text = $"Название: {appEvent.Title}\n" +
+                      $"Участники:\n" +
+                      $"{participantList}";
+        Thread.Sleep(200);
+        container.BotClient.EditMessageText(
+            container.ChatId,
+            container.Message.Id,
+            text: text,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreEventPart, appEvent.Id),
+            cancellationToken: container.Token);
+    }
+
+    private static void HandleMyOwnToDescription(UpdateContainer container)
+    {
+        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
+        string text = $"Название: {appEvent.Title}\n" +
+                      $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                      $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
+                      $"Место: {appEvent.Address}\n" +
+                      $"Максимум человек: {appEvent.ParticipantLimit}\n" +
+                      $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
+                      $"Планируемые затраты: {appEvent.Cost}\n" +
+                      (string.IsNullOrEmpty(appEvent.Description)
+                          ? ""
+                          : $"Дополнительная информация: {appEvent.Description}");
+        Thread.Sleep(200);
+        container.BotClient.EditMessageText(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            text: text,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, appEvent.Id),  
+            cancellationToken: container.Token);
+    }
+
     private static void HandleEdit(UpdateContainer container)
     {
         //TODO открыть форму редактирования мероприятия (аналогично созданию)
@@ -63,7 +117,7 @@ public static class EventListHandler
 
     private static void HandleCancel(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!)!;
+        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
         EService.Remove(container.CallbackData!.EventId!);
         container.BotClient.AnswerCallbackQuery(
             callbackQueryId: container.CallbackData.CallbackId!,
@@ -89,14 +143,9 @@ public static class EventListHandler
 
     private static void HandleParticipantList(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData?.EventId!) is not { } appEvent)
-            throw new NullReferenceException("Event not found in db");
-
-        StringBuilder participantList = new();
-        foreach (AppUser appUser in appEvent.RegisteredUsers)
-        {
-            participantList.Append("@" + appUser.Username + "\n");
-        }
+        AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
+        string participantList = GetParticipantList(appEvent);
+        
         string text = $"Название: {appEvent.Title}\n" +
                       $"Организатор: @{appEvent.Creator.Username}\n" +
                       $"Участники:\n" +
@@ -112,8 +161,7 @@ public static class EventListHandler
 
     private static void HandleCancelRegistration(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData?.EventId!) is not { } appEvent)
-            throw new NullReferenceException("Event not found in db");
+        AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
         EService.CancelRegistration(appEvent, container.AppUser);
         container.BotClient.DeleteMessage(
             chatId: container.ChatId,
@@ -129,8 +177,7 @@ public static class EventListHandler
 
     private static void HandleToDescription(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData?.EventId!) is not { } appEvent)
-            throw new NullReferenceException("Event not found in db");
+        AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
         string text = $"Название: {appEvent.Title}\n" +
                       $"Организатор: @{appEvent.Creator.Username}\n" +
                       $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
@@ -158,6 +205,17 @@ public static class EventListHandler
             chatId: container.ChatId,
             messageId: container.Message.Id,
             cancellationToken: container.Token);
+    }
+
+    private static string GetParticipantList(AppEvent appEvent)
+    {
+        StringBuilder participantList = new();
+        foreach (AppUser appUser in appEvent.RegisteredUsers)
+        {
+            participantList.Append("@" + appUser.Username + "\n");
+        }
+
+        return participantList.ToString();
     }
 
     private static void HandleUnknown(UpdateContainer container)

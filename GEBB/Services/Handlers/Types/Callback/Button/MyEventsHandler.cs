@@ -31,10 +31,6 @@ public static class MyEventsHandler
 
     private static void HandleCreate(UpdateContainer container)
     {
-        //TODO изменить форму Эвент ИД.
-        //должно создаваться мероприятие в базе
-        //кнопки для заполнения данных мероприятия должны содержать в callback'e ид мероприятия из бд
-        
         long chatId = container.ChatId;
         int messageId = container.Message.Id;
         CancellationToken token = container.Token;
@@ -81,13 +77,6 @@ public static class MyEventsHandler
 
     private static void HandleList(UpdateContainer container)
     {
-        //TODO не помню, зачем тут юзера надо апдейтить?
-        UService.Update(container.AppUser);
-        Thread.Sleep(200);
-        container.BotClient.SetMyCommands(
-            commands: BotCommandProvider.GetCommandMenu(container.AppUser.UserStatus),
-            scope: BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
         container.Events.AddRange(EService.GetMyOwnEvents(container.AppUser.UserId));
         if (container.Events.Count > 0)
         {
@@ -107,7 +96,6 @@ public static class MyEventsHandler
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
                     text: text,
-                    //TODO реализовать кнопку со списком участников
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, appEvent.Id),  
                     cancellationToken: container.Token);
             }

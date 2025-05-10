@@ -1,5 +1,6 @@
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
@@ -19,15 +20,14 @@ public class DbEventService : IEventService
         return entities.Select(TempEntityToEvent).ToList();
     }
 
-    public AppEvent? Get(string eventId)
+    public AppEvent Get(string eventId)
     {
-        //TODO обработать ситуацию, если в БД нет евента с нужным ИД, сейчас выкидывается InvalidOperationException
         (int messageId, long creatorId) = ParseEventId(eventId);
         using TgBotDbContext db = new();
         EventEntity eventEntity = db.Events
             .Include(elem => elem.RegisteredUsers)
             .First(elem => elem.EventId == messageId && elem.CreatorId == creatorId);
-        return (eventEntity is not { } entity) ? null : EntityToEvent(entity);
+        return (eventEntity is not { } entity) ? throw new EntityNotFoundException() : EntityToEvent(entity);
     }
 
     public ICollection<AppEvent> GetMyOwnEvents(long creatorId)
@@ -55,7 +55,7 @@ public class DbEventService : IEventService
         db.SaveChanges();
     }
 
-    public AppEvent? Create(long creatorId, int messageId)
+    public AppEvent Create(long creatorId, int messageId)
     {
         using TgBotDbContext db = new();
         TempEventEntity entity = new()
@@ -157,7 +157,27 @@ public class DbEventService : IEventService
         }
         List<EventEntity> eventEntities = db.Events
             .Include(elem => elem.RegisteredUsers)
-            .Where(elem => elem.RegisteredUsers.Contains(user) && elem.DateTimeOf > DateTime.Now && elem.Status == EventStatus.Active)
+            .Where(elem => elem.RegisteredUsers.Contains(user) && 
+                           elem.DateTimeOf > DateTime.Now && 
+                           elem.Status == EventStatus.Active)
+            .ToList();
+        return eventEntities.Select(EntityToEvent).ToList();
+    }
+
+    public ICollection<AppEvent> GetAvailableEvents(long userId)
+    {
+        using TgBotDbContext db = new();
+        if (db.Users.Find(userId) is not { } user)
+        {
+            throw new Exception("User not found in DB.");
+        }
+
+        List<EventEntity> eventEntities = db.Events
+            .Include(elem => elem.RegisteredUsers)
+            .Where(elem => !elem.RegisteredUsers.Contains(user) &&
+                           (elem.RegisteredUsers.Count == 0 || elem.RegisteredUsers.Count < elem.ParticipantLimit) &&
+                           elem.DateTimeOf > DateTime.Now && 
+                           elem.Status == EventStatus.Active)
             .ToList();
         return eventEntities.Select(EntityToEvent).ToList();
     }

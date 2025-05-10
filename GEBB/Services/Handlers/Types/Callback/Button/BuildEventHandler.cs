@@ -165,8 +165,6 @@ public static class CreateEventHandler
                       (string.IsNullOrEmpty(appEvent.Description)
                           ? ""
                           : $"Дополнительная информация: {appEvent.Description}");
-        CallbackData data = new()
-            { Button = CallbackButton.Reg, Menu = CallbackMenu.RegisterToEvent, EventId = appEvent.Id };
 
         foreach (AppUser user in UService.GetInviteList(appEvent))
         {
@@ -174,7 +172,7 @@ public static class CreateEventHandler
             container.BotClient.SendMessage(
                 chatId: user.UserId,
                 text: text,
-                replyMarkup: InlineKeyboardProvider.RegistrationMarkup(data),
+                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegisterToEvent, appEvent.Id),
                 cancellationToken: container.Token);
         }
     }

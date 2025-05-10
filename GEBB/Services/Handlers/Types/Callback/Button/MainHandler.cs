@@ -43,9 +43,9 @@ public static class MainHandler
     {
         List<AppEvent> eventList = container.Events;
         eventList.AddRange(EService.GetRegisterEvents(container.AppUser.UserId));
-        string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
         if (eventList.Count == 0)
         {
+            string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
             Thread.Sleep(200);
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
@@ -83,9 +83,41 @@ public static class MainHandler
 
     private static void HandleAvailableEvents(UpdateContainer container)
     {
-        //TODO получить список мероприятий с датой в будущем, со свободными местами и куда еще не зарегистрирован.
-        //TODO отправить пользователю списком сообщений (добавить кнопки регистрации и закрыть).
-        throw new NotImplementedException();
+        container.Events.AddRange(EService.GetAvailableEvents(container.AppUser.UserId));
+        if (container.Events.Count == 0)
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "В настоящее время нет доступных для регистрации мероприятий.",
+                showAlert: true,
+                cancellationToken: container.Token);
+        }
+        else
+        {
+            foreach (AppEvent appEvent in container.Events)
+            {
+                string text = $"Название: {appEvent.Title}\n" +
+                              $"Организатор: @{appEvent.Creator.Username}\n" +
+                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
+                              $"Место: {appEvent.Address}\n" +
+                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
+                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
+                              $"Планируемые затраты: {appEvent.Cost}\n" +
+                              (string.IsNullOrEmpty(appEvent.Description)
+                                  ? ""
+                                  : $"Дополнительная информация: {appEvent.Description}");
+                Thread.Sleep(200);
+                container.BotClient.SendMessage(
+                    chatId: container.ChatId,
+                    text: text,
+                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegisterToEvent, appEvent.Id));
+            }
+        }
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleClose(UpdateContainer container)

@@ -5,7 +5,7 @@ namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
 public interface IEventService
 {
     ICollection<AppEvent> GetInCreating(long creatorId);
-    AppEvent? Get(string eventId);
+    AppEvent Get(string eventId);
     void Update(AppEvent appEvent);
     AppEvent? Create(long creatorId, int messageId);
     void Remove(string eventId);
@@ -16,4 +16,5 @@ public interface IEventService
     void CancelRegistration(AppEvent appEvent, AppUser appUser);
     ICollection<AppEvent> GetMyOwnEvents(long creatorId);
     ICollection<AppEvent> GetRegisterEvents(long userId);
+    ICollection<AppEvent> GetAvailableEvents(long userId);
 }
