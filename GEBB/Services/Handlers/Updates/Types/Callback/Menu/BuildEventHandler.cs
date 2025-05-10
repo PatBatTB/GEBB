@@ -5,7 +5,6 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
 
@@ -41,19 +40,19 @@ public static class CreateEventHandler
         int count = container.Events.Count;
         if (count is 0 or > 1)
         {
+            Thread.Sleep(200);
             container.BotClient.DeleteMessage(
                 container.ChatId,
                 container.Message.MessageId,
                 container.Token);
-            Thread.Sleep(200);
-
+            
             EService.Remove(container.Events);
-
-            container.UserDto.UserStatus = UserStatus.Active;
-            UService.Update(container.UserDto);
+            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+            
             string message = (count == 0)
                 ? "Ошибка. Не обнаружено мероприятий в режиме создания.\nПопробуйте снова через команду /menu"
                 : "Ошибка. Обнаружено несколько мероприятий в режиме создания.\nПопробуйте снова через команду /menu";
+            Thread.Sleep(200);
             container.BotClient.SendMessage(
                 chatId: container.ChatId,
                 text: message,
@@ -149,12 +148,7 @@ public static class CreateEventHandler
             cancellationToken: container.Token);
         Thread.Sleep(200);
         EService.FinishCreating(eventDto);
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
             container.ChatId,
@@ -195,14 +189,9 @@ public static class CreateEventHandler
             messageId,
             container.Token);
 
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
 
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
-        EService.Remove(eventId);
+        EService.RemoveInCreating(container.ChatId);
     }
 
     private static void CreateEventMenuUnknownButton(UpdateContainer container)

@@ -3,7 +3,6 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
 using Telegram.Bot;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback;
 
@@ -43,8 +42,7 @@ public static class MenuHandler
     {
         if (container.CallbackData?.Menu is not { } menu)
             throw new NullReferenceException("CallbackData doesn't have menu");
-        MenuHandlerDict.GetValueOrDefault(menu, CallbackUnknownMenu)
-            .Invoke(container);
+        MenuHandlerDict.GetValueOrDefault(menu, CallbackUnknownMenu).Invoke(container);
     }
 
     private static void HandleEventReplaceMenu(UpdateContainer container)

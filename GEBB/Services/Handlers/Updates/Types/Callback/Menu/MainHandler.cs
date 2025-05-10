@@ -5,7 +5,6 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
 
@@ -79,13 +78,7 @@ public static class MainHandler
         }
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-        Thread.Sleep(200);
-        container.BotClient.SetMyCommands(
-            commands: BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            scope: BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleAvailableEvents(UpdateContainer container)
@@ -103,12 +96,7 @@ public static class MainHandler
             chatId,
             messageId,
             container.Token);
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleUnknown(UpdateContainer container)

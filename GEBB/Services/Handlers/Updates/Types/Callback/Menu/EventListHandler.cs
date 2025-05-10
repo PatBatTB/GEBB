@@ -12,6 +12,7 @@ namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu
 public static class EventListHandler
 {
     private static readonly IEventService EService = new DbEventService();
+    private static readonly IUserService UService = new DbUserService();
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
     {

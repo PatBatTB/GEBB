@@ -5,7 +5,6 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types;
 
@@ -30,7 +29,6 @@ public static class CommandHandler
     private static void HandleStart(UpdateContainer container)
     {
         string text;
-        //проверка, что пользователи не могут вызывать команду, если ее нет в их меню.
         if (!Command.Start.Scope().Contains(container.UserDto.UserStatus))
         {
             text = "Вам недоступна данная команда.";
@@ -52,22 +50,12 @@ public static class CommandHandler
             text,
             cancellationToken: container.Token);
 
-        //изменить userStatus, обновить БД
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-
-        //отправить меню
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token
-        );
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleStop(UpdateContainer container)
     {
         string text;
-        //верификация пользователя
         if (!Command.Stop.Scope().Contains(container.UserDto.UserStatus))
         {
             text = "Вам недоступна данная команда.";
@@ -78,7 +66,6 @@ public static class CommandHandler
             return;
         }
 
-        //     - отправляется прощальное сообщение
         text = "Вы приостановили действия бота.\n" +
                "Вы больше не будете получать уведомлений.\n" +
                "Для возобновления участия отправьте команду /start";
@@ -86,15 +73,8 @@ public static class CommandHandler
             container.ChatId,
             text,
             cancellationToken: container.Token);
-        container.UserDto.UserStatus = UserStatus.Stop;
-        UService.Update(container.UserDto);
-
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
-
-        //удаляются все незавершенные создания мероприятий с удалением сообщений с меню.
+        
+        DataService.UpdateUserStatus(container, UserStatus.Stop, UService);
         ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
@@ -115,12 +95,7 @@ public static class CommandHandler
             return;
         }
 
-        container.UserDto.UserStatus = UserStatus.OpenedMenu;
-        UService.Update(container.UserDto);
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
+        DataService.UpdateUserStatus(container, UserStatus.OpenedMenu, UService);
 
         text = CallbackMenu.Main.Text();
         container.BotClient.SendMessage(
@@ -138,17 +113,11 @@ public static class CommandHandler
     private static void HandleCancel(UpdateContainer container)
     {
         ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
-
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
-            cancellationToken: container.Token);
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
     }
 }

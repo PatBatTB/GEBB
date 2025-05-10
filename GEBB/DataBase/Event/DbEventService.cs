@@ -22,6 +22,11 @@ public class DbEventService : IEventService
     {
         //TODO обработать ситуацию, если в БД нет евента с нужным ИД, сейчас выкидывается InvalidOperationException
         (int messageId, long creatorId) = ParseEventId(eventId);
+        return Get(messageId, creatorId);
+    }
+
+    public EventDto? Get(int messageId, long creatorId)
+    {
         using TgBotDbContext db = new();
         EventEntity eventEntity = db.Events
             .Include(elem => elem.RegisteredUsers)
@@ -46,7 +51,7 @@ public class DbEventService : IEventService
         db.SaveChanges();
     }
 
-    public void Add(int messageId, long creatorId)
+    public EventDto? Add(int messageId, long creatorId)
     {
         EventEntity entity = new()
         {
@@ -59,6 +64,7 @@ public class DbEventService : IEventService
         using TgBotDbContext db = new();
         db.Add(entity);
         db.SaveChanges();
+        return EntityToDto(entity);
     }
 
     public void Remove(string eventId)

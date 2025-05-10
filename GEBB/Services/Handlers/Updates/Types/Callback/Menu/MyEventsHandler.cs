@@ -29,48 +29,54 @@ public static class MyEventsHandler
         ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    private static async void HandleCreate(UpdateContainer container)
+    private static void HandleCreate(UpdateContainer container)
     {
-        try
+        //TODO изменить форму Эвент ИД.
+        //должно создаваться мероприятие в базе
+        //кнопки для заполнения данных мероприятия должны содержать в callback'e ид мероприятия из бд
+        
+        long chatId = container.ChatId;
+        int messageId = container.Message.Id;
+        CancellationToken token = container.Token;
+        
+        container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
+        
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: chatId,
+            messageId: messageId,
+            cancellationToken: token);
+        
+        if (container.Events.Count > 0)
         {
-            //TODO проверка количества эвентов в режиме создания (если больше одного - предложить удалить и начать заново).
-            //TODO изменить форму Эвент ИД.
-            //должно создаваться мероприятие в базе
-            //кнопки для заполнения данных мероприятия должны содержать в callback'e ид мероприятия из бд
-            
-            var chatId = container.ChatId;
-            var messageId = container.Message.Id;
-            var token = container.Token;
-
-            await container.BotClient.DeleteMessage(
-                chatId,
-                messageId,
-                token);
+            List<int> messageIds = container.Events.Select(dto => dto.MessageId).ToList();
 
             Thread.Sleep(200);
-
-            Message sent = await container.BotClient.SendMessage(
-                chatId,
-                CallbackMenu.CreateEvent.Text(),
-                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
+            container.BotClient.DeleteMessages(
+                chatId: chatId,
+                messageIds: messageIds,
                 cancellationToken: token);
-
-            container.UserDto.UserStatus = UserStatus.CreatingEvent;
-            UService.Update(container.UserDto);
-
+            
             Thread.Sleep(200);
+            container.BotClient.SendMessage(
+            chatId: chatId,
+            text: "Ошибка. Обнаружено мероприятие в режиме создания.\nПопробуйте снова через команду /menu",
+            cancellationToken: token);
 
-            await container.BotClient.SetMyCommands(
-                BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-                BotCommandScope.Chat(container.ChatId),
-                cancellationToken: container.Token);
+            EService.RemoveInCreating(chatId);
 
-            EService.Add(sent.Id, container.UserDto.UserId);
+            throw new Exception("Multiple event creating doesn't work;");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        
+        Thread.Sleep(200);
+        Message sent = container.BotClient.SendMessage(
+            chatId,
+            CallbackMenu.CreateEvent.Text(),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
+            cancellationToken: token).Result;
+        
+        EService.Add(sent.Id, container.UserDto.UserId);
+        DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, UService);
     }
 
     private static void HandleList(UpdateContainer container)
@@ -119,7 +125,7 @@ public static class MyEventsHandler
             chatId: container.ChatId,
             messageId: container.Message.Id,
             cancellationToken: container.Token);
-        container.UserDto.UserStatus = UserStatus.Active;
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleBack(UpdateContainer container)

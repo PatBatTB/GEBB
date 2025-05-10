@@ -6,8 +6,9 @@ public interface IEventService
 {
     ICollection<EventDto> GetInCreating(long creatorId);
     EventDto? Get(string eventId);
+    EventDto? Get(int messageId, long creatorId);
     void Update(EventDto eventDto);
-    void Add(int messageId, long creatorId);
+    EventDto? Add(int messageId, long creatorId);
     void Remove(string eventId);
     void Remove(ICollection<EventDto> events);
     ICollection<int> RemoveInCreating(long creatorId);

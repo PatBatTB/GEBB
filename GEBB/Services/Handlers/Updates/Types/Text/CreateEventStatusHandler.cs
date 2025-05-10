@@ -4,7 +4,6 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Text;
 
@@ -50,14 +49,8 @@ public static class CreateEventStatusHandler
                 cancellationToken: container.Token);
             return;
         }
-
-        container.UserDto.UserStatus = UserStatus.Active;
-        UService.Update(container.UserDto);
-
-        container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
-            BotCommandScope.Chat(container.ChatId),
-            cancellationToken: container.Token);
+        
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
 
         if (container.Events.Count > 1)
         {
@@ -73,7 +66,7 @@ public static class CreateEventStatusHandler
                 chatId: container.ChatId,
                 text: "Возможно произошла ошибка.\n" +
                       "Вы пытаетесь создать более одного мероприятия одновременно.\n" +
-                      "Режим создания был очищен, воспользуйтесь меню для создания нового мероприятия.");
+                      "Режим создания был очищен, воспользуйтесь командой /menu для создания нового мероприятия.");
         }
 
         if (container.Events.Count == 0)
@@ -181,7 +174,8 @@ public static class CreateEventStatusHandler
 
         if (count < 1)
         {
-            string message = "Необходимо пригласить как минимум одного человека. Ввести еще раз?";
+            string message = 
+                "Необходимо указать количество приглашенных гостей. Либо ноль, если приглашаются все желающие. Ввести еще раз?";
             SendEnterAgainMenu(container, CallbackMenu.EventPartLimitReplace, message);
             return false;
         }
