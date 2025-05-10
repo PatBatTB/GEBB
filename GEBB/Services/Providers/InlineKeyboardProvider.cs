@@ -40,7 +40,7 @@ public static class InlineKeyboardProvider
         return InlineReplyMarkupWithIdDict.GetValueOrDefault(menu, UnknownMarkup).Invoke(menu, eventId);
     }
 
-    public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(EventDto entity)
+    public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(AppEvent entity)
     {
         var menu = CallbackMenu.CreateEvent;
         var markup = GetMarkup(CallbackMenu.CreateEvent);

@@ -11,11 +11,11 @@ public static class DataService
 {
     public static void UpdateUserStatus(UpdateContainer container, UserStatus newStatus, IUserService UService)
     {
-        container.UserDto.UserStatus = newStatus;
-        UService.Update(container.UserDto);
+        container.AppUser.UserStatus = newStatus;
+        UService.Update(container.AppUser);
         Thread.Sleep(200);
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.AppUser.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
     }

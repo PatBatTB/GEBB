@@ -11,7 +11,7 @@ public class UpdateContainer(
     Update update,
     long chatId,
     Message message,
-    UserDto userDto,
+    AppUser appUser,
     CancellationToken token,
     CallbackData? callbackData = null)
 {
@@ -20,7 +20,7 @@ public class UpdateContainer(
     public long ChatId { get; } = chatId;
     public Message Message { get; } = message;
     public CallbackData? CallbackData { get; } = callbackData;
-    public UserDto UserDto { get; } = userDto;
+    public AppUser AppUser { get; } = appUser;
     public CancellationToken Token { get; } = token;
-    public List<EventDto> Events { get; } = [];
+    public List<AppEvent> Events { get; } = [];
 }

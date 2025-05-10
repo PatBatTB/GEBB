@@ -4,17 +4,16 @@ namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
 
 public interface IEventService
 {
-    ICollection<EventDto> GetInCreating(long creatorId);
-    EventDto? Get(string eventId);
-    EventDto? Get(int messageId, long creatorId);
-    void Update(EventDto eventDto);
-    EventDto? Add(int messageId, long creatorId);
+    ICollection<AppEvent> GetInCreating(long creatorId);
+    AppEvent? Get(string eventId);
+    void Update(AppEvent appEvent);
+    AppEvent? Create(long creatorId, int messageId);
     void Remove(string eventId);
-    void Remove(ICollection<EventDto> events);
+    void Remove(ICollection<AppEvent> events);
     ICollection<int> RemoveInCreating(long creatorId);
-    void FinishCreating(EventDto eventDto);
-    void RegisterUser(EventDto eventDto, UserDto userDto);
-    void CancelRegistration(EventDto eventDto, UserDto userDto);
-    ICollection<EventDto> GetMyOwnEvents(long creatorId);
-    ICollection<EventDto> GetRegisterEvents(long userId);
+    void FinishCreating(AppEvent appEvent);
+    void RegisterUser(AppEvent appEvent, AppUser appUser);
+    void CancelRegistration(AppEvent appEvent, AppUser appUser);
+    ICollection<AppEvent> GetMyOwnEvents(long creatorId);
+    ICollection<AppEvent> GetRegisterEvents(long userId);
 }

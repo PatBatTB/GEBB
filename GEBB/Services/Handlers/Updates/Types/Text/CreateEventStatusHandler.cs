@@ -26,7 +26,7 @@ public static class CreateEventStatusHandler
     {
         if (container.Message.ReplyToMessage?.From?.Id != container.BotClient.BotId) return;
 
-        container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
+        container.Events.AddRange(EService.GetInCreating(container.AppUser.UserId));
         Thread.Sleep(500);
         container.BotClient.DeleteMessages(
             container.ChatId,
@@ -35,17 +35,17 @@ public static class CreateEventStatusHandler
         
         if (container.Events.Count == 1)
         {
-            EventDto currentEvent = container.Events[0];
+            AppEvent currentAppEvent = container.Events[0];
             if (UpdateEventFieldDict.GetValueOrDefault(container.Message.ReplyToMessage!.Text!, UnknownField)
                 .Invoke(container))
             {
-                EService.Update(currentEvent);
+                EService.Update(currentAppEvent);
             }
 
             container.BotClient.EditMessageReplyMarkup(
                 container.ChatId,
-                currentEvent.MessageId,
-                InlineKeyboardProvider.GetDynamicCreateEventMarkup(currentEvent),
+                currentAppEvent.MessageId,
+                InlineKeyboardProvider.GetDynamicCreateEventMarkup(currentAppEvent),
                 cancellationToken: container.Token);
             return;
         }

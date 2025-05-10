@@ -20,7 +20,7 @@ public static class TypeHandler
     public static void Handle(UpdateContainer container)
     {
         container.BotClient.SetMyCommands(
-            BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
+            BotCommandProvider.GetCommandMenu(container.AppUser.UserStatus),
             BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token
         );
@@ -30,7 +30,7 @@ public static class TypeHandler
 
     private static void CallbackQueryHandle(UpdateContainer container)
     {
-        if (container.UserDto.UserStatus == UserStatus.Stop)
+        if (container.AppUser.UserStatus == UserStatus.Stop)
         {
             container.BotClient.SendMessage(
                 chatId: container.ChatId,

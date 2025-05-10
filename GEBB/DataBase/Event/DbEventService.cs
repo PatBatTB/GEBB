@@ -1,4 +1,5 @@
 using Com.Github.PatBatTB.GEBB.DataBase.User;
+using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
@@ -9,62 +10,65 @@ public class DbEventService : IEventService
     private readonly DbUserService _dbUserService = new();
 
 
-    public ICollection<EventDto> GetInCreating(long creatorId)
+    public ICollection<AppEvent> GetInCreating(long creatorId)
     {
         using TgBotDbContext db = new();
-        ICollection<EventEntity> entities = db.Events
-            .Where(elem => elem.CreatorId == creatorId && elem.IsCreateCompleted == false)
+        ICollection<TempEventEntity> entities = db.TempEvents
+            .Where(elem => elem.CreatorId == creatorId && elem.Status == EventStatus.Creating)
             .ToList();
-        return entities.Select(EntityToDto).ToList();
+        return entities.Select(TempEntityToEvent).ToList();
     }
 
-    public EventDto? Get(string eventId)
+    public AppEvent? Get(string eventId)
     {
         //TODO обработать ситуацию, если в БД нет евента с нужным ИД, сейчас выкидывается InvalidOperationException
         (int messageId, long creatorId) = ParseEventId(eventId);
-        return Get(messageId, creatorId);
-    }
-
-    public EventDto? Get(int messageId, long creatorId)
-    {
         using TgBotDbContext db = new();
         EventEntity eventEntity = db.Events
             .Include(elem => elem.RegisteredUsers)
             .First(elem => elem.EventId == messageId && elem.CreatorId == creatorId);
-        return (eventEntity is not { } entity) ? null : EntityToDto(entity);
+        return (eventEntity is not { } entity) ? null : EntityToEvent(entity);
     }
 
-    public ICollection<EventDto> GetMyOwnEvents(long creatorId)
+    public ICollection<AppEvent> GetMyOwnEvents(long creatorId)
     {
         using TgBotDbContext db = new();
         ICollection<EventEntity> entities = db.Events
             .Include(elem => elem.RegisteredUsers)
-            .Where(elem => elem.CreatorId == creatorId && elem.DateTimeOf > DateTime.Now)
+            .Where(elem => elem.CreatorId == creatorId && elem.DateTimeOf > DateTime.Now && elem.Status == EventStatus.Active)
             .ToList();
-        return entities.Select(EntityToDto).ToList();
+        return entities.Select(EntityToEvent).ToList();
     }
 
-    public void Update(EventDto eventDto)
+    public void Update(AppEvent appEvent)
     {
         using TgBotDbContext db = new();
-        db.Update(DtoToEntity(eventDto));
+        switch (appEvent.Status)
+        {
+            case EventStatus.Creating: case EventStatus.Editing:
+                db.Update(EventToTempEntity(appEvent));
+                break;
+            default:
+                db.Update(EventToEntity(appEvent));
+                break;
+        }
         db.SaveChanges();
     }
 
-    public EventDto? Add(int messageId, long creatorId)
+    public AppEvent? Create(long creatorId, int messageId)
     {
-        EventEntity entity = new()
+        using TgBotDbContext db = new();
+        TempEventEntity entity = new()
         {
-            EventId = messageId,
+            EventId = GetNextEventId(creatorId, db),
+            MessageId = messageId,
             CreatorId = creatorId,
             CreatedAt = DateTime.Now,
-            IsActive = false,
-            IsCreateCompleted = false
+            Status = EventStatus.Creating,
         };
-        using TgBotDbContext db = new();
         db.Add(entity);
         db.SaveChanges();
-        return EntityToDto(entity);
+        return TempEntityToEvent(entity);
     }
 
     public void Remove(string eventId)
@@ -76,15 +80,17 @@ public class DbEventService : IEventService
             throw new Exception("Event not found in DB");
         }
 
-        db.Remove(entity);
+        entity.Status = EventStatus.Deleted;
+        db.Update(entity);
         db.SaveChanges();
     }
 
-    public void Remove(ICollection<EventDto> events)
+    public void Remove(ICollection<AppEvent> events)
     {
         using TgBotDbContext db = new();
-        ICollection<EventEntity> eventEntities = events.Select(DtoToEntity).ToList();
-        db.RemoveRange(eventEntities);
+        events.ToList().ForEach(elem => elem.Status = EventStatus.Deleted);
+        ICollection<EventEntity> eventEntities = events.Select(EventToEntity).ToList();
+        db.UpdateRange(eventEntities);
         db.SaveChanges();
     }
 
@@ -96,43 +102,44 @@ public class DbEventService : IEventService
     /// <returns>ID list of deleting events.</returns>
     public ICollection<int> RemoveInCreating(long creatorId)
     {
-        List<EventEntity> eventList = [];
+        List<TempEventEntity> eventList = [];
         List<int> messageIdList = [];
         using TgBotDbContext db = new();
         eventList.AddRange(
-            db.Events.AsEnumerable()
+            db.TempEvents.AsEnumerable()
                 .Where(elem =>
-                    elem.CreatorId == creatorId &&
-                    elem.IsCreateCompleted == false));
+                    elem.CreatorId == creatorId && elem.Status == EventStatus.Creating));
         messageIdList.AddRange(eventList.Select(elem => elem.EventId).ToList());
         db.RemoveRange(eventList);
         db.SaveChanges();
         return messageIdList;
     }
 
-    public void FinishCreating(EventDto eventDto)
+    public void FinishCreating(AppEvent appEvent)
     {
-        EventEntity entity = DtoToEntity(eventDto);
-        entity.IsCreateCompleted = true;
+        TempEventEntity tempEntity = EventToTempEntity(appEvent);
+        EventEntity entity = EventToEntity(appEvent);
+        entity.Status = EventStatus.Active;
         using TgBotDbContext db = new();
-        db.Update(entity);
+        db.Add(entity);
+        db.Remove(tempEntity);
         db.SaveChanges();
     }
 
-    public void RegisterUser(EventDto eventDto, UserDto userDto)
+    public void RegisterUser(AppEvent appEvent, AppUser appUser)
     {
-        EventEntity eventEntity = DtoToEntity(eventDto);
-        UserEntity userEntity = _dbUserService.DtoToEntity(userDto);
+        EventEntity eventEntity = EventToEntity(appEvent);
+        UserEntity userEntity = _dbUserService.DtoToEntity(appUser);
         eventEntity.RegisteredUsers.Add(userEntity);
         using TgBotDbContext db = new();
         db.Update(eventEntity);
         db.SaveChanges();
     }
 
-    public void CancelRegistration(EventDto eventDto, UserDto userDto)
+    public void CancelRegistration(AppEvent appEvent, AppUser appUser)
     {
-        (int messageId, long creatorId) = ParseEventId(eventDto.EventId);
-        long userId = userDto.UserId;
+        (int messageId, long creatorId) = ParseEventId(appEvent.Id);
+        long userId = appUser.UserId;
         using TgBotDbContext db = new();
         db.Database.ExecuteSqlRaw(
             """
@@ -141,7 +148,7 @@ public class DbEventService : IEventService
             """, userId, messageId, creatorId);
     }
 
-    public ICollection<EventDto> GetRegisterEvents(long userId)
+    public ICollection<AppEvent> GetRegisterEvents(long userId)
     {
         using TgBotDbContext db = new();
         if (db.Users.Find(userId) is not { } user)
@@ -150,68 +157,110 @@ public class DbEventService : IEventService
         }
         List<EventEntity> eventEntities = db.Events
             .Include(elem => elem.RegisteredUsers)
-            .Where(elem => elem.RegisteredUsers.Contains(user) && elem.DateTimeOf > DateTime.Now)
+            .Where(elem => elem.RegisteredUsers.Contains(user) && elem.DateTimeOf > DateTime.Now && elem.Status == EventStatus.Active)
             .ToList();
-        return eventEntities.Select(EntityToDto).ToList();
+        return eventEntities.Select(EntityToEvent).ToList();
     }
 
-    private EventEntity DtoToEntity(EventDto dto)
+    private EventEntity EventToEntity(AppEvent appEvent)
     {
-        (int messageId, long creatorId) = ParseEventId(dto.EventId);
-        ICollection<UserEntity> userEntities = dto.RegisteredUsers.Select(_dbUserService.DtoToEntity).ToList();
+        (int eventId, long creatorId) = ParseEventId(appEvent.Id);
+        ICollection<UserEntity> userEntities = appEvent.RegisteredUsers.Select(_dbUserService.DtoToEntity).ToList();
         return new()
         {
-            EventId = messageId,
+            EventId = eventId,
             CreatorId = creatorId,
-            Title = dto.Title,
-            DateTimeOf = dto.DateTimeOf,
-            CreatedAt = dto.CreatedAt,
-            Address = dto.Address,
-            ParticipantLimit = dto.ParticipantLimit,
-            Cost = dto.Cost,
-            Description = dto.Description,
-            IsCreateCompleted = dto.IsCreateCompleted,
-            IsActive = dto.IsActive,
+            Title = appEvent.Title,
+            DateTimeOf = appEvent.DateTimeOf,
+            CreatedAt = appEvent.CreatedAt,
+            Address = appEvent.Address,
+            ParticipantLimit = appEvent.ParticipantLimit,
+            Cost = appEvent.Cost,
+            Description = appEvent.Description,
             RegisteredUsers = userEntities,
+            Status = appEvent.Status,
         };
     }
 
-    private EventDto EntityToDto(EventEntity entity)
+    private AppEvent EntityToEvent(EventEntity entity)
     {
         using TgBotDbContext db = new();
         UserEntity userEntity = db.Find<UserEntity>(entity.CreatorId) ?? throw new Exception("User not found in DB");
-        UserDto[] userDtos = entity.RegisteredUsers.Select(user => _dbUserService.EntityToDto(user)).ToArray();
+        AppUser[] appUsers = entity.RegisteredUsers.Select(user => _dbUserService.EntityToUser(user)).ToArray();
         return new()
         {
-            EventId = CreateEventId(entity.EventId, entity.CreatorId),
-            Creator = _dbUserService.EntityToDto(userEntity),
+            Id = CreateEventId(entity.EventId, entity.CreatorId),
+            Creator = _dbUserService.EntityToUser(userEntity),
             Title = entity.Title,
             Address = entity.Address,
             Cost = entity.Cost,
             DateTimeOf = entity.DateTimeOf,
             CreatedAt = entity.CreatedAt,
             Description = entity.Description,
-            MessageId = entity.EventId,
             ParticipantLimit = entity.ParticipantLimit,
-            RegisteredUsers = userDtos,
-            IsCreateCompleted = entity.IsCreateCompleted,
-            IsActive = entity.IsActive,
+            RegisteredUsers = appUsers,
+            Status = entity.Status,
+        };
+    }
+    
+    private AppEvent TempEntityToEvent(TempEventEntity entity)
+    {
+        using TgBotDbContext db = new();
+        UserEntity userEntity = db.Find<UserEntity>(entity.CreatorId) ?? throw new Exception("User not found in DB");
+        return new()
+        {
+            Id = CreateEventId(entity.EventId, entity.CreatorId),
+            Creator = _dbUserService.EntityToUser(userEntity),
+            MessageId = entity.MessageId,
+            Title = entity.Title,
+            Address = entity.Address,
+            Cost = entity.Cost,
+            DateTimeOf = entity.DateTimeOf,
+            CreatedAt = entity.CreatedAt,
+            Description = entity.Description,
+            ParticipantLimit = entity.ParticipantLimit,
+            Status = entity.Status,
         };
     }
 
-    private (int messageId, long creatorId) ParseEventId(string eventId)
+    private TempEventEntity EventToTempEntity(AppEvent appEvent)
     {
-        string[] ids = eventId.Split(Separator);
-        if (ids.Length != 2 || !int.TryParse(ids[0], out int messageId) || !long.TryParse(ids[1], out long creatorId))
+        (int eventId, long creatorId) = ParseEventId(appEvent.Id);
+        return new()
         {
-            throw new ArgumentException("eventId doesn't match mask \"messageId + x + creatorId\"");
+            EventId = eventId,
+            CreatorId = creatorId,
+            Title = appEvent.Title,
+            MessageId = appEvent.MessageId,
+            DateTimeOf = appEvent.DateTimeOf,
+            CreatedAt = appEvent.CreatedAt,
+            Address = appEvent.Address,
+            ParticipantLimit = appEvent.ParticipantLimit,
+            Cost = appEvent.Cost,
+            Description = appEvent.Description,
+            Status = appEvent.Status,
+        };
+    }
+
+    private (int eventId, long creatorId) ParseEventId(string appEventId)
+    {
+        string[] ids = appEventId.Split(Separator);
+        if (ids.Length != 2 || !int.TryParse(ids[0], out int eventId) || !long.TryParse(ids[1], out long creatorId))
+        {
+            throw new ArgumentException("eventId doesn't match mask \"eventId + x + creatorId\"");
         }
 
-        return (messageId, creatorId);
+        return (eventId, creatorId);
     }
 
     private string CreateEventId(int messageId, long creatorId)
     {
         return messageId + Separator + creatorId;
+    }
+
+    private int GetNextEventId(long creatorId, TgBotDbContext db)
+    {
+        IQueryable<int> ids = db.Events.Where(elem => elem.CreatorId == creatorId).Select(elem => elem.EventId);
+        return ids.Any() ? ids.Max() + 1 : 1;
     }
 }

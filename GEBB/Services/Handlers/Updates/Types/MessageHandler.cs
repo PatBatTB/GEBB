@@ -22,7 +22,7 @@ public static class MessageHandler
 
     private static void HandleText(UpdateContainer container)
     {
-        if (container.UserDto.UserStatus == UserStatus.Stop)
+        if (container.AppUser.UserStatus == UserStatus.Stop)
         {
             container.BotClient.SendMessage(
                 chatId: container.ChatId,
@@ -31,13 +31,13 @@ public static class MessageHandler
             return;
         }
 
-        if (container.UserDto.UserStatus == UserStatus.CreatingEvent)
+        if (container.AppUser.UserStatus == UserStatus.CreatingEvent)
         {
             CreateEventStatusHandler.Handle(container);
             return;
         }
 
-        Console.WriteLine($"{container.UserDto.Username} [{container.UserDto.UserId}] : {container.Message.Text}");
+        Console.WriteLine($"{container.AppUser.Username} [{container.AppUser.UserId}] : {container.Message.Text}");
     }
 
     private static void HandleUnknown(UpdateContainer container)

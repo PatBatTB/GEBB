@@ -35,7 +35,7 @@ public static class CreateEventHandler
 
     public static void Handle(UpdateContainer container)
     {
-        container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
+        container.Events.AddRange(EService.GetInCreating(container.AppUser.UserId));
 
         int count = container.Events.Count;
         if (count is 0 or > 1)
@@ -129,13 +129,13 @@ public static class CreateEventHandler
     private static void HandleFinishCreating(UpdateContainer container)
     {
         //TODO должен быть флаг мероприятие создается или меняется. От этого зависит список рассылки и форма сообщения.
-        EventDto eventDto = container.Events[0];
+        AppEvent appEvent = container.Events[0];
         string message;
-        if (eventDto.Title is null ||
-            eventDto.DateTimeOf is null ||
-            eventDto.Address is null ||
-            eventDto.Cost is null ||
-            eventDto.ParticipantLimit is null)
+        if (appEvent.Title is null ||
+            appEvent.DateTimeOf is null ||
+            appEvent.Address is null ||
+            appEvent.Cost is null ||
+            appEvent.ParticipantLimit is null)
         {
             message = "Сначала укажите все данные для мероприятия.";
             container.BotClient.AnswerCallbackQuery(container.CallbackData!.CallbackId!, message, true,
@@ -147,7 +147,7 @@ public static class CreateEventHandler
         container.BotClient.AnswerCallbackQuery(container.CallbackData!.CallbackId!, message, true,
             cancellationToken: container.Token);
         Thread.Sleep(200);
-        EService.FinishCreating(eventDto);
+        EService.FinishCreating(appEvent);
         DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
@@ -155,20 +155,20 @@ public static class CreateEventHandler
             container.Message.Id,
             container.Token);
 
-        string text = $"@{container.UserDto.Username} приглашает на мероприятие!\n" +
-                      $"Название: {eventDto.Title}\n" +
-                      $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
-                      $"Место: {eventDto.Address}\n" +
-                      $"Максимум человек: {eventDto.ParticipantLimit}\n" +
-                      $"Планируемые затраты: {eventDto.Cost}\n" +
-                      (string.IsNullOrEmpty(eventDto.Description)
+        string text = $"@{container.AppUser.Username} приглашает на мероприятие!\n" +
+                      $"Название: {appEvent.Title}\n" +
+                      $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                      $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
+                      $"Место: {appEvent.Address}\n" +
+                      $"Максимум человек: {appEvent.ParticipantLimit}\n" +
+                      $"Планируемые затраты: {appEvent.Cost}\n" +
+                      (string.IsNullOrEmpty(appEvent.Description)
                           ? ""
-                          : $"Дополнительная информация: {eventDto.Description}");
+                          : $"Дополнительная информация: {appEvent.Description}");
         CallbackData data = new()
-            { Button = CallbackButton.Reg, Menu = CallbackMenu.RegisterToEvent, EventId = eventDto.EventId };
+            { Button = CallbackButton.Reg, Menu = CallbackMenu.RegisterToEvent, EventId = appEvent.Id };
 
-        foreach (UserDto user in UService.GetInviteList(eventDto))
+        foreach (AppUser user in UService.GetInviteList(appEvent))
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(

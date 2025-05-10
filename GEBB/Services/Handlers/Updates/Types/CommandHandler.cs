@@ -29,7 +29,7 @@ public static class CommandHandler
     private static void HandleStart(UpdateContainer container)
     {
         string text;
-        if (!Command.Start.Scope().Contains(container.UserDto.UserStatus))
+        if (!Command.Start.Scope().Contains(container.AppUser.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -39,7 +39,7 @@ public static class CommandHandler
             return;
         }
 
-        text = container.UserDto.UserStatus switch
+        text = container.AppUser.UserStatus switch
         {
             UserStatus.Newuser => "Добро пожаловать!\nДля вызова меню воспользуйтесь командой /menu",
             UserStatus.Stop => "С возвращением!\nДля вызова меню воспользуйтесь командой /menu",
@@ -56,7 +56,7 @@ public static class CommandHandler
     private static void HandleStop(UpdateContainer container)
     {
         string text;
-        if (!Command.Stop.Scope().Contains(container.UserDto.UserStatus))
+        if (!Command.Stop.Scope().Contains(container.AppUser.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -75,7 +75,7 @@ public static class CommandHandler
             cancellationToken: container.Token);
         
         DataService.UpdateUserStatus(container, UserStatus.Stop, UService);
-        ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
+        ICollection<int> idList = EService.RemoveInCreating(container.AppUser.UserId);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
@@ -85,7 +85,7 @@ public static class CommandHandler
     private static void HandleMenu(UpdateContainer container)
     {
         string text;
-        if (!Command.Menu.Scope().Contains(container.UserDto.UserStatus))
+        if (!Command.Menu.Scope().Contains(container.AppUser.UserStatus))
         {
             text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
@@ -112,7 +112,17 @@ public static class CommandHandler
 
     private static void HandleCancel(UpdateContainer container)
     {
-        ICollection<int> idList = EService.RemoveInCreating(container.UserDto.UserId);
+        string text;
+        if (!Command.CancelCreate.Scope().Contains(container.AppUser.UserStatus))
+        {
+            text = "Вам недоступна данная команда.";
+            container.BotClient.SendMessage(
+                container.ChatId,
+                text,
+                cancellationToken: container.Token);
+            return;
+        }
+        ICollection<int> idList = EService.RemoveInCreating(container.AppUser.UserId);
         DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessages(
