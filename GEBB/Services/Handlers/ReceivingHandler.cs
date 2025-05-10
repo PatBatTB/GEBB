@@ -4,7 +4,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
 
 public class ReceivingHandler
 {

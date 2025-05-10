@@ -165,6 +165,8 @@ public static class InlineKeyboardProvider
 
     private static InlineKeyboardMarkup GetEventHandleMarkup(CallbackMenu menu, string eventId)
     {
+        var partList = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.PartList, Menu = menu, EventId = eventId });
         var edit = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
         var cancel = InlineButtonProvider
@@ -173,6 +175,7 @@ public static class InlineKeyboardProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(
             [
+                [partList],
                 [edit, cancel],
                 [close]
             ]

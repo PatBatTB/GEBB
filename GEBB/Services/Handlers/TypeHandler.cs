@@ -1,13 +1,13 @@
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types;
-using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
 
 public static class TypeHandler
 {

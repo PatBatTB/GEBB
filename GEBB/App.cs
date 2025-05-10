@@ -1,5 +1,5 @@
 using Com.GitHub.PatBatTB.GEBB.Domain;
-using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates;
+using Com.Github.PatBatTB.GEBB.Services.Handlers;
 using Telegram.Bot;
 
 namespace Com.GitHub.PatBatTB.GEBB;

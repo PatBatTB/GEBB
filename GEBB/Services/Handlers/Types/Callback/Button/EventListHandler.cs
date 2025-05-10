@@ -7,7 +7,7 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
 public static class EventListHandler
 {
@@ -75,11 +75,11 @@ public static class EventListHandler
                       $"{appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
                       $"{appEvent.DateTimeOf!.Value:HH:mm}\n" +
                       $"отменено организатором.";
-        foreach (AppUser userDto in appEvent.RegisteredUsers)
+        foreach (AppUser appUser in appEvent.RegisteredUsers)
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(
-                chatId: userDto.UserId,
+                chatId: appUser.UserId,
                 text: text,
                 cancellationToken: container.Token);
         }
@@ -89,16 +89,16 @@ public static class EventListHandler
 
     private static void HandleParticipantList(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
+        if (EService.Get(container.CallbackData?.EventId!) is not { } appEvent)
             throw new NullReferenceException("Event not found in db");
 
         StringBuilder participantList = new();
-        foreach (AppUser userDto in eventDto.RegisteredUsers)
+        foreach (AppUser appUser in appEvent.RegisteredUsers)
         {
-            participantList.Append("@" + userDto.Username + "\n");
+            participantList.Append("@" + appUser.Username + "\n");
         }
-        string text = $"Название: {eventDto.Title}\n" +
-                      $"Организатор: @{eventDto.Creator.Username}\n" +
+        string text = $"Название: {appEvent.Title}\n" +
+                      $"Организатор: @{appEvent.Creator.Username}\n" +
                       $"Участники:\n" +
                       $"{participantList}";
         Thread.Sleep(200);
@@ -106,15 +106,15 @@ public static class EventListHandler
             container.ChatId,
             container.Message.Id,
             text: text,
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventPart, eventDto.Id),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventPart, appEvent.Id),
             cancellationToken: container.Token);
     }
 
     private static void HandleCancelRegistration(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
+        if (EService.Get(container.CallbackData?.EventId!) is not { } appEvent)
             throw new NullReferenceException("Event not found in db");
-        EService.CancelRegistration(eventDto, container.AppUser);
+        EService.CancelRegistration(appEvent, container.AppUser);
         container.BotClient.DeleteMessage(
             chatId: container.ChatId,
             messageId: container.Message.Id,
@@ -129,25 +129,25 @@ public static class EventListHandler
 
     private static void HandleToDescription(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
+        if (EService.Get(container.CallbackData?.EventId!) is not { } appEvent)
             throw new NullReferenceException("Event not found in db");
-        string text = $"Название: {eventDto.Title}\n" +
-                      $"Организатор: @{eventDto.Creator.Username}\n" +
-                      $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
-                      $"Место: {eventDto.Address}\n" +
-                      $"Максимум человек: {eventDto.ParticipantLimit}\n" +
-                      $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
-                      $"Планируемые затраты: {eventDto.Cost}\n" +
-                      (string.IsNullOrEmpty(eventDto.Description)
+        string text = $"Название: {appEvent.Title}\n" +
+                      $"Организатор: @{appEvent.Creator.Username}\n" +
+                      $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                      $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
+                      $"Место: {appEvent.Address}\n" +
+                      $"Максимум человек: {appEvent.ParticipantLimit}\n" +
+                      $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
+                      $"Планируемые затраты: {appEvent.Cost}\n" +
+                      (string.IsNullOrEmpty(appEvent.Description)
                           ? ""
-                          : $"Дополнительная информация: {eventDto.Description}");
+                          : $"Дополнительная информация: {appEvent.Description}");
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
             messageId: container.Message.Id,
             text: text,
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.Id),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, appEvent.Id),
             cancellationToken: container.Token);
     }
 

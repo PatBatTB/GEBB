@@ -31,14 +31,14 @@ public class DbUserService : IUserService
     public void Update(AppUser appUser)
     {
         using TgBotDbContext db = new();
-        db.Update(DtoToEntity(appUser));
+        db.Update(UserToEntity(appUser));
         db.SaveChanges();
     }
 
     public void Remove(AppUser appUser)
     {
         using TgBotDbContext db = new();
-        db.Remove(DtoToEntity(appUser));
+        db.Remove(UserToEntity(appUser));
         db.SaveChanges();
     }
 
@@ -67,14 +67,14 @@ public class DbUserService : IUserService
         };
     }
 
-    public UserEntity DtoToEntity(AppUser dto)
+    public UserEntity UserToEntity(AppUser appUser)
     {
         return new()
         {
-            UserId = dto.UserId,
-            Username = dto.Username,
-            Status = dto.UserStatus,
-            RegisteredAt = dto.RegisteredAt
+            UserId = appUser.UserId,
+            Username = appUser.Username,
+            Status = appUser.UserStatus,
+            RegisteredAt = appUser.RegisteredAt
         };
     }
 }

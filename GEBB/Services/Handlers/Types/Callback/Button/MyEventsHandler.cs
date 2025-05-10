@@ -7,7 +7,7 @@ using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
 public static class MyEventsHandler
 {
@@ -91,24 +91,24 @@ public static class MyEventsHandler
         container.Events.AddRange(EService.GetMyOwnEvents(container.AppUser.UserId));
         if (container.Events.Count > 0)
         {
-            foreach (AppEvent eventDto in container.Events)
+            foreach (AppEvent appEvent in container.Events)
             {
-                string text = $"Название: {eventDto.Title}\n" +
-                              $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                              $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
-                              $"Место: {eventDto.Address}\n" +
-                              $"Максимум человек: {eventDto.ParticipantLimit}\n" +
-                              $"Зарегистрировалось: {eventDto.RegisteredUsers.Count}\n" +
-                              $"Планируемые затраты: {eventDto.Cost}\n" +
-                              (string.IsNullOrEmpty(eventDto.Description)
+                string text = $"Название: {appEvent.Title}\n" +
+                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
+                              $"Место: {appEvent.Address}\n" +
+                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
+                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
+                              $"Планируемые затраты: {appEvent.Cost}\n" +
+                              (string.IsNullOrEmpty(appEvent.Description)
                                   ? ""
-                                  : $"Дополнительная информация: {eventDto.Description}");
+                                  : $"Дополнительная информация: {appEvent.Description}");
                 Thread.Sleep(200);
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
                     text: text,
                     //TODO реализовать кнопку со списком участников
-                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, eventDto.Id),  
+                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, appEvent.Id),  
                     cancellationToken: container.Token);
             }
         }

@@ -1,10 +1,10 @@
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
-using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
+using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 using Telegram.Bot;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback;
 
 public static class MenuHandler
 {
@@ -65,7 +65,7 @@ public static class MenuHandler
 
     private static void HandleEventRegisterMenu(UpdateContainer container)
     {
-        if (EService.Get(container.CallbackData!.EventId!) is not { } eventDto)
+        if (EService.Get(container.CallbackData!.EventId!) is not { } appEvent)
         {
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
@@ -73,7 +73,7 @@ public static class MenuHandler
                 showAlert: true,
                 cancellationToken: container.Token);
         }
-        else if (eventDto.ParticipantLimit > 0 && eventDto.ParticipantLimit <= eventDto.RegisteredUsers.Count)
+        else if (appEvent.ParticipantLimit > 0 && appEvent.ParticipantLimit <= appEvent.RegisteredUsers.Count)
         {
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
@@ -84,7 +84,7 @@ public static class MenuHandler
         }
         else
         {
-            EService.RegisterUser(eventDto, container.AppUser);
+            EService.RegisterUser(appEvent, container.AppUser);
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
                 text: "Вы успешно зарегистрировались на мероприятие.",

@@ -6,7 +6,7 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types.Callback.Menu;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
 public static class CreateEventHandler
 {

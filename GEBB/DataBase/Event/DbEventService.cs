@@ -129,7 +129,7 @@ public class DbEventService : IEventService
     public void RegisterUser(AppEvent appEvent, AppUser appUser)
     {
         EventEntity eventEntity = EventToEntity(appEvent);
-        UserEntity userEntity = _dbUserService.DtoToEntity(appUser);
+        UserEntity userEntity = _dbUserService.UserToEntity(appUser);
         eventEntity.RegisteredUsers.Add(userEntity);
         using TgBotDbContext db = new();
         db.Update(eventEntity);
@@ -165,7 +165,7 @@ public class DbEventService : IEventService
     private EventEntity EventToEntity(AppEvent appEvent)
     {
         (int eventId, long creatorId) = ParseEventId(appEvent.Id);
-        ICollection<UserEntity> userEntities = appEvent.RegisteredUsers.Select(_dbUserService.DtoToEntity).ToList();
+        ICollection<UserEntity> userEntities = appEvent.RegisteredUsers.Select(_dbUserService.UserToEntity).ToList();
         return new()
         {
             EventId = eventId,
