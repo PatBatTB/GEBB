@@ -9,6 +9,7 @@ public partial class TgBotDbContext : DbContext
 {
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
+    public virtual DbSet<TempEventEntity> TempEvents { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite(AppSettings.DbConnString);
@@ -22,13 +23,27 @@ public partial class TgBotDbContext : DbContext
             entity.Property(e => e.Address).HasColumnType("varchar");
             entity.Property(e => e.Cost).HasColumnType("INTEGER");
             entity.Property(e => e.Description).HasColumnType("varchar");
-            entity.Property(e => e.IsActive).HasColumnType("bool");
-            entity.Property(e => e.IsCreateCompleted).HasColumnType("bool");
             entity.Property(e => e.ParticipantLimit).HasColumnType("INTEGER");
             entity.Property(e => e.Title).HasColumnType("varchar");
+            entity.Property(e => e.Status).HasColumnType("INTEGER");
 
             entity.HasKey(e => new { e.EventId, e.CreatorId });
             entity.HasOne(d => d.Creator).WithMany(p => p.Events).HasForeignKey(d => d.CreatorId);
+        });
+
+        modelBuilder.Entity<TempEventEntity>(entity =>
+        {
+            entity.Property(e => e.EventId).HasColumnType("INTEGER");
+            entity.Property(e => e.CreatorId).HasColumnType("BIGINT");
+            entity.Property(e => e.MessageId).HasColumnType("INTEGER");
+            entity.Property(e => e.Address).HasColumnType("varchar");
+            entity.Property(e => e.Cost).HasColumnType("INTEGER");
+            entity.Property(e => e.Description).HasColumnType("varchar");
+            entity.Property(e => e.ParticipantLimit).HasColumnType("INTEGER");
+            entity.Property(e => e.Title).HasColumnType("varchar");
+            entity.Property(e => e.Status).HasColumnType("INTEGER");
+            entity.HasKey(e => new { e.EventId, e.CreatorId });
+            entity.HasOne(d => d.Creator).WithMany(p => p.TempEvents).HasForeignKey(d => d.CreatorId);
         });
 
         modelBuilder.Entity<UserEntity>(entity =>
@@ -36,7 +51,7 @@ public partial class TgBotDbContext : DbContext
             entity.Property(e => e.UserId)
                 .ValueGeneratedNever()
                 .HasColumnType("BIGINT");
-            entity.Property(e => e.UserStatus).HasColumnType("INTEGER");
+            entity.Property(e => e.Status).HasColumnType("INTEGER");
             entity.Property(e => e.RegisteredAt).HasColumnType("timestamp");
             entity.Property(e => e.Username).HasColumnType("varchar");
 

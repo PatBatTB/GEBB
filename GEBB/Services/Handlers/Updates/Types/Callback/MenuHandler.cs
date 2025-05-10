@@ -65,7 +65,6 @@ public static class MenuHandler
 
     private static void HandleEventRegisterMenu(UpdateContainer container)
     {
-        //TODO если мероприятие не найдено в базе - удалять сообщение и выдавать бабл, что мероприятие уже не актуально.
         if (EService.Get(container.CallbackData!.EventId!) is not { } eventDto)
         {
             container.BotClient.AnswerCallbackQuery(
@@ -85,7 +84,7 @@ public static class MenuHandler
         }
         else
         {
-            EService.RegisterUser(eventDto, container.UserDto);
+            EService.RegisterUser(eventDto, container.AppUser);
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
                 text: "Вы успешно зарегистрировались на мероприятие.",

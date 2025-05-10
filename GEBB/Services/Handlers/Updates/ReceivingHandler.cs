@@ -71,10 +71,10 @@ public class ReceivingHandler
                     return Task.CompletedTask;
             }
 
-            UserDto userDto = UService.Update(user);
+            AppUser appUser = UService.Update(user);
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
-                new(botClient, update, chatId, message, userDto, token, callbackData);
+                new(botClient, update, chatId, message, appUser, token, callbackData);
             TypeHandler.Handle(updateContainer);
         }
         catch (Exception e)

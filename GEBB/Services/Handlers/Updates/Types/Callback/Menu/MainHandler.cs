@@ -41,8 +41,8 @@ public static class MainHandler
 
     private static void HandleMyRegistrations(UpdateContainer container)
     {
-        List<EventDto> eventList = container.Events;
-        eventList.AddRange(EService.GetRegisterEvents(container.UserDto.UserId));
+        List<AppEvent> eventList = container.Events;
+        eventList.AddRange(EService.GetRegisterEvents(container.AppUser.UserId));
         string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
         if (eventList.Count == 0)
         {
@@ -55,10 +55,10 @@ public static class MainHandler
         }
         else
         {
-            foreach (EventDto eventDto in container.Events)
+            foreach (AppEvent eventDto in container.Events)
             {
                 string text = $"Название: {eventDto.Title}\n" +
-                              $"Организатор: {eventDto.Creator.Username}\n" +
+                              $"Организатор: @{eventDto.Creator.Username}\n" +
                               $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
                               $"Время: {eventDto.DateTimeOf!.Value:HH:mm}\n" +
                               $"Место: {eventDto.Address}\n" +
@@ -72,7 +72,7 @@ public static class MainHandler
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
                     text: text,
-                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.EventId),
+                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.Id),
                     cancellationToken: container.Token);
             }
         }

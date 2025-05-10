@@ -5,11 +5,10 @@ namespace Com.Github.PatBatTB.GEBB.DataBase.User;
 
 public class DbUserService : IUserService
 {
-    public UserDto Update(Telegram.Bot.Types.User tgUser)
+    public AppUser Update(Telegram.Bot.Types.User tgUser)
     {
         using TgBotDbContext db = new();
-        var user = db.Find<UserEntity>(tgUser.Id);
-        if (user is not null)
+        if (db.Users.Find(tgUser.Id) is { } user)
         {
             user.Username = tgUser.Username;
         }
@@ -19,27 +18,27 @@ public class DbUserService : IUserService
             {
                 UserId = tgUser.Id,
                 Username = tgUser.Username,
-                UserStatus = UserStatus.Newuser,
+                Status = UserStatus.Newuser,
                 RegisteredAt = DateTime.Now
             };
             db.Add(user);
         }
 
         db.SaveChanges();
-        return EntityToDto(user);
+        return EntityToUser(user);
     }
 
-    public void Update(UserDto user)
+    public void Update(AppUser appUser)
     {
         using TgBotDbContext db = new();
-        db.Update(DtoToEntity(user));
+        db.Update(DtoToEntity(appUser));
         db.SaveChanges();
     }
 
-    public void Remove(UserDto user)
+    public void Remove(AppUser appUser)
     {
         using TgBotDbContext db = new();
-        db.Remove(DtoToEntity(user));
+        db.Remove(DtoToEntity(appUser));
         db.SaveChanges();
     }
 
@@ -48,33 +47,33 @@ public class DbUserService : IUserService
     /// </summary>
     /// <param name="entity">Event</param>
     /// <returns>List of usersID</returns>
-    public ICollection<UserDto> GetInviteList(EventDto eventDto)
+    public ICollection<AppUser> GetInviteList(AppEvent appEvent)
     {
         using TgBotDbContext db = new();
         ICollection<UserEntity> entities = db.Users
-            .Where(user => user.UserStatus != UserStatus.Stop && user.UserId != eventDto.Creator.UserId)
+            .Where(user => user.Status != UserStatus.Stop && user.UserId != appEvent.Creator.UserId)
             .ToList();
-        return entities.Select(EntityToDto).ToList();
+        return entities.Select(EntityToUser).ToList();
     }
 
-    public UserDto EntityToDto(UserEntity entity)
+    public AppUser EntityToUser(UserEntity entity)
     {
         return new()
         {
             UserId = entity.UserId,
             Username = entity.Username,
-            UserStatus = entity.UserStatus,
+            UserStatus = entity.Status,
             RegisteredAt = entity.RegisteredAt,
         };
     }
 
-    public UserEntity DtoToEntity(UserDto dto)
+    public UserEntity DtoToEntity(AppUser dto)
     {
         return new()
         {
             UserId = dto.UserId,
             Username = dto.Username,
-            UserStatus = dto.UserStatus,
+            Status = dto.UserStatus,
             RegisteredAt = dto.RegisteredAt
         };
     }

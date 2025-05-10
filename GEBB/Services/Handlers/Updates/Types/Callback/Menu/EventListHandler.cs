@@ -63,7 +63,7 @@ public static class EventListHandler
 
     private static void HandleCancel(UpdateContainer container)
     {
-        EventDto eventDto = EService.Get(container.CallbackData!.EventId!)!;
+        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!)!;
         EService.Remove(container.CallbackData!.EventId!);
         container.BotClient.AnswerCallbackQuery(
             callbackQueryId: container.CallbackData.CallbackId!,
@@ -71,11 +71,11 @@ public static class EventListHandler
             showAlert: true,
             cancellationToken: container.Token);
         Thread.Sleep(200);
-        string text = $"Мероприятие {eventDto.Title}\n" +
-                      $"{eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"{eventDto.DateTimeOf!.Value:HH:mm}\n" +
+        string text = $"Мероприятие {appEvent.Title}\n" +
+                      $"{appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                      $"{appEvent.DateTimeOf!.Value:HH:mm}\n" +
                       $"отменено организатором.";
-        foreach (UserDto userDto in eventDto.RegisteredUsers)
+        foreach (AppUser userDto in appEvent.RegisteredUsers)
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(
@@ -93,7 +93,7 @@ public static class EventListHandler
             throw new NullReferenceException("Event not found in db");
 
         StringBuilder participantList = new();
-        foreach (UserDto userDto in eventDto.RegisteredUsers)
+        foreach (AppUser userDto in eventDto.RegisteredUsers)
         {
             participantList.Append("@" + userDto.Username + "\n");
         }
@@ -106,7 +106,7 @@ public static class EventListHandler
             container.ChatId,
             container.Message.Id,
             text: text,
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventPart, eventDto.EventId),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventPart, eventDto.Id),
             cancellationToken: container.Token);
     }
 
@@ -114,7 +114,7 @@ public static class EventListHandler
     {
         if (EService.Get(container.CallbackData?.EventId!) is not { } eventDto)
             throw new NullReferenceException("Event not found in db");
-        EService.CancelRegistration(eventDto, container.UserDto);
+        EService.CancelRegistration(eventDto, container.AppUser);
         container.BotClient.DeleteMessage(
             chatId: container.ChatId,
             messageId: container.Message.Id,
@@ -147,7 +147,7 @@ public static class EventListHandler
             chatId: container.ChatId,
             messageId: container.Message.Id,
             text: text,
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.EventId),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, eventDto.Id),
             cancellationToken: container.Token);
     }
 

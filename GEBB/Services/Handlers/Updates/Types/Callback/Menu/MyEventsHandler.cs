@@ -39,7 +39,7 @@ public static class MyEventsHandler
         int messageId = container.Message.Id;
         CancellationToken token = container.Token;
         
-        container.Events.AddRange(EService.GetInCreating(container.UserDto.UserId));
+        container.Events.AddRange(EService.GetInCreating(container.AppUser.UserId));
         
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
@@ -75,22 +75,23 @@ public static class MyEventsHandler
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
             cancellationToken: token).Result;
         
-        EService.Add(sent.Id, container.UserDto.UserId);
+        EService.Create(container.AppUser.UserId, sent.Id);
         DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, UService);
     }
 
     private static void HandleList(UpdateContainer container)
     {
-        UService.Update(container.UserDto);
+        //TODO не помню, зачем тут юзера надо апдейтить?
+        UService.Update(container.AppUser);
         Thread.Sleep(200);
         container.BotClient.SetMyCommands(
-            commands: BotCommandProvider.GetCommandMenu(container.UserDto.UserStatus),
+            commands: BotCommandProvider.GetCommandMenu(container.AppUser.UserStatus),
             scope: BotCommandScope.Chat(container.ChatId),
             cancellationToken: container.Token);
-        container.Events.AddRange(EService.GetMyOwnEvents(container.UserDto.UserId));
+        container.Events.AddRange(EService.GetMyOwnEvents(container.AppUser.UserId));
         if (container.Events.Count > 0)
         {
-            foreach (EventDto eventDto in container.Events)
+            foreach (AppEvent eventDto in container.Events)
             {
                 string text = $"Название: {eventDto.Title}\n" +
                               $"Дата: {eventDto.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
@@ -106,8 +107,8 @@ public static class MyEventsHandler
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
                     text: text,
-                    replyMarkup:
-                    InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, eventDto.EventId),
+                    //TODO реализовать кнопку со списком участников
+                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, eventDto.Id),  
                     cancellationToken: container.Token);
             }
         }
