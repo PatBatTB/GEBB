@@ -8,7 +8,7 @@ namespace Com.Github.PatBatTB.GEBB.Services;
 
 public static class MessageSender
 {
-    public static void SendEnterDataRequest(UpdateContainer container, CreateEventStatus status)
+    public static void SendEnterDataRequest(UpdateContainer container, BuildEventStatus status)
     {
         Thread.Sleep(200);
         container.BotClient.SendMessage(

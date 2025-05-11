@@ -24,8 +24,9 @@ public static class InlineKeyboardProvider
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, string, InlineKeyboardMarkup>>
         InlineReplyMarkupWithIdDict = new()
         {
-            [CallbackMenu.BuildEvent] = GetBuildEventMarkup,
+            [CallbackMenu.CreateEvent] = GetBuildEventMarkup,
             [CallbackMenu.CreatedEvent] = GetEventHandleMarkup,
+            [CallbackMenu.EditEvent] = GetBuildEventMarkup,
             [CallbackMenu.CreEventPart] = GetAlterEventHandleMarkup,
             [CallbackMenu.RegEventDescr] = GetRegisteredEventMarkup,
             [CallbackMenu.RegEventPart] = GetAlterRegisteredEventMarkup,
@@ -42,10 +43,9 @@ public static class InlineKeyboardProvider
         return InlineReplyMarkupWithIdDict.GetValueOrDefault(menu, UnknownMarkup).Invoke(menu, eventId);
     }
 
-    public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(AppEvent entity)
+    public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(AppEvent entity, CallbackMenu menu)
     {
-        var menu = CallbackMenu.BuildEvent;
-        var markup = GetMarkup(CallbackMenu.BuildEvent, entity.Id);
+        var markup = GetMarkup(menu, entity.Id);
 
         Dictionary<string, InlineKeyboardButton> buttonsMappingDict = new();
         if (entity.Title is not null)
@@ -141,7 +141,7 @@ public static class InlineKeyboardProvider
         var description = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Descr, Menu = menu, EventId = eventId });
         var finish = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.FinishCreating, Menu = menu, EventId = eventId });
+            .GetButton(new CallbackData { Button = CallbackButton.FinishBuilding, Menu = menu, EventId = eventId });
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId });
         return new InlineKeyboardMarkup(

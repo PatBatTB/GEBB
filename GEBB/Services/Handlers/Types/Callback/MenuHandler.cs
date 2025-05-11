@@ -12,7 +12,8 @@ public static class MenuHandler
     {
         [CallbackMenu.Main] = MainHandler.Handle,
         [CallbackMenu.MyEvents] = MyEventsHandler.Handle,
-        [CallbackMenu.BuildEvent] = CreateEventHandler.Handle,
+        [CallbackMenu.CreateEvent] = BuildEventHandler.Handle,
+        [CallbackMenu.EditEvent] = BuildEventHandler.Handle,
         [CallbackMenu.EventTitleReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventDateTimeOfAgain] = HandleEventReplaceMenu,
         [CallbackMenu.EventDateTimeOfReplace] = HandleEventReplaceMenu,
@@ -27,14 +28,14 @@ public static class MenuHandler
         [CallbackMenu.RegEventPart] = EventListHandler.HandleRegisteredPart,
     };
 
-    private static readonly Dictionary<CallbackMenu, CreateEventStatus> ReplaceStatusDict = new()
+    private static readonly Dictionary<CallbackMenu, BuildEventStatus> ReplaceStatusDict = new()
     {
-        [CallbackMenu.EventTitleReplace] = CreateEventStatus.Title,
-        [CallbackMenu.EventDateTimeOfAgain] = CreateEventStatus.DateTimeOf,
-        [CallbackMenu.EventDateTimeOfReplace] = CreateEventStatus.DateTimeOf,
-        [CallbackMenu.EventAddressReplace] = CreateEventStatus.Address,
-        [CallbackMenu.EventCostReplace] = CreateEventStatus.Cost,
-        [CallbackMenu.EventPartLimitReplace] = CreateEventStatus.ParticipantLimit,
+        [CallbackMenu.EventTitleReplace] = BuildEventStatus.CreateTitle,
+        [CallbackMenu.EventDateTimeOfAgain] = BuildEventStatus.CreateDateTimeOf,
+        [CallbackMenu.EventDateTimeOfReplace] = BuildEventStatus.CreateDateTimeOf,
+        [CallbackMenu.EventAddressReplace] = BuildEventStatus.CreateAddress,
+        [CallbackMenu.EventCostReplace] = BuildEventStatus.CreateCost,
+        [CallbackMenu.EventPartLimitReplace] = BuildEventStatus.CreateParticipantLimit,
     };
 
     private static readonly IEventService EService = new DbEventService(); 
@@ -48,7 +49,7 @@ public static class MenuHandler
 
     private static void HandleEventReplaceMenu(UpdateContainer container)
     {
-        if (!ReplaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out CreateEventStatus status))
+        if (!ReplaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out BuildEventStatus status))
         {
             throw new ArgumentException("Unknown CallbackMenu");
         }

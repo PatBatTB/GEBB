@@ -40,8 +40,8 @@ public static class CommandExtension
         {
             Command.Start => [UserStatus.Newuser, UserStatus.Stop],
             Command.Menu => [UserStatus.Active, UserStatus.OpenedMenu],
-            Command.CancelCreate => [UserStatus.CreatingEvent],
-            Command.Stop => [UserStatus.Active, UserStatus.OpenedMenu, UserStatus.CreatingEvent],
+            Command.CancelCreate => [UserStatus.CreatingEvent, UserStatus.EditingEvent],
+            Command.Stop => [UserStatus.Active, UserStatus.OpenedMenu, UserStatus.CreatingEvent, UserStatus.EditingEvent],
             _ => throw new ArgumentException("Incorrect command enum")
         };
     }

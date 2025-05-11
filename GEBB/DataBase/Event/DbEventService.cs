@@ -11,11 +11,11 @@ public class DbEventService : IEventService
     private readonly DbUserService _dbUserService = new();
 
 
-    public ICollection<AppEvent> GetInCreating(long creatorId)
+    public ICollection<AppEvent> GetBuildEvents(long creatorId, EventStatus status)
     {
         using TgBotDbContext db = new();
         ICollection<BuildEventEntity> entities = db.TempEvents
-            .Where(elem => elem.CreatorId == creatorId && elem.Status == EventStatus.Creating)
+            .Where(elem => elem.CreatorId == creatorId && elem.Status == status)
             .ToList();
         return entities.Select(TempEntityToEvent).ToList();
     }
@@ -104,12 +104,13 @@ public class DbEventService : IEventService
     }
 
     /// <summary>
-    /// Delete all events in status "creating" (IsCreateComplete = false) for specify user.
+    /// Delete all events in building statuses (Creating, Editing)
     /// Returned ID list equals ID of messages with creating menus.
     /// </summary>
     /// <param name="creatorId">ID of event creator.</param>
+    /// <param name="statusList">List of statuses to delete.</param>
     /// <returns>ID list of deleting events.</returns>
-    public ICollection<int> RemoveInCreating(long creatorId)
+    public ICollection<int> RemoveInBuilding(long creatorId, List<EventStatus> statusList)
     {
         List<BuildEventEntity> eventList = [];
         List<int> messageIdList = [];
@@ -117,11 +118,21 @@ public class DbEventService : IEventService
         eventList.AddRange(
             db.TempEvents.AsEnumerable()
                 .Where(elem =>
-                    elem.CreatorId == creatorId && elem.Status == EventStatus.Creating));
+                    elem.CreatorId == creatorId && statusList.Contains(elem.Status)));
         messageIdList.AddRange(eventList.Select(elem => elem.EventId).ToList());
         db.RemoveRange(eventList);
         db.SaveChanges();
         return messageIdList;
+    }
+
+    public ICollection<int> RemoveInBuilding(long creatorId)
+    {
+        return RemoveInBuilding(creatorId, Enum.GetValues<EventStatus>().ToList());
+    }
+
+    public ICollection<int> RemoveInBuilding(long creatorId, EventStatus status)
+    {
+        return RemoveInBuilding(creatorId, [status]);
     }
 
     public void FinishCreating(AppEvent appEvent)
@@ -131,6 +142,30 @@ public class DbEventService : IEventService
         entity.Status = EventStatus.Active;
         using TgBotDbContext db = new();
         db.Add(entity);
+        db.Remove(buildEntity);
+        db.SaveChanges();
+    }
+
+    public void FinishEditing(AppEvent appEvent, out AppEvent oldEvent, out AppEvent newEvent)
+    {
+        (int eventId, long creatorId) = ParseEventId(appEvent.Id);
+        BuildEventEntity buildEntity = EventToBuildEntity(appEvent);
+        using TgBotDbContext db = new();
+        List<EventEntity> entities = db.Events.Where(elem => elem.EventId == eventId && elem.CreatorId == creatorId)
+            .Include(elem => elem.RegisteredUsers)
+            .ToList();
+        if (entities.Count == 0) throw new EntityNotFoundException();
+        EventEntity eventEntity = entities[0];
+        oldEvent = EntityToEvent(eventEntity);
+
+        eventEntity.Title = appEvent.Title;
+        eventEntity.Address = appEvent.Address;
+        eventEntity.DateTimeOf = appEvent.DateTimeOf;
+        eventEntity.Cost = appEvent.Cost;
+        eventEntity.ParticipantLimit = appEvent.ParticipantLimit;
+        eventEntity.Description = appEvent.Description;
+        newEvent = EntityToEvent(eventEntity);
+        db.Update(eventEntity);
         db.Remove(buildEntity);
         db.SaveChanges();
     }

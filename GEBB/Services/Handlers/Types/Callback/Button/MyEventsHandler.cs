@@ -35,7 +35,7 @@ public static class MyEventsHandler
         int messageId = container.Message.Id;
         CancellationToken token = container.Token;
         
-        container.Events.AddRange(EService.GetInCreating(container.AppUser.UserId));
+        container.Events.AddRange(EService.GetBuildEvents(container.AppUser.UserId, EventStatus.Creating));
         
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
@@ -59,23 +59,22 @@ public static class MyEventsHandler
             text: "Ошибка. Обнаружено мероприятие в режиме создания.\nПопробуйте снова через команду /menu",
             cancellationToken: token);
 
-            EService.RemoveInCreating(chatId);
+            EService.RemoveInBuilding(chatId, EventStatus.Creating);
 
             throw new Exception("Multiple event creating doesn't work;");
         }
         
-         //TODO
         Thread.Sleep(200);
         Message sent = container.BotClient.SendMessage(
             chatId,
-            CallbackMenu.BuildEvent.Text(),
+            CallbackMenu.CreateEvent.Text(),
             cancellationToken: token).Result;
         AppEvent appEvent = EService.Create(container.AppUser.UserId, sent.Id);
         Thread.Sleep(100);
         container.BotClient.EditMessageReplyMarkup(
             chatId: container.ChatId,
             messageId: sent.Id,
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.BuildEvent, appEvent.Id),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent, appEvent.Id),
             cancellationToken: container.Token);
 
         DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, UService);
@@ -120,7 +119,6 @@ public static class MyEventsHandler
             chatId: container.ChatId,
             messageId: container.Message.Id,
             cancellationToken: container.Token);
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleBack(UpdateContainer container)

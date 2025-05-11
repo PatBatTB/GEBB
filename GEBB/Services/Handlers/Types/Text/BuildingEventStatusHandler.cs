@@ -7,16 +7,22 @@ using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Text;
 
-public static class CreateEventStatusHandler
+public static class BuildingEventStatusHandler
 {
     private static readonly Dictionary<string, Func<UpdateContainer, bool>> UpdateEventFieldDict = new()
     {
-        [CreateEventStatus.Title.Message()] = UpdateTitleField,
-        [CreateEventStatus.DateTimeOf.Message()] = UpdateDateTimeOfField,
-        [CreateEventStatus.Address.Message()] = UpdateAddressField,
-        [CreateEventStatus.Cost.Message()] = UpdateCostField,
-        [CreateEventStatus.ParticipantLimit.Message()] = UpdateParticipantLimitField,
-        [CreateEventStatus.Description.Message()] = UpdateDescriptionField,
+        [BuildEventStatus.CreateTitle.Message()] = UpdateTitleField,
+        [BuildEventStatus.CreateDateTimeOf.Message()] = UpdateDateTimeOfField,
+        [BuildEventStatus.CreateAddress.Message()] = UpdateAddressField,
+        [BuildEventStatus.CreateCost.Message()] = UpdateCostField,
+        [BuildEventStatus.CreateParticipantLimit.Message()] = UpdateParticipantLimitField,
+        [BuildEventStatus.CreateDescription.Message()] = UpdateDescriptionField,
+        [BuildEventStatus.EditTitle.Message()] = UpdateTitleField,
+        [BuildEventStatus.EditDateTimeOf.Message()] = UpdateDateTimeOfField,
+        [BuildEventStatus.EditAddress.Message()] = UpdateAddressField,
+        [BuildEventStatus.EditCost.Message()] = UpdateCostField,
+        [BuildEventStatus.EditParticipantLimit.Message()] = UpdateParticipantLimitField,
+        [BuildEventStatus.EditDescription.Message()] = UpdateDescriptionField,
     };
 
     private static readonly IEventService EService = new DbEventService();
@@ -26,7 +32,13 @@ public static class CreateEventStatusHandler
     {
         if (container.Message.ReplyToMessage?.From?.Id != container.BotClient.BotId) return;
 
-        container.Events.AddRange(EService.GetInCreating(container.AppUser.UserId));
+        EventStatus status = (container.AppUser.UserStatus) switch
+        {
+            UserStatus.CreatingEvent => EventStatus.Creating,
+            UserStatus.EditingEvent => EventStatus.Editing,
+            _ => throw new InvalidOperationException("BuildingEventStatusHandler: Invalid UserStatus")
+        };
+        container.Events.AddRange(EService.GetBuildEvents(container.AppUser.UserId, status));
         Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             container.ChatId,
@@ -41,12 +53,15 @@ public static class CreateEventStatusHandler
             {
                 EService.Update(currentAppEvent);
             }
-
-            container.BotClient.EditMessageReplyMarkup(
-                container.ChatId,
-                currentAppEvent.MessageId,
-                InlineKeyboardProvider.GetDynamicCreateEventMarkup(currentAppEvent),
-                cancellationToken: container.Token);
+            
+            if (status == EventStatus.Creating)
+            {
+                container.BotClient.EditMessageReplyMarkup(
+                    container.ChatId,
+                    currentAppEvent.MessageId,
+                    InlineKeyboardProvider.GetDynamicCreateEventMarkup(currentAppEvent, CallbackMenu.CreateEvent),
+                    cancellationToken: container.Token);
+            }
             return;
         }
         

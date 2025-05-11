@@ -8,7 +8,6 @@ using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
@@ -128,20 +127,26 @@ public static class EventListHandler
 
     private static void HandleEdit(UpdateContainer container)
     {
-        //TODO добавить в контейнер текущий эвент.
         try
         {
             container.Events.Add(EService.Get(container.CallbackData!.EventId!));
-            //TODO открыть форму редактирования мероприятия (аналогично созданию)
+            List<AppEvent> appEvents = new();
+            appEvents.AddRange(EService.GetBuildEvents(container.ChatId, EventStatus.Editing));
+            if (appEvents.Count > 0) throw new InvalidOperationException();
             Thread.Sleep(200);
             Message sent = container.BotClient.SendMessage(
                 chatId: container.ChatId,
                 text: $"Редактирование мероприятия:\n{container.Events[0].Title}",
-                replyMarkup: InlineKeyboardMarkup.Empty(),
                 cancellationToken: container.Token).Result;
-            //TODO добавить в BuildEvent копию текущего эвента со статусом редактирование
             container.Events[0].MessageId = sent.Id;
-            //TODO может и не надо в эвент прописывать, если это сразу в маркап передавать.
+            container.Events[0] = EService.Edit(container.Events[0]);
+            Thread.Sleep(100);
+            container.BotClient.EditMessageReplyMarkup(
+                chatId: container.ChatId,
+                messageId: sent.Id,
+                replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EditEvent, container.Events[0].Id),
+                cancellationToken: container.Token);
+            DataService.UpdateUserStatus(container, UserStatus.EditingEvent, UService);
         }
         catch (EntityNotFoundException)
         {
@@ -151,6 +156,17 @@ public static class EventListHandler
                 text: "Произошла ошибка, текущее мероприятие не найдено в базе.",
                 showAlert: true,
                 cancellationToken: container.Token);
+        }
+        catch (InvalidOperationException)
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Произошла ошибка. В базе найдено другое мероприятие, которые вы редактируете. Попробуйте снова.",
+                showAlert: true,
+                cancellationToken: container.Token);
+            ICollection<int> editingIds = EService.RemoveInBuilding(container.AppUser.UserId, EventStatus.Editing);
+            container.BotClient.DeleteMessages(container.ChatId, editingIds, container.Token);
         }
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);

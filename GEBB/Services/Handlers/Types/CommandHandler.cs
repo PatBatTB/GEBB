@@ -67,7 +67,7 @@ public static class CommandHandler
         }
 
         text = "Вы приостановили действия бота.\n" +
-               "Вы больше не будете получать уведомлений.\n" +
+               "Вы больше не будете получать уведомления о новых мероприятиях.\n" +
                "Для возобновления участия отправьте команду /start";
         container.BotClient.SendMessage(
             container.ChatId,
@@ -75,7 +75,7 @@ public static class CommandHandler
             cancellationToken: container.Token);
         
         DataService.UpdateUserStatus(container, UserStatus.Stop, UService);
-        ICollection<int> idList = EService.RemoveInCreating(container.AppUser.UserId);
+        ICollection<int> idList = EService.RemoveInBuilding(container.AppUser.UserId);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
@@ -122,7 +122,7 @@ public static class CommandHandler
                 cancellationToken: container.Token);
             return;
         }
-        ICollection<int> idList = EService.RemoveInCreating(container.AppUser.UserId);
+        ICollection<int> idList = EService.RemoveInBuilding(container.AppUser.UserId);
         DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessages(

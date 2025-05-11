@@ -31,9 +31,10 @@ public static class MessageHandler
             return;
         }
 
-        if (container.AppUser.UserStatus == UserStatus.CreatingEvent)
+        if (container.AppUser.UserStatus == UserStatus.CreatingEvent || 
+            container.AppUser.UserStatus == UserStatus.EditingEvent)
         {
-            CreateEventStatusHandler.Handle(container);
+            BuildingEventStatusHandler.Handle(container);
             return;
         }
 
