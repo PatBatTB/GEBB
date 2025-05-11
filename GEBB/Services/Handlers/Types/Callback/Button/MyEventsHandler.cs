@@ -64,14 +64,20 @@ public static class MyEventsHandler
             throw new Exception("Multiple event creating doesn't work;");
         }
         
+         //TODO
         Thread.Sleep(200);
         Message sent = container.BotClient.SendMessage(
             chatId,
-            CallbackMenu.CreateEvent.Text(),
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent),
+            CallbackMenu.BuildEvent.Text(),
             cancellationToken: token).Result;
-        
-        EService.Create(container.AppUser.UserId, sent.Id);
+        AppEvent appEvent = EService.Create(container.AppUser.UserId, sent.Id);
+        Thread.Sleep(100);
+        container.BotClient.EditMessageReplyMarkup(
+            chatId: container.ChatId,
+            messageId: sent.Id,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.BuildEvent, appEvent.Id),
+            cancellationToken: container.Token);
+
         DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, UService);
     }
 

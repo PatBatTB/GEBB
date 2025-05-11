@@ -12,7 +12,6 @@ public static class InlineKeyboardProvider
         {
             [CallbackMenu.Main] = GetMainMarkup,
             [CallbackMenu.MyEvents] = GetMyEventsMarkup,
-            [CallbackMenu.CreateEvent] = GetCreateEventMarkup,
             [CallbackMenu.EventTitleReplace] = GetYesNoMarkup,
             [CallbackMenu.EventDateTimeOfAgain] = GetYesNoMarkup,
             [CallbackMenu.EventDateTimeOfReplace] = GetYesNoMarkup,
@@ -25,6 +24,7 @@ public static class InlineKeyboardProvider
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, string, InlineKeyboardMarkup>>
         InlineReplyMarkupWithIdDict = new()
         {
+            [CallbackMenu.BuildEvent] = GetBuildEventMarkup,
             [CallbackMenu.CreatedEvent] = GetEventHandleMarkup,
             [CallbackMenu.CreEventPart] = GetAlterEventHandleMarkup,
             [CallbackMenu.RegEventDescr] = GetRegisteredEventMarkup,
@@ -44,41 +44,45 @@ public static class InlineKeyboardProvider
 
     public static InlineKeyboardMarkup GetDynamicCreateEventMarkup(AppEvent entity)
     {
-        var menu = CallbackMenu.CreateEvent;
-        var markup = GetMarkup(CallbackMenu.CreateEvent);
+        var menu = CallbackMenu.BuildEvent;
+        var markup = GetMarkup(CallbackMenu.BuildEvent, entity.Id);
 
         Dictionary<string, InlineKeyboardButton> buttonsMappingDict = new();
         if (entity.Title is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.Title, Menu = menu }.GetDataString(),
-                InlineButtonProvider.GetButton(new CallbackData { Button = CallbackButton.TitleDone, Menu = menu })
+                new CallbackData() { Button = CallbackButton.Title, Menu = menu, EventId = entity.Id }.GetDataString(),
+                InlineButtonProvider
+                    .GetButton(new CallbackData { Button = CallbackButton.TitleDone, Menu = menu, EventId = entity.Id })
             );
         if (entity.DateTimeOf is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.DateTimeOf, Menu = menu }.GetDataString(),
-                InlineButtonProvider.GetButton(new CallbackData { Button = CallbackButton.DateTimeOfDone, Menu = menu })
+                new CallbackData() { Button = CallbackButton.DateTimeOf, Menu = menu, EventId = entity.Id }.GetDataString(),
+                InlineButtonProvider
+                    .GetButton(new CallbackData { Button = CallbackButton.DateTimeOfDone, Menu = menu, EventId = entity.Id })
             );
         if (entity.Address is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.Address, Menu = menu }.GetDataString(),
-                InlineButtonProvider.GetButton(new CallbackData { Button = CallbackButton.AddressDone, Menu = menu })
+                new CallbackData() { Button = CallbackButton.Address, Menu = menu, EventId = entity.Id }.GetDataString(),
+                InlineButtonProvider
+                    .GetButton(new CallbackData { Button = CallbackButton.AddressDone, Menu = menu, EventId = entity.Id })
             );
         if (entity.ParticipantLimit is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.PartLimit, Menu = menu }.GetDataString(),
-                InlineButtonProvider.GetButton(new CallbackData
-                    { Button = CallbackButton.PartLimitDone, Menu = menu })
+                new CallbackData() { Button = CallbackButton.PartLimit, Menu = menu, EventId = entity.Id }.GetDataString(),
+                InlineButtonProvider
+                    .GetButton(new CallbackData { Button = CallbackButton.PartLimitDone, Menu = menu, EventId = entity.Id })
             );
         if (entity.Cost is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.Cost, Menu = menu }.GetDataString(),
-                InlineButtonProvider.GetButton(new CallbackData { Button = CallbackButton.CostDone, Menu = menu })
+                new CallbackData() { Button = CallbackButton.Cost, Menu = menu, EventId = entity.Id }.GetDataString(),
+                InlineButtonProvider
+                    .GetButton(new CallbackData { Button = CallbackButton.CostDone, Menu = menu, EventId = entity.Id })
             );
         if (entity.Description is not null)
             buttonsMappingDict.Add(
-                new CallbackData() { Button = CallbackButton.Descr, Menu = menu }.GetDataString(),
+                new CallbackData() { Button = CallbackButton.Descr, Menu = menu, EventId = entity.Id }.GetDataString(),
                 InlineButtonProvider.GetButton(
-                    new CallbackData { Button = CallbackButton.DescrDone, Menu = menu })
+                    new CallbackData { Button = CallbackButton.DescrDone, Menu = menu, EventId = entity.Id })
             );
 
         var newKeyboard = markup.InlineKeyboard.Select(row =>
@@ -122,24 +126,24 @@ public static class InlineKeyboardProvider
         );
     }
 
-    private static InlineKeyboardMarkup GetCreateEventMarkup(CallbackMenu menu)
+    private static InlineKeyboardMarkup GetBuildEventMarkup(CallbackMenu menu, string eventId)
     {
         var title = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Title, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.Title, Menu = menu, EventId = eventId });
         var dateTimeOf = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.DateTimeOf, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.DateTimeOf, Menu = menu, EventId = eventId });
         var address = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Address, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.Address, Menu = menu, EventId = eventId });
         var cost = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Cost, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.Cost, Menu = menu, EventId = eventId });
         var participantLimit = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.PartLimit, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.PartLimit, Menu = menu, EventId = eventId });
         var description = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Descr, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.Descr, Menu = menu, EventId = eventId });
         var finish = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.FinishCreating, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.FinishCreating, Menu = menu, EventId = eventId });
         var close = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu });
+            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId });
         return new InlineKeyboardMarkup(
             [
                 [title],

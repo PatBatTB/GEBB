@@ -4,7 +4,7 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.Event;
 
-public sealed class TempEventEntity
+public sealed class BuildEventEntity
 {
     public int EventId { get; set; }
 

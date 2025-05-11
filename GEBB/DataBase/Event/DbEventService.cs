@@ -14,7 +14,7 @@ public class DbEventService : IEventService
     public ICollection<AppEvent> GetInCreating(long creatorId)
     {
         using TgBotDbContext db = new();
-        ICollection<TempEventEntity> entities = db.TempEvents
+        ICollection<BuildEventEntity> entities = db.TempEvents
             .Where(elem => elem.CreatorId == creatorId && elem.Status == EventStatus.Creating)
             .ToList();
         return entities.Select(TempEntityToEvent).ToList();
@@ -46,7 +46,7 @@ public class DbEventService : IEventService
         switch (appEvent.Status)
         {
             case EventStatus.Creating: case EventStatus.Editing:
-                db.Update(EventToTempEntity(appEvent));
+                db.Update(EventToBuildEntity(appEvent));
                 break;
             default:
                 db.Update(EventToEntity(appEvent));
@@ -58,7 +58,7 @@ public class DbEventService : IEventService
     public AppEvent Create(long creatorId, int messageId)
     {
         using TgBotDbContext db = new();
-        TempEventEntity entity = new()
+        BuildEventEntity entity = new()
         {
             EventId = GetNextEventId(creatorId, db),
             MessageId = messageId,
@@ -69,6 +69,15 @@ public class DbEventService : IEventService
         db.Add(entity);
         db.SaveChanges();
         return TempEntityToEvent(entity);
+    }
+
+    public AppEvent Edit(AppEvent appEvent)
+    {
+        using TgBotDbContext db = new();
+        appEvent.Status = EventStatus.Editing;
+        db.Add(EventToBuildEntity(appEvent));
+        db.SaveChanges();
+        return appEvent;
     }
 
     public void Remove(string eventId)
@@ -102,7 +111,7 @@ public class DbEventService : IEventService
     /// <returns>ID list of deleting events.</returns>
     public ICollection<int> RemoveInCreating(long creatorId)
     {
-        List<TempEventEntity> eventList = [];
+        List<BuildEventEntity> eventList = [];
         List<int> messageIdList = [];
         using TgBotDbContext db = new();
         eventList.AddRange(
@@ -117,12 +126,12 @@ public class DbEventService : IEventService
 
     public void FinishCreating(AppEvent appEvent)
     {
-        TempEventEntity tempEntity = EventToTempEntity(appEvent);
+        BuildEventEntity buildEntity = EventToBuildEntity(appEvent);
         EventEntity entity = EventToEntity(appEvent);
         entity.Status = EventStatus.Active;
         using TgBotDbContext db = new();
         db.Add(entity);
-        db.Remove(tempEntity);
+        db.Remove(buildEntity);
         db.SaveChanges();
     }
 
@@ -175,6 +184,7 @@ public class DbEventService : IEventService
         List<EventEntity> eventEntities = db.Events
             .Include(elem => elem.RegisteredUsers)
             .Where(elem => !elem.RegisteredUsers.Contains(user) &&
+                           elem.CreatorId != userId &&
                            (elem.RegisteredUsers.Count == 0 || elem.RegisteredUsers.Count < elem.ParticipantLimit) &&
                            elem.DateTimeOf > DateTime.Now && 
                            elem.Status == EventStatus.Active)
@@ -223,7 +233,7 @@ public class DbEventService : IEventService
         };
     }
     
-    private AppEvent TempEntityToEvent(TempEventEntity entity)
+    private AppEvent TempEntityToEvent(BuildEventEntity entity)
     {
         using TgBotDbContext db = new();
         UserEntity userEntity = db.Find<UserEntity>(entity.CreatorId) ?? throw new Exception("User not found in DB");
@@ -243,7 +253,7 @@ public class DbEventService : IEventService
         };
     }
 
-    private TempEventEntity EventToTempEntity(AppEvent appEvent)
+    private BuildEventEntity EventToBuildEntity(AppEvent appEvent)
     {
         (int eventId, long creatorId) = ParseEventId(appEvent.Id);
         return new()

@@ -9,7 +9,7 @@ public partial class TgBotDbContext : DbContext
 {
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
-    public virtual DbSet<TempEventEntity> TempEvents { get; set; }
+    public virtual DbSet<BuildEventEntity> TempEvents { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite(AppSettings.DbConnString);
@@ -31,7 +31,7 @@ public partial class TgBotDbContext : DbContext
             entity.HasOne(d => d.Creator).WithMany(p => p.Events).HasForeignKey(d => d.CreatorId);
         });
 
-        modelBuilder.Entity<TempEventEntity>(entity =>
+        modelBuilder.Entity<BuildEventEntity>(entity =>
         {
             entity.Property(e => e.EventId).HasColumnType("INTEGER");
             entity.Property(e => e.CreatorId).HasColumnType("BIGINT");

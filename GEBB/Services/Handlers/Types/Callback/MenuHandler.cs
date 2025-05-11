@@ -1,7 +1,6 @@
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
-using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 using Telegram.Bot;
 
@@ -13,7 +12,7 @@ public static class MenuHandler
     {
         [CallbackMenu.Main] = MainHandler.Handle,
         [CallbackMenu.MyEvents] = MyEventsHandler.Handle,
-        [CallbackMenu.CreateEvent] = CreateEventHandler.Handle,
+        [CallbackMenu.BuildEvent] = CreateEventHandler.Handle,
         [CallbackMenu.EventTitleReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventDateTimeOfAgain] = HandleEventReplaceMenu,
         [CallbackMenu.EventDateTimeOfReplace] = HandleEventReplaceMenu,
@@ -67,45 +66,7 @@ public static class MenuHandler
 
     private static void HandleEventRegisterMenu(UpdateContainer container)
     {
-        try
-        {
-            AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
-            
-            if (appEvent.ParticipantLimit > 0 && appEvent.ParticipantLimit <= appEvent.RegisteredUsers.Count)
-            {
-                Thread.Sleep(200);
-                container.BotClient.AnswerCallbackQuery(
-                    callbackQueryId: container.CallbackData!.CallbackId!,
-                    text: "К сожалению, места на это мероприятие закончились.",
-                    showAlert: true,
-                    cancellationToken: container.Token);
-            }
-            else
-            {
-                EService.RegisterUser(appEvent, container.AppUser);
-                Thread.Sleep(200);
-                container.BotClient.AnswerCallbackQuery(
-                    callbackQueryId: container.CallbackData!.CallbackId!,
-                    text: "Вы успешно зарегистрировались на мероприятие.",
-                    showAlert: true,
-                    cancellationToken: container.Token);
-            }
-        }
-        catch (EntityNotFoundException)
-        {
-            Thread.Sleep(200);
-            container.BotClient.AnswerCallbackQuery(
-                callbackQueryId: container.CallbackData!.CallbackId!,
-                text: "Данное мероприятие больше неактуально.",
-                showAlert: true,
-                cancellationToken: container.Token);
-        }
-        
-        Thread.Sleep(200);
-        container.BotClient.DeleteMessage(
-            chatId: container.ChatId,
-            messageId: container.Message.Id,
-            cancellationToken: container.Token);
+        EventListHandler.HandleRegister(container);
     }
 
     private static void CallbackUnknownMenu(UpdateContainer container)

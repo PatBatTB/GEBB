@@ -10,4 +10,5 @@ public enum UserStatus
     Active,
     OpenedMenu,
     CreatingEvent,
+    EditingEvent,
 }

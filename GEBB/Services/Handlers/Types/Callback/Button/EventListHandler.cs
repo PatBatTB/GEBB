@@ -4,8 +4,11 @@ using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
@@ -44,6 +47,12 @@ public static class EventListHandler
         [CallbackButton.Close] = HandleClose,
     };
 
+    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisterButtonDist = new()
+    {
+        [CallbackButton.Reg] = HandleRegisterToEvent,
+        [CallbackButton.Close] = HandleClose,
+    };
+
     public static void HandleMyOwn(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
@@ -70,6 +79,13 @@ public static class EventListHandler
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
         RegisteredButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+    }
+
+    public static void HandleRegister(UpdateContainer container)
+    {
+        if (container.CallbackData?.Button is not { } button)
+            throw new NullReferenceException("CallbackData doesn't have button");
+        RegisterButtonDist.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
     private static void HandleMyOwnParticipantList(UpdateContainer container)
@@ -112,7 +128,32 @@ public static class EventListHandler
 
     private static void HandleEdit(UpdateContainer container)
     {
-        //TODO открыть форму редактирования мероприятия (аналогично созданию)
+        //TODO добавить в контейнер текущий эвент.
+        try
+        {
+            container.Events.Add(EService.Get(container.CallbackData!.EventId!));
+            //TODO открыть форму редактирования мероприятия (аналогично созданию)
+            Thread.Sleep(200);
+            Message sent = container.BotClient.SendMessage(
+                chatId: container.ChatId,
+                text: $"Редактирование мероприятия:\n{container.Events[0].Title}",
+                replyMarkup: InlineKeyboardMarkup.Empty(),
+                cancellationToken: container.Token).Result;
+            //TODO добавить в BuildEvent копию текущего эвента со статусом редактирование
+            container.Events[0].MessageId = sent.Id;
+            //TODO может и не надо в эвент прописывать, если это сразу в маркап передавать.
+        }
+        catch (EntityNotFoundException)
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Произошла ошибка, текущее мероприятие не найдено в базе.",
+                showAlert: true,
+                cancellationToken: container.Token);
+        }
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
     }
 
     private static void HandleCancel(UpdateContainer container)
@@ -195,6 +236,49 @@ public static class EventListHandler
             messageId: container.Message.Id,
             text: text,
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, appEvent.Id),
+            cancellationToken: container.Token);
+    }
+
+    private static void HandleRegisterToEvent(UpdateContainer container)
+    {
+        try
+        {
+            AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
+            
+            if (appEvent.ParticipantLimit > 0 && appEvent.ParticipantLimit <= appEvent.RegisteredUsers.Count)
+            {
+                Thread.Sleep(200);
+                container.BotClient.AnswerCallbackQuery(
+                    callbackQueryId: container.CallbackData!.CallbackId!,
+                    text: "К сожалению, места на это мероприятие закончились.",
+                    showAlert: true,
+                    cancellationToken: container.Token);
+            }
+            else
+            {
+                EService.RegisterUser(appEvent, container.AppUser);
+                Thread.Sleep(200);
+                container.BotClient.AnswerCallbackQuery(
+                    callbackQueryId: container.CallbackData!.CallbackId!,
+                    text: "Вы успешно зарегистрировались на мероприятие.",
+                    showAlert: true,
+                    cancellationToken: container.Token);
+            }
+        }
+        catch (EntityNotFoundException)
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Данное мероприятие больше неактуально.",
+                showAlert: true,
+                cancellationToken: container.Token);
+        }
+        
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
             cancellationToken: container.Token);
     }
 

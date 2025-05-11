@@ -17,7 +17,7 @@ public sealed class UserEntity
 
     public ICollection<EventEntity> Events { get; set; } = new List<EventEntity>();
 
-    public ICollection<TempEventEntity> TempEvents { get; set; } = new List<TempEventEntity>();
+    public ICollection<BuildEventEntity> TempEvents { get; set; } = new List<BuildEventEntity>();
 
     public ICollection<EventEntity> EventsNavigation { get; set; } = new List<EventEntity>();
 }

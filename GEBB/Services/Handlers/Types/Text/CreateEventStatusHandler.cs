@@ -27,7 +27,7 @@ public static class CreateEventStatusHandler
         if (container.Message.ReplyToMessage?.From?.Id != container.BotClient.BotId) return;
 
         container.Events.AddRange(EService.GetInCreating(container.AppUser.UserId));
-        Thread.Sleep(500);
+        Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             container.ChatId,
             [container.Message.Id, container.Message.ReplyToMessage.Id],
@@ -172,7 +172,7 @@ public static class CreateEventStatusHandler
             return false;
         }
 
-        if (count < 1)
+        if (count < 0)
         {
             string message = 
                 "Необходимо указать количество приглашенных гостей. Либо ноль, если приглашаются все желающие. Ввести еще раз?";

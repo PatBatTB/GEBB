@@ -7,7 +7,8 @@ public interface IEventService
     ICollection<AppEvent> GetInCreating(long creatorId);
     AppEvent Get(string eventId);
     void Update(AppEvent appEvent);
-    AppEvent? Create(long creatorId, int messageId);
+    AppEvent Create(long creatorId, int messageId);
+    AppEvent Edit(AppEvent appEvent);
     void Remove(string eventId);
     void Remove(ICollection<AppEvent> events);
     ICollection<int> RemoveInCreating(long creatorId);

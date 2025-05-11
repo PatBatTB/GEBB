@@ -5,7 +5,7 @@ public enum CallbackMenu
     //TODO Для Callbackdata использовать технические названия, а не имя энама
     Main,
     MyEvents,
-    CreateEvent,
+    BuildEvent,
     EventTitleReplace,
     EventDateTimeOfAgain,
     EventDateTimeOfReplace,
@@ -24,7 +24,7 @@ public static class CallbackMenuExtension
 {
     private const string MainText = "Меню пользователя";
     private const string MyEventsText = MainText + "\n \u21b3 Мои мероприятия";
-    private const string CreateEventText = MyEventsText + "\n    \u21b3 Создание нового мероприятия";
+    private const string BuildEventText = MyEventsText + "\n    \u21b3 Редактирование мероприятия";
     private const string EventTitleReplaceText = "Название мероприятия уже задано. Изменить?";
     private const string EventDateTimeOfAgainText = "Неправильный формат. Ввести снова?";
     private const string EventDateTimeOfReplaceText = "Дата уже была указана. Изменить?";
@@ -39,7 +39,7 @@ public static class CallbackMenuExtension
         {
             CallbackMenu.Main => MainText,
             CallbackMenu.MyEvents => MyEventsText,
-            CallbackMenu.CreateEvent => CreateEventText,
+            CallbackMenu.BuildEvent => BuildEventText,
             CallbackMenu.EventTitleReplace => EventTitleReplaceText,
             CallbackMenu.EventDateTimeOfAgain => EventDateTimeOfAgainText,
             CallbackMenu.EventDateTimeOfReplace => EventDateTimeOfReplaceText,
