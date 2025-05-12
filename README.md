@@ -22,7 +22,23 @@ The service does not have a user interface,
 the interaction takes place through messaging with a bot in the Telegram application.
 
 ## Building
-...
+
+Для сборки проекта необходимо иметь установленную `.NET SDK 9.0`
+В скрипте ниже измените `path_to_output_dir` на путь к существующей директории.
+Данный скрипт выполняет полную сборку со всеми зависимостями под операционную систему `linux-x64`
+___
+To build the project, you must have the `.NET SDK 9.0` installed.
+In the script below, replace `path_to_output_dir` with the path to an existing directory.
+This script performs a complete build with all dependencies for the Linux x64 operating system.
+
+```bash
+dotnet publish -c Release -r linux-x64 -v d -p:PublishDir=path_to_output_dir,PublishSingleFile=true
+```
+
+Для дальнейшего запуска сборки не нужен dotnet SDK или Runtime
+___
+You do not need the .NET SDK or Runtime to running the build.
+
 
 ## Troubleshooting
 ...
