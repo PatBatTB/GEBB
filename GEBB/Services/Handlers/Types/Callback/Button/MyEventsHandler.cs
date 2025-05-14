@@ -104,6 +104,11 @@ public static class MyEventsHandler
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, appEvent.Id),  
                     cancellationToken: container.Token);
             }
+            Thread.Sleep(200);
+            container.BotClient.DeleteMessage(
+                chatId: container.ChatId,
+                messageId: container.Message.Id,
+                cancellationToken: container.Token);
         }
         else
         {
@@ -114,11 +119,6 @@ public static class MyEventsHandler
                 showAlert: true,
                 cancellationToken: container.Token);
         }
-        Thread.Sleep(200);
-        container.BotClient.DeleteMessage(
-            chatId: container.ChatId,
-            messageId: container.Message.Id,
-            cancellationToken: container.Token);
     }
 
     private static void HandleBack(UpdateContainer container)

@@ -6,10 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Com.Github.PatBatTB.GEBB</RootNamespace>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Title>Group Events Builder Bot</Title>
     <Authors>Patrick Bates</Authors>
-    <AssemblyVersion>0.1.1</AssemblyVersion>
+    <AssemblyVersion>0.1.2</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +25,9 @@
 
   <ItemGroup>
     <None Update="start.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

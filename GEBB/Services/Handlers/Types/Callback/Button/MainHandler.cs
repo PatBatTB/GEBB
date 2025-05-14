@@ -75,10 +75,10 @@ public static class MainHandler
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, appEvent.Id),
                     cancellationToken: container.Token);
             }
+            Thread.Sleep(200);
+            container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         }
-        Thread.Sleep(200);
-        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleAvailableEvents(UpdateContainer container)
@@ -114,10 +114,10 @@ public static class MainHandler
                     text: text,
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegisterToEvent, appEvent.Id));
             }
+            Thread.Sleep(200);
+            container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         }
-        Thread.Sleep(200);
-        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 
     private static void HandleClose(UpdateContainer container)
