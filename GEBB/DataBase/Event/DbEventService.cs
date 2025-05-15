@@ -172,12 +172,13 @@ public class DbEventService : IEventService
 
     public void RegisterUser(AppEvent appEvent, AppUser appUser)
     {
-        EventEntity eventEntity = EventToEntity(appEvent);
-        UserEntity userEntity = _dbUserService.UserToEntity(appUser);
-        eventEntity.RegisteredUsers.Add(userEntity);
         using TgBotDbContext db = new();
-        db.Update(eventEntity);
-        db.SaveChanges();
+        (int eventId, long creatorId) = ParseEventId(appEvent.Id);
+        db.Database.ExecuteSqlRaw(
+            """
+            INSERT INTO Registrations VALUES 
+            ({0}, {1}, {2})
+            """, appUser.UserId, eventId, creatorId);
     }
 
     public void CancelRegistration(AppEvent appEvent, AppUser appUser)
