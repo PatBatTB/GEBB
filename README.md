@@ -60,9 +60,9 @@ ___
 dotnet publish -c Release -r linux-x64 -v d -p:PublishDir=path_to_output_dir,PublishSingleFile=true
 ```
 
-Для дальнейшего запуска сборки dotnet SDK или Runtime <u>не нужен</u>
+Для дальнейшего запуска сборки dotnet SDK или Runtime <ins>не нужен</ins>
 ___
-You <u>do not need</u> the .NET SDK or Runtime to running the build.
+You <ins>do not need</ins> the .NET SDK or Runtime to running the build.
 
 ## Usage
 
@@ -74,9 +74,10 @@ ___
 - Enter the token for your bot in the `BOT_TOKEN` variable.
 - Enter the desired minimum logging level in the `LOG_LEVEL` variable.
 
-
-    BOT_TOKEN="<your_bot_token>"
-    LOG_LEVEL="<logging level>"
+```text
+BOT_TOKEN="<your_bot_token>"
+LOG_LEVEL="<logging level>"
+```
 
 - Сделайте файл `start.sh` исполняемым.
 ___
