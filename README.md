@@ -21,13 +21,39 @@ Thus, the service is intended for use within groups of users who know each other
 The service does not have a user interface, 
 the interaction takes place through messaging with a bot in the Telegram application.
 
-## Building
+## Getting started
 
-Для сборки проекта необходимо иметь установленную `.NET SDK 9.0`
-В скрипте ниже измените `path_to_output_dir` на путь к существующей директории.
+### Prerequisites
+
+- Для сборки проекта необходимо иметь установленную `.NET SDK 9.0`
+___
+- To build the project, you must have the `.NET SDK 9.0` installed.
+
+[Download SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+
+- Установите утилиту `xmlstarlet`
+___
+- Install the `xmlstarlet` utility
+
+Debian/Ubuntu
+```bash
+$ apt install xmlstarlet
+```
+
+### Installation
+
+- Клонируйте репозиторий. 
+___
+- Clone the repo.
+
+```bash
+git clone https://gitlab.com/PatBatTB/GEBB.git
+```
+
+- В скрипте ниже измените `path_to_output_dir` на путь к существующей директории.
 Данный скрипт выполняет полную сборку со всеми зависимостями под операционную систему `linux-x64`
 ___
-To build the project, you must have the `.NET SDK 9.0` installed.
+- To build the project, you must have the `.NET SDK 9.0` installed.
 In the script below, replace `path_to_output_dir` with the path to an existing directory.
 This script performs a complete build with all dependencies for the Linux x64 operating system.
 
@@ -35,16 +61,42 @@ This script performs a complete build with all dependencies for the Linux x64 op
 dotnet publish -c Release -r linux-x64 -v d -p:PublishDir=path_to_output_dir,PublishSingleFile=true
 ```
 
-Для дальнейшего запуска сборки не нужен dotnet SDK или Runtime
+Для дальнейшего запуска сборки dotnet SDK или Runtime <u>не нужен</u>
 ___
-You do not need the .NET SDK or Runtime to running the build.
+You <u>do not need</u> the .NET SDK or Runtime to running the build.
 
+## Usage
+
+### Настройка файла запуска start.sh / Configuring the runnable script start.sh
+
+- Укажите токен своего бота в переменной `BOT_TOKEN`
+- Укажите желаемый уровень логирования в переменной `LOG_LEVEL`
+___
+- Enter the token for your bot in the `BOT_TOKEN` variable.
+- Enter the desired minimum logging level in the `LOG_LEVEL` variable.
+
+
+    BOT_TOKEN="<your_bot_token>"
+    LOG_LEVEL="<logging level>"
+
+- Сделайте файл `start.sh` исполняемым.
+___
+- Make the `start.sh` file executable.
+
+```bash
+chmod +x ./start.sh
+```
+### Запуск / Launch
+
+Запустите файл `start.sh`
+___
+Launch the `start.sh` file
 
 ## Troubleshooting
 ...
 
-## Release Notes
-Can be found in [RELEASE_NOTES](RELEASE_NOTES.md).
+## Changelog
+Can be found in [CHANGELOG](CHANGELOG.md).
 
 ## Authors
 * Patrick Bates - [PatBatTB](https://github.com/PatBatTB)

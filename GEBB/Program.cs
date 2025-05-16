@@ -1,4 +1,7 @@
 ﻿using Com.Github.PatBatTB.GEBB.DataBase;
+using log4net.Config;
+
+[assembly: XmlConfigurator(ConfigFile = "log4net.config", Watch = true)]
 
 namespace Com.GitHub.PatBatTB.GEBB;
 
