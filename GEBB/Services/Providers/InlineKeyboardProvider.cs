@@ -14,7 +14,7 @@ public static class InlineKeyboardProvider
         new()
         {
             [CallbackMenu.Main] = GetMainMarkup,
-            [CallbackMenu.MyEvents] = GetMyEventsMarkup,
+            [CallbackMenu.EventsList] = GetEventListMenu,
             [CallbackMenu.EventTitleReplace] = GetYesNoMarkup,
             [CallbackMenu.EventDateTimeOfAgain] = GetYesNoMarkup,
             [CallbackMenu.EventDateTimeOfReplace] = GetYesNoMarkup,
@@ -96,34 +96,36 @@ public static class InlineKeyboardProvider
 
     private static InlineKeyboardMarkup GetMainMarkup(CallbackMenu menu)
     {
+        var create = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Create, Menu = menu });
+        var list = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.List, Menu = menu });
+        var close = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu });
+        return new InlineKeyboardMarkup(
+            [
+                [create],
+                [list],
+                [close],
+            ]
+        );
+    }
+
+    private static InlineKeyboardMarkup GetEventListMenu(CallbackMenu menu)
+    {
         var myEvents = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.MyEvents, Menu = menu });
         var myRegs = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.MyRegs, Menu = menu });
         var availEvents = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.AvailEvents, Menu = menu });
-        var close = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu });
-        return new InlineKeyboardMarkup(
-            [
-                [myEvents],
-                [myRegs, availEvents],
-                [close],
-            ]
-        );
-    }
-
-    private static InlineKeyboardMarkup GetMyEventsMarkup(CallbackMenu menu)
-    {
-        var create = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.Create, Menu = menu });
-        var list = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.List, Menu = menu });
         var back = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Back, Menu = menu });
         return new InlineKeyboardMarkup(
             [
-                [create, list],
+                [myEvents],
+                [myRegs],
+                [availEvents],
                 [back],
             ]
         );

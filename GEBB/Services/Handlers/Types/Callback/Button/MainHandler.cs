@@ -1,4 +1,3 @@
-using System.Globalization;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
@@ -6,6 +5,7 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using log4net;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
@@ -13,9 +13,8 @@ public static class MainHandler
 {
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonHandlerDict = new()
     {
-        [CallbackButton.MyEvents] = HandleEvents,
-        [CallbackButton.MyRegs] = HandleMyRegistrations,
-        [CallbackButton.AvailEvents] = HandleAvailableEvents,
+        [CallbackButton.Create] = HandleCreate,
+        [CallbackButton.List] = HandleList,
         [CallbackButton.Close] = HandleClose,
     };
 
@@ -30,96 +29,66 @@ public static class MainHandler
         ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown)
             .Invoke(container);
     }
+    
+    private static void HandleCreate(UpdateContainer container)
+    {
+        long chatId = container.ChatId;
+        int messageId = container.Message.Id;
+        CancellationToken token = container.Token;
+        
+        container.Events.AddRange(EService.GetBuildEvents(container.AppUser.UserId, EventStatus.Creating));
+        
+        Thread.Sleep(200);
+        container.BotClient.DeleteMessage(
+            chatId: chatId,
+            messageId: messageId,
+            cancellationToken: token);
+        
+        if (container.Events.Count > 0)
+        {
+            List<int> messageIds = container.Events.Select(dto => dto.MessageId).ToList();
 
-    private static void HandleEvents(UpdateContainer container)
+            Thread.Sleep(200);
+            container.BotClient.DeleteMessages(
+                chatId: chatId,
+                messageIds: messageIds,
+                cancellationToken: token);
+            
+            Thread.Sleep(200);
+            container.BotClient.SendMessage(
+                chatId: chatId,
+                text: "Ошибка. Обнаружено мероприятие в режиме создания.\nПопробуйте снова через команду /menu",
+                cancellationToken: token);
+
+            EService.RemoveInBuilding(chatId, EventStatus.Creating);
+
+            Log.Warn("Attempting to create multiple events at the same time");
+        }
+        
+        Thread.Sleep(200);
+        Message sent = container.BotClient.SendMessage(
+            chatId,
+            CallbackMenu.CreateEvent.Text(),
+            cancellationToken: token).Result;
+        AppEvent appEvent = EService.Create(container.AppUser.UserId, sent.Id);
+        Thread.Sleep(100);
+        container.BotClient.EditMessageReplyMarkup(
+            chatId: container.ChatId,
+            messageId: sent.Id,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent, appEvent.Id),
+            cancellationToken: container.Token);
+
+        DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, UService);
+    }
+
+    private static void HandleList(UpdateContainer container)
     {
         container.BotClient.EditMessageText(
-            container.ChatId,
-            container.Message.Id,
-            CallbackMenu.MyEvents.Text(),
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.MyEvents),
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            text: CallbackMenu.EventsList.Text(),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EventsList),
             cancellationToken: container.Token);
-    }
-
-    private static void HandleMyRegistrations(UpdateContainer container)
-    {
-        List<AppEvent> eventList = container.Events;
-        eventList.AddRange(EService.GetRegisterEvents(container.AppUser.UserId));
-        if (eventList.Count == 0)
-        {
-            string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
-            Thread.Sleep(200);
-            container.BotClient.AnswerCallbackQuery(
-                callbackQueryId: container.CallbackData!.CallbackId!,
-                text: noEventsText,
-                showAlert: true,
-                cancellationToken: container.Token);
-        }
-        else
-        {
-            foreach (AppEvent appEvent in container.Events)
-            {
-                string text = $"Название: {appEvent.Title}\n" +
-                              $"Организатор: @{appEvent.Creator.Username}\n" +
-                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                              $"Место: {appEvent.Address}\n" +
-                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                              $"Планируемые затраты: {appEvent.Cost}\n" +
-                              (string.IsNullOrEmpty(appEvent.Description)
-                                  ? ""
-                                  : $"Дополнительная информация: {appEvent.Description}");
-                Thread.Sleep(200);
-                container.BotClient.SendMessage(
-                    chatId: container.ChatId,
-                    text: text,
-                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, appEvent.Id),
-                    cancellationToken: container.Token);
-            }
-            Thread.Sleep(200);
-            container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
-        }
-    }
-
-    private static void HandleAvailableEvents(UpdateContainer container)
-    {
-        container.Events.AddRange(EService.GetAvailableEvents(container.AppUser.UserId));
-        if (container.Events.Count == 0)
-        {
-            Thread.Sleep(200);
-            container.BotClient.AnswerCallbackQuery(
-                callbackQueryId: container.CallbackData!.CallbackId!,
-                text: "В настоящее время нет доступных для регистрации мероприятий.",
-                showAlert: true,
-                cancellationToken: container.Token);
-        }
-        else
-        {
-            foreach (AppEvent appEvent in container.Events)
-            {
-                string text = $"Название: {appEvent.Title}\n" +
-                              $"Организатор: @{appEvent.Creator.Username}\n" +
-                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                              $"Место: {appEvent.Address}\n" +
-                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                              $"Планируемые затраты: {appEvent.Cost}\n" +
-                              (string.IsNullOrEmpty(appEvent.Description)
-                                  ? ""
-                                  : $"Дополнительная информация: {appEvent.Description}");
-                Thread.Sleep(200);
-                container.BotClient.SendMessage(
-                    chatId: container.ChatId,
-                    text: text,
-                    replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegisterToEvent, appEvent.Id));
-            }
-            Thread.Sleep(200);
-            container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
-        }
     }
 
     private static void HandleClose(UpdateContainer container)

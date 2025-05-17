@@ -41,12 +41,12 @@ public static class CallbackButtonExtension
     {
         return callbackButton switch
         {
-            CallbackButton.MyEvents => "Мои мероприятия",
-            CallbackButton.MyRegs => "Мои регистрации",
-            CallbackButton.AvailEvents => "Доступные мероприятия",
+            CallbackButton.MyEvents => "Собственные мероприятия",
+            CallbackButton.MyRegs => "Куда зарегистрирован?",
+            CallbackButton.AvailEvents => "Открытые для регистрации",
             CallbackButton.Close => "Закрыть",
-            CallbackButton.Create => "Создать",
-            CallbackButton.List => "Список",
+            CallbackButton.Create => "Создать новое мероприятие",
+            CallbackButton.List => "Список мероприятий",
             CallbackButton.Back => "Назад",
             CallbackButton.Title => "Название мероприятия",
             CallbackButton.TitleDone => CallbackButton.Title.Text() + DoneSymbol,

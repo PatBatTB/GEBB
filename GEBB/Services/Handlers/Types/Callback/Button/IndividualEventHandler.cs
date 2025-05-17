@@ -12,11 +12,11 @@ using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
-public static class EventListHandler
+public static class IndividualEventHandler
 {
     private static readonly IEventService EService = new DbEventService();
     private static readonly IUserService UService = new DbUserService();
-    private static readonly ILog Log = LogManager.GetLogger(typeof(EventListHandler)); 
+    private static readonly ILog Log = LogManager.GetLogger(typeof(IndividualEventHandler)); 
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
     {

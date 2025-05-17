@@ -6,10 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Com.Github.PatBatTB.GEBB</RootNamespace>
-    <Version>0.2.1</Version>
+    <Version>0.3.0</Version>
     <Title>Group Events Builder Bot</Title>
     <Authors>Patrick Bates</Authors>
-    <AssemblyVersion>0.2.1</AssemblyVersion>
+    <AssemblyVersion>0.3.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
