@@ -4,9 +4,10 @@ using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types;
 
 public static class CommandHandler
 {
@@ -20,6 +21,7 @@ public static class CommandHandler
 
     private static readonly IUserService UService = new DbUserService();
     private static readonly IEventService EService = new DbEventService();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(CommandHandler));
 
     public static void Handle(UpdateContainer container)
     {
@@ -107,7 +109,7 @@ public static class CommandHandler
 
     private static void HandleUnknown(UpdateContainer container)
     {
-        Console.WriteLine("UpdateTypeHandler.CommandUnknownHandle()");
+        Log.Error("Unknown command");
     }
 
     private static void HandleCancel(UpdateContainer container)

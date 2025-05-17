@@ -1,12 +1,15 @@
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using log4net;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Providers;
 
 public static class InlineKeyboardProvider
 {
+    private static ILog Log = LogManager.GetLogger(typeof(InlineKeyboardProvider));
+    
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, InlineKeyboardMarkup>> InlineReplyMarkupDict =
         new()
         {
@@ -262,11 +265,13 @@ public static class InlineKeyboardProvider
 
     private static InlineKeyboardMarkup UnknownMarkup(CallbackMenu menu)
     {
-        throw new ArgumentException("InlineKeyboardProvider: Unknown CallbackMenu");
+        Log.Error("Unknown CallbackMenu");
+        throw new ArgumentException("Unknown CallbackMenu");
     }
 
     private static InlineKeyboardMarkup UnknownMarkup(CallbackMenu menu, string eventId)
     {
-        throw new ArgumentException("InlineKeyboardProvider: Unknown CallbackMenu");
+        Log.Error("Unknown CallbackMenu");
+        throw new ArgumentException("Unknown CallbackMenu");
     }
 }

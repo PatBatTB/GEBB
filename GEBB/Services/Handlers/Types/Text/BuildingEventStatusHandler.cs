@@ -3,6 +3,7 @@ using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Text;
@@ -27,6 +28,7 @@ public static class BuildingEventStatusHandler
 
     private static readonly IEventService EService = new DbEventService();
     private static readonly IUserService UService = new DbUserService();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(BuildingEventStatusHandler));
 
     public static void Handle(UpdateContainer container)
     {
@@ -119,7 +121,7 @@ public static class BuildingEventStatusHandler
 
         if (!DateTimeParser.TryParse(dateTimeString, out var nDate) || nDate is not { } date)
         {
-            Console.WriteLine("Incorrect date format");
+            Log.Error("Incorrect date format");
             container.BotClient.SendMessage(
                 chatId: container.ChatId,
                 text: CallbackMenu.EventDateTimeOfAgain.Text(),
@@ -223,7 +225,7 @@ public static class BuildingEventStatusHandler
 
     private static bool UnknownField(UpdateContainer container)
     {
-        Console.WriteLine("CreateEventHandler.UnknownField()");
+        Log.Error("Unknown message to fill the new event's field");
         return false;
     }
 }

@@ -6,6 +6,7 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -15,6 +16,7 @@ public static class EventListHandler
 {
     private static readonly IEventService EService = new DbEventService();
     private static readonly IUserService UService = new DbUserService();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(EventListHandler)); 
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
     {
@@ -320,6 +322,6 @@ public static class EventListHandler
 
     private static void HandleUnknown(UpdateContainer container)
     {
-        Console.WriteLine("EventListHandler.UnknownButton");
+        Log.Error("Unknown button");
     }
 }

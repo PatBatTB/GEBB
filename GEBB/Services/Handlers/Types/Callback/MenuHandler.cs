@@ -2,6 +2,7 @@ using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
+using log4net;
 using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback;
@@ -38,7 +39,8 @@ public static class MenuHandler
         [CallbackMenu.EventPartLimitReplace] = BuildEventStatus.CreateParticipantLimit,
     };
 
-    private static readonly IEventService EService = new DbEventService(); 
+    private static readonly IEventService EService = new DbEventService();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(MenuHandler)); 
 
     public static void Handle(UpdateContainer container)
     {
@@ -51,7 +53,7 @@ public static class MenuHandler
     {
         if (!ReplaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out BuildEventStatus status))
         {
-            throw new ArgumentException("Unknown CallbackMenu");
+            Log.Error("Unknown CallbackMenu");
         }
 
         Thread.Sleep(200);
@@ -72,6 +74,6 @@ public static class MenuHandler
 
     private static void CallbackUnknownMenu(UpdateContainer container)
     {
-        Console.WriteLine("MenuButtonHandler.CallbackMenuUnknown()");
+        Log.Error("Unknown button");
     }
 }

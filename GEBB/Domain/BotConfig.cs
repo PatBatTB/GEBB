@@ -1,3 +1,4 @@
+using log4net;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 
@@ -5,12 +6,17 @@ namespace Com.GitHub.PatBatTB.GEBB.Domain;
 
 internal static class BotConfig
 {
+    private static ILog Log = LogManager.GetLogger(typeof(BotConfig));
+    
     static BotConfig()
     {
-        if (Environment.GetEnvironmentVariable("bot.token") is { } token)
+        if (Environment.GetEnvironmentVariable("bot.token") is { } token) 
             BotToken = token;
         else
-            throw new NullReferenceException("env var 'bot.token' must be token of your bot");
+        {
+            Log.Fatal("Env variable 'bot.token' not found.");
+            throw new NullReferenceException();
+        }
 
         ReceiverOptions = new ReceiverOptions
         {
@@ -19,7 +25,7 @@ internal static class BotConfig
                 UpdateType.Message,
                 UpdateType.CallbackQuery
             ],
-            DropPendingUpdates = true
+            DropPendingUpdates = false
         };
     }
 

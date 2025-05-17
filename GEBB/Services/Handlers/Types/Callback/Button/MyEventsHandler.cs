@@ -4,6 +4,7 @@ using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -19,8 +20,8 @@ public static class MyEventsHandler
     };
 
     private static readonly IUserService UService = new DbUserService();
-
-    private static IEventService EService = new DbEventService();
+    private static readonly IEventService EService = new DbEventService();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(MyEventsHandler)); 
 
     public static void Handle(UpdateContainer container)
     {
@@ -61,7 +62,7 @@ public static class MyEventsHandler
 
             EService.RemoveInBuilding(chatId, EventStatus.Creating);
 
-            throw new Exception("Multiple event creating doesn't work;");
+            Log.Warn("Attempting to create multiple events at the same time");
         }
         
         Thread.Sleep(200);
@@ -133,6 +134,6 @@ public static class MyEventsHandler
 
     private static void HandleUnknown(UpdateContainer container)
     {
-        Console.WriteLine("MenuButtonHandler.MyEventsMenuUnknownButton()");
+        Log.Error("Unknown button");
     }
 }

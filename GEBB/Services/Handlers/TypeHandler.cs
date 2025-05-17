@@ -1,8 +1,9 @@
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using Com.Github.PatBatTB.GEBB.Services.Handlers.Types;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback;
-using Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,6 +17,8 @@ public static class TypeHandler
         [UpdateType.Message] = MessageHandler.Handle,
         [UpdateType.CallbackQuery] = CallbackQueryHandle,
     };
+    
+    private static readonly ILog Log = LogManager.GetLogger(typeof(TypeHandler));
 
     public static void Handle(UpdateContainer container)
     {
@@ -39,12 +42,11 @@ public static class TypeHandler
             return;
         }
 
-        Console.WriteLine("CallbackQuery was taken: " + container.CallbackData!.GetDataString());
         MenuHandler.Handle(container);
     }
 
     private static void UpdateTypeUnknown(UpdateContainer container)
     {
-        Console.WriteLine("UpdateTypeHandler - unknown");
+        Log.Error("Unknown update type");
     }
 }
