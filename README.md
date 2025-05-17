@@ -1,3 +1,9 @@
+# Announcement
+
+Поддержка проека на GitHub прекращена. Проект переехал на [GitLab](https://gitlab.com/PatBatTB/GEBB)
+___
+The project is no longer supported on GitHub. The project moved to [GitLab](https://gitlab.com/PatBatTB/GEBB)
+
 ## Overview
 Сервис GEBB предназначен для планирования и организации посещения мероприятий, автоматизации процесса поиска спутников, 
 регистрации пользователей в группы и обмена контактами между зарегистрированными на мероприятие участниками.
