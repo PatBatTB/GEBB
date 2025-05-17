@@ -2,9 +2,10 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.GitHub.PatBatTB.GEBB.Extensions;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Text;
+using log4net;
 using Telegram.Bot;
 
-namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Updates.Types;
+namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types;
 
 public static class MessageHandler
 {
@@ -14,6 +15,8 @@ public static class MessageHandler
         [ContentMessageType.Text] = HandleText,
         [ContentMessageType.Unknown] = HandleUnknown,
     };
+    
+    private static readonly ILog Log = LogManager.GetLogger(typeof(MessageHandler));
 
     public static void Handle(UpdateContainer container)
     {
@@ -35,14 +38,11 @@ public static class MessageHandler
             container.AppUser.UserStatus == UserStatus.EditingEvent)
         {
             BuildingEventStatusHandler.Handle(container);
-            return;
         }
-
-        Console.WriteLine($"{container.AppUser.Username} [{container.AppUser.UserId}] : {container.Message.Text}");
     }
 
     private static void HandleUnknown(UpdateContainer container)
     {
-        Console.WriteLine("UpdateTypeHandler.MessageTypeUnknownHandle()");
+        Log.Error("Unknown message type");
     }
 }

@@ -1,18 +1,24 @@
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using log4net;
 using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Domain;
 
 public class CallbackData
 {
+    private static readonly ILog Log = LogManager.GetLogger(typeof(CallbackData));
+        
     private const string Separator = "_";
+
     private readonly CallbackButton? _button;
+
     private readonly string? _eventId;
 
     private readonly Dictionary<Prop, object?> _mappingDict = new();
+
     private readonly CallbackMenu? _menu;
 
-    public CallbackData()
+        public CallbackData()
     {
     }
 
@@ -26,12 +32,17 @@ public class CallbackData
         {
             cbProp = (Prop)Convert.ToInt32(propsArr[0], 2);
         }
-        catch (FormatException e)
+        catch (FormatException)
         {
-            e.Source = "First argument must be binary number";
+            Log.Error("First argument must be binary number");
             throw;
         }
-        if (!ValidateCount(propsArr)) throw new ArgumentException("Incorrect number of arguments");
+
+        if (!ValidateCount(propsArr))
+        {
+            Log.Error("Incorrect number of arguments");
+            throw new ArgumentException();
+        }
         for (int i = 1; i < propsArr.Length; i++)
         {
             foreach (Prop prop in Enum.GetValues<Prop>())
@@ -53,7 +64,8 @@ public class CallbackData
                             cbProp -= (int)prop;
                             break;
                         default:
-                            throw new KeyNotFoundException("unknown prop");
+                            Log.Error("Unknown property");
+                            throw new KeyNotFoundException();
                     }
 
                     break;

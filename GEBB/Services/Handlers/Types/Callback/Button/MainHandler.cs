@@ -4,6 +4,7 @@ using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
@@ -20,6 +21,7 @@ public static class MainHandler
 
     private static readonly IUserService UService = new DbUserService();
     private static readonly IEventService EService = new DbEventService();
+    private static readonly ILog Log = LogManager.GetLogger(typeof(MainHandler));
 
     public static void Handle(UpdateContainer container)
     {
@@ -133,6 +135,6 @@ public static class MainHandler
 
     private static void HandleUnknown(UpdateContainer container)
     {
-        Console.WriteLine("MenuButtonHandler.MainMenuUnknownButtonHandle()");
+        Log.Error("Unknown button");
     }
 }

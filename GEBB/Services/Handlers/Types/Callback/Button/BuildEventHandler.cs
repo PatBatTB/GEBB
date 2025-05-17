@@ -6,6 +6,7 @@ using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
+using log4net;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
@@ -13,6 +14,8 @@ namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
 public static class BuildEventHandler
 {
+    private static readonly ILog Log = LogManager.GetLogger(typeof(BuildEventHandler)); 
+    
     private static readonly Dictionary<(CallbackButton, EventStatus), Action<UpdateContainer>> ButtonHandlerDict = new()
     {
         [(CallbackButton.Title, EventStatus.Creating)] = HandleTitle,
@@ -76,7 +79,10 @@ public static class BuildEventHandler
         }
 
         if (container.CallbackData?.Button is not { } button)
+        {
+            Log.Error("CallbackData doesn't have button");
             throw new NullReferenceException("CallbackData doesn't have button");
+        }
         ButtonHandlerDict.GetValueOrDefault((button, container.Events[0].Status), CreateEventMenuUnknownButton)
             .Invoke(container);
     }
@@ -358,6 +364,6 @@ public static class BuildEventHandler
 
     private static void CreateEventMenuUnknownButton(UpdateContainer container)
     {
-        Console.WriteLine("MenuButtonHandler.CreateEventMenuUnknownButton()");
+        Log.Error("Unknown button");
     }
 }

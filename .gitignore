@@ -1,8 +1,10 @@
 /.idea/
 /.git/
+/.run/
 .vscode/
 /*/bin/
 /*/obj/
 /GEBB.sln.DotSettings.user
 /GEBB/tgbot.sqlite*
 /GEBB/appsettings.json
+/GEBB/log4net.config
