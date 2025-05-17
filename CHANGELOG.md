@@ -1,3 +1,13 @@
+## v0.3.0
+- Изменено меню пользователя на более удобное и интуитивное.
+___
+- The user menu has been revamped to be more user-friendly and intuitive.
+
+## v0.2.1
+- Переписаны выводы ошибок с консоли на запись в лог
+___
+- Rewritten error outputs from console to logging
+
 ## v0.2.0
 - Добавлено логирование
 ___

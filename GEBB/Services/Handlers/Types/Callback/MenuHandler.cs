@@ -12,8 +12,8 @@ public static class MenuHandler
     private static readonly Dictionary<CallbackMenu, Action<UpdateContainer>> MenuHandlerDict = new()
     {
         [CallbackMenu.Main] = MainHandler.Handle,
-        [CallbackMenu.MyEvents] = MyEventsHandler.Handle,
         [CallbackMenu.CreateEvent] = BuildEventHandler.Handle,
+        [CallbackMenu.EventsList] = EventsListHandler.Handle,
         [CallbackMenu.EditEvent] = BuildEventHandler.Handle,
         [CallbackMenu.EventTitleReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventDateTimeOfAgain] = HandleEventReplaceMenu,
@@ -23,10 +23,10 @@ public static class MenuHandler
         [CallbackMenu.EventPartLimitReplace] = HandleEventReplaceMenu,
         [CallbackMenu.EventDescrReplace] = HandleEventReplaceMenu,
         [CallbackMenu.RegisterToEvent] = HandleEventRegisterMenu,
-        [CallbackMenu.CreatedEvent] = EventListHandler.HandleMyOwn,
-        [CallbackMenu.CreEventPart] = EventListHandler.HandleMyOwnPart,
-        [CallbackMenu.RegEventDescr] = EventListHandler.HandleRegisteredDescr,
-        [CallbackMenu.RegEventPart] = EventListHandler.HandleRegisteredPart,
+        [CallbackMenu.CreatedEvent] = IndividualEventHandler.HandleMyOwn,
+        [CallbackMenu.CreEventPart] = IndividualEventHandler.HandleMyOwnPart,
+        [CallbackMenu.RegEventDescr] = IndividualEventHandler.HandleRegisteredDescr,
+        [CallbackMenu.RegEventPart] = IndividualEventHandler.HandleRegisteredPart,
     };
 
     private static readonly Dictionary<CallbackMenu, BuildEventStatus> ReplaceStatusDict = new()
@@ -69,7 +69,7 @@ public static class MenuHandler
 
     private static void HandleEventRegisterMenu(UpdateContainer container)
     {
-        EventListHandler.HandleRegister(container);
+        IndividualEventHandler.HandleRegister(container);
     }
 
     private static void CallbackUnknownMenu(UpdateContainer container)
