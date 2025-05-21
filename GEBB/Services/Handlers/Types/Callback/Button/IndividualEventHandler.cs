@@ -178,24 +178,37 @@ public static class IndividualEventHandler
     {
         AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
         EService.Remove(container.CallbackData!.EventId!);
-        container.BotClient.AnswerCallbackQuery(
-            callbackQueryId: container.CallbackData.CallbackId!,
-            text: "Мероприятие отменено.",
-            showAlert: true,
-            cancellationToken: container.Token);
-        Thread.Sleep(200);
-        string text = $"Мероприятие {appEvent.Title}\n" +
-                      $"{appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"{appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                      $"отменено организатором.";
-        foreach (AppUser appUser in appEvent.RegisteredUsers)
+        if (appEvent.DateTimeOf > DateTime.Now)
         {
             Thread.Sleep(200);
-            container.BotClient.SendMessage(
-                chatId: appUser.UserId,
-                text: text,
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData.CallbackId!,
+                text: "Мероприятие отменено.",
+                showAlert: true,
+                cancellationToken: container.Token);
+            string text = $"Мероприятие {appEvent.Title}\n" +
+                          $"{appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+                          $"{appEvent.DateTimeOf!.Value:HH:mm}\n" +
+                          $"отменено организатором.";
+            foreach (AppUser appUser in appEvent.RegisteredUsers)
+            {
+                Thread.Sleep(200);
+                container.BotClient.SendMessage(
+                    chatId: appUser.UserId,
+                    text: text,
+                    cancellationToken: container.Token);
+            }
+        }
+        else
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData.CallbackId!,
+                text: "Мероприятие уже завершилось.",
+                showAlert: true,
                 cancellationToken: container.Token);
         }
+        
 
         HandleClose(container);
     }

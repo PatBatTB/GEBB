@@ -3,8 +3,8 @@
 BOT_TOKEN=""
 ### Write the desired min logging level:
 # Available values: ALL / DEBUG / INFO / WARN / ERROR / FATAL / OFF
-### You need the "xmlstarlet" utility to replace the LOG_LEVEL. If it is not installed, the logging level "ALL" is used by default.
-LOG_LEVEL="ALL"
+### You need the "xmlstarlet" utility to replace the LOG_LEVEL. If it is not installed, the logging level "WARN" is used by default.
+LOG_LEVEL="WARN"
 ###
 
 if [ "$BOT_TOKEN" = "" ]; then
@@ -23,15 +23,16 @@ if [ ! -f "$LOG_CONFIG_PATH" ]; then
     <appender name=\"RollingFileAppender\" type=\"log4net.Appender.RollingFileAppender\">
         <file value=\""$LOG_FILE_PATH"\" />
         <appendToFile value=\"true\" />
-        <maximumFileSize value=\"1000KB\" />
+        <rollingStyle value=\"Size\" />
+        <maximumFileSize value=\"3MB\" />
         <maxSizeRollBackups value=\"5\" />
         <layout type=\"log4net.Layout.PatternLayout\">
-            <conversionPattern value=\"%date [%thread] %-5level %logger - %message%newline\" />
+            <conversionPattern value=\"%date [%2thread] %-5level %.40logger - %message%newline\" />
         </layout>
     </appender>
     
     <root>
-        <level value=\"ALL\" />
+        <level value=\"WARN\" />
         <appender-ref ref=\"ConsoleAppender\" />
         <appender-ref ref=\"RollingFileAppender\" />
     </root>
@@ -40,6 +41,8 @@ fi
 
 if command -v xmlstarlet > /dev/null 2>&1; then
   xmlstarlet edit -L -O -u "//log4net/root/level/@value" -v "$LOG_LEVEL" "$LOG_CONFIG_PATH"
+else
+  echo "You need to install \"xmlstarlet\" utility if you want to autoupdate logging level from variable LOG_LEVEL"
 fi
 if [ ! -f "$APPSETTINGS" ]; then
 	echo "{

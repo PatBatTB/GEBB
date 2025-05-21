@@ -32,7 +32,7 @@ public class ReceivingHandler
 
                     message = update.Message;
                     chatId = message.Chat.Id;
-                    log.Debug($"Receive message in chat: {chatId} from:{message.From!.Id} message: {message.Text!}");
+                    log.Debug($"Receive message in chat: {chatId} from: {message.From!.Username}[{message.From!.Id}] message: {message.Text!}");
 
                     if (message.From is null)
                     {
@@ -59,7 +59,7 @@ public class ReceivingHandler
 
                     callbackQuery = update.CallbackQuery;
                     user = callbackQuery.From;
-                    log.Debug($"Receive CallbackQuery in chat: {callbackQuery.ChatInstance} from:{user.Id} data: {callbackQuery.Data!}");
+                    log.Debug($"Receive CallbackQuery from: {user.Username}[{user.Id}] data: {callbackQuery.Data!}");
 
                     if (callbackQuery.Message is null)
                     {

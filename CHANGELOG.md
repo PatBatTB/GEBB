@@ -1,3 +1,19 @@
+## v0.3.1
+- Изменена стратегия ротирования логов. Теперь логи ротируются в зависимости от размера.
+- Пользователи больше не будут получать уведомление об отмене мероприятий, если отменяется мероприятие, которое уже завершилось.
+- Удалены из логов ошибочные номера chatID
+- Добавлены в DEBUG-логи имена пользователей полученных сообщений и откликов.
+- Изменен уровень логирования по умолчанию на WARN
+- Изменен паттерн логирования для большего удобства.
+
+___
+- Change log's rollingStyle strategy to size-based
+- If cancelled event has passed, participants will not receive notifications
+- Incorrect chatId from log has been deleted
+- Added Username of received message and callbackQuery to log
+- Default logLevel changed to WARN
+- Log's conversionPattern has been edited for more usability
+
 ## v0.3.0
 - Изменено меню пользователя на более удобное и интуитивное.
 ___
