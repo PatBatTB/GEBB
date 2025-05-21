@@ -7,6 +7,7 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.GitHub.PatBatTB.GEBB.Exceptions;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using log4net;
+using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -276,41 +277,59 @@ public static class IndividualEventHandler
         {
             AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
             
+            if (appEvent.Status == EventStatus.Deleted)
+            {
+                throw new EventNotValidException("Данное мероприятие было отменено организатором.");
+            }
+            
+            if (appEvent.DateTimeOf <= DateTime.Now)
+            {
+                throw new EventNotValidException("Данное мероприятие уже завершилось.");
+            }
+
             if (appEvent.ParticipantLimit > 0 && appEvent.ParticipantLimit <= appEvent.RegisteredUsers.Count)
             {
-                Thread.Sleep(200);
-                container.BotClient.AnswerCallbackQuery(
-                    callbackQueryId: container.CallbackData!.CallbackId!,
-                    text: "К сожалению, места на это мероприятие закончились.",
-                    showAlert: true,
-                    cancellationToken: container.Token);
+                throw new EventNotValidException("К сожалению, места на это мероприятие закончились.");
             }
-            else
-            {
-                EService.RegisterUser(appEvent, container.AppUser);
-                Thread.Sleep(200);
-                container.BotClient.AnswerCallbackQuery(
-                    callbackQueryId: container.CallbackData!.CallbackId!,
-                    text: "Вы успешно зарегистрировались на мероприятие.",
-                    showAlert: true,
-                    cancellationToken: container.Token);
-            }
+            
+            EService.RegisterUser(appEvent, container.AppUser);
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Вы успешно зарегистрировались на мероприятие.",
+                showAlert: true,
+                cancellationToken: container.Token);
         }
         catch (EntityNotFoundException)
         {
             Thread.Sleep(200);
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
-                text: "Данное мероприятие больше неактуально.",
+                text: "Произошла ошибка. Пожалуйста сообщите администратору.",
+                showAlert: true,
+                cancellationToken: container.Token);
+        }
+        catch (SqliteException e) when (e.SqliteErrorCode == 19 && e.Message.Contains("UNIQUE constraint failed"))
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: "Вы уже зарегистрированы на это мероприятие",
+                showAlert: true,
+                cancellationToken: container.Token);
+        }
+        catch (EventNotValidException e)
+        {
+            Thread.Sleep(200);
+            container.BotClient.AnswerCallbackQuery(
+                callbackQueryId: container.CallbackData!.CallbackId!,
+                text: e.Message,
                 showAlert: true,
                 cancellationToken: container.Token);
         }
         
         Thread.Sleep(200);
-        container.BotClient.DeleteMessage(
-            chatId: container.ChatId,
-            messageId: container.Message.Id,
-            cancellationToken: container.Token);
+        container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
     }
 
     private static void HandleClose(UpdateContainer container)
