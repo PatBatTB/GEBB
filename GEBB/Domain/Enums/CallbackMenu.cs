@@ -19,6 +19,7 @@ public enum CallbackMenu
     RegEventDescr,
     RegEventPart,
     CreEventPart,
+    ReportBug,
 }
 
 public static class CallbackMenuExtension
@@ -34,6 +35,7 @@ public static class CallbackMenuExtension
     private const string EventCostReplaceText = "Стоимость уже указана. Изменить?";
     private const string EventParticipantLimitReplaceText = "Количество участников уже указано. Изменить?";
     private const string EventDescriptionReplaceText = "Описание уже указано. Изменить?";
+    private const string ReportBugText = "Воспользуйтесь одним из способов обратной связи:";
 
     public static string Text(this CallbackMenu callbackMenu)
     {
@@ -55,6 +57,7 @@ public static class CallbackMenuExtension
             CallbackMenu.RegEventDescr => throw new ArgumentException("RegisteredEventDescription has no text"),
             CallbackMenu.RegEventPart => throw new ArgumentException("RegisteredEventParticipants has no text"),
             CallbackMenu.CreEventPart => throw new ArgumentException("CreateEventParticipants has no text"),
+            CallbackMenu.ReportBug => ReportBugText,
             _ => throw new ArgumentException("Incorrect CallbackMenu enum")
         };
     }

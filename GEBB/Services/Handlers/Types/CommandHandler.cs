@@ -6,6 +6,7 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Providers;
 using log4net;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types;
 
@@ -16,11 +17,14 @@ public static class CommandHandler
         [Command.Start.Name()] = HandleStart,
         [Command.Stop.Name()] = HandleStop,
         [Command.Menu.Name()] = HandleMenu,
+        [Command.Report.Name()] = HandleReport,
         [Command.CancelCreate.Name()] = HandleCancel,
     };
 
     private static readonly IUserService UService = new DbUserService();
+
     private static readonly IEventService EService = new DbEventService();
+
     private static readonly ILog Log = LogManager.GetLogger(typeof(CommandHandler));
 
     public static void Handle(UpdateContainer container)
@@ -107,9 +111,15 @@ public static class CommandHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private static void HandleReport(UpdateContainer container)
     {
-        Log.Error("Unknown command");
+        Thread.Sleep(200);
+        container.BotClient.SendMessage(
+            chatId: container.ChatId,
+            text: CallbackMenu.ReportBug.Text() + "\n Вы можете отправить письмо на email\ncontact-project+patbattb-gebb-support@incoming.gitlab.com\n или воспользоваться кнопками ниже.",
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.ReportBug),
+            parseMode: ParseMode.Html,
+            cancellationToken: container.Token);
     }
 
     private static void HandleCancel(UpdateContainer container)
@@ -131,5 +141,10 @@ public static class CommandHandler
             chatId: container.ChatId,
             messageIds: idList,
             cancellationToken: container.Token);
+    }
+
+    private static void HandleUnknown(UpdateContainer container)
+    {
+        Log.Error("Unknown command");
     }
 }

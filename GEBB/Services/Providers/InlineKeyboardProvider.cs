@@ -22,6 +22,7 @@ public static class InlineKeyboardProvider
             [CallbackMenu.EventCostReplace] = GetYesNoMarkup,
             [CallbackMenu.EventPartLimitReplace] = GetYesNoMarkup,
             [CallbackMenu.EventDescrReplace] = GetYesNoMarkup,
+            [CallbackMenu.ReportBug] = GetFeedbackMarkup,
         };
 
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, string, InlineKeyboardMarkup>>
@@ -256,6 +257,17 @@ public static class InlineKeyboardProvider
             [
                 [register],
                 [close],
+            ]
+        );
+    }
+
+    private static InlineKeyboardMarkup GetFeedbackMarkup(CallbackMenu arg)
+    {
+        var email = InlineKeyboardButton.WithUrl("GitLab", "https://gitlab.com/PatBatTB/GEBB/-/issues/new");
+        var telegram = InlineKeyboardButton.WithUrl("Telegram", "https://t.me/PatBatTB");
+        return new InlineKeyboardMarkup(
+            [
+                [email, telegram]
             ]
         );
     }
