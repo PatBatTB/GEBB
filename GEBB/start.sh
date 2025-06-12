@@ -33,7 +33,6 @@ if [ ! -f "$LOG_CONFIG_PATH" ]; then
     
     <root>
         <level value=\"WARN\" />
-        <appender-ref ref=\"ConsoleAppender\" />
         <appender-ref ref=\"RollingFileAppender\" />
     </root>
 </log4net>" > "$LOG_CONFIG_PATH"

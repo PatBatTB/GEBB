@@ -221,7 +221,7 @@ public class DbEventService : IEventService
             .Include(elem => elem.RegisteredUsers)
             .Where(elem => !elem.RegisteredUsers.Contains(user) &&
                            elem.CreatorId != userId &&
-                           (elem.RegisteredUsers.Count == 0 || elem.RegisteredUsers.Count < elem.ParticipantLimit) &&
+                           (elem.ParticipantLimit == 0 || elem.ParticipantLimit > elem.RegisteredUsers.Count) &&
                            elem.DateTimeOf > DateTime.Now && 
                            elem.Status == EventStatus.Active)
             .ToList();

@@ -37,20 +37,10 @@ public static class EventsListHandler
         {
             foreach (AppEvent appEvent in container.Events)
             {
-                string text = $"Название: {appEvent.Title}\n" +
-                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                              $"Место: {appEvent.Address}\n" +
-                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                              $"Планируемые затраты: {appEvent.Cost}\n" +
-                              (string.IsNullOrEmpty(appEvent.Description)
-                                  ? ""
-                                  : $"Дополнительная информация: {appEvent.Description}");
                 Thread.Sleep(200);
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
-                    text: text,
+                    text: MessageService.GetMyEventDescription(appEvent),
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, appEvent.Id),  
                     cancellationToken: container.Token);
             }
@@ -89,21 +79,10 @@ public static class EventsListHandler
         {
             foreach (AppEvent appEvent in container.Events)
             {
-                string text = $"Название: {appEvent.Title}\n" +
-                              $"Организатор: @{appEvent.Creator.Username}\n" +
-                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                              $"Место: {appEvent.Address}\n" +
-                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                              $"Планируемые затраты: {appEvent.Cost}\n" +
-                              (string.IsNullOrEmpty(appEvent.Description)
-                                  ? ""
-                                  : $"Дополнительная информация: {appEvent.Description}");
                 Thread.Sleep(200);
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
-                    text: text,
+                    text: MessageService.GetEventDescription(appEvent),
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, appEvent.Id),
                     cancellationToken: container.Token);
             }
@@ -129,21 +108,10 @@ public static class EventsListHandler
         {
             foreach (AppEvent appEvent in container.Events)
             {
-                string text = $"Название: {appEvent.Title}\n" +
-                              $"Организатор: @{appEvent.Creator.Username}\n" +
-                              $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                              $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                              $"Место: {appEvent.Address}\n" +
-                              $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                              $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                              $"Планируемые затраты: {appEvent.Cost}\n" +
-                              (string.IsNullOrEmpty(appEvent.Description)
-                                  ? ""
-                                  : $"Дополнительная информация: {appEvent.Description}");
                 Thread.Sleep(200);
                 container.BotClient.SendMessage(
                     chatId: container.ChatId,
-                    text: text,
+                    text: MessageService.GetEventDescription(appEvent),
                     replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegisterToEvent, appEvent.Id));
             }
             Thread.Sleep(200);

@@ -109,21 +109,11 @@ public static class IndividualEventHandler
     private static void HandleMyOwnToDescription(UpdateContainer container)
     {
         AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
-        string text = $"Название: {appEvent.Title}\n" +
-                      $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                      $"Место: {appEvent.Address}\n" +
-                      $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                      $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                      $"Планируемые затраты: {appEvent.Cost}\n" +
-                      (string.IsNullOrEmpty(appEvent.Description)
-                          ? ""
-                          : $"Дополнительная информация: {appEvent.Description}");
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
             messageId: container.Message.Id,
-            text: text,
+            text: MessageService.GetMyEventDescription(appEvent),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreatedEvent, appEvent.Id),  
             cancellationToken: container.Token);
     }
@@ -251,22 +241,11 @@ public static class IndividualEventHandler
     private static void HandleToDescription(UpdateContainer container)
     {
         AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
-        string text = $"Название: {appEvent.Title}\n" +
-                      $"Организатор: @{appEvent.Creator.Username}\n" +
-                      $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                      $"Место: {appEvent.Address}\n" +
-                      $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                      $"Зарегистрировалось: {appEvent.RegisteredUsers.Count}\n" +
-                      $"Планируемые затраты: {appEvent.Cost}\n" +
-                      (string.IsNullOrEmpty(appEvent.Description)
-                          ? ""
-                          : $"Дополнительная информация: {appEvent.Description}");
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
             messageId: container.Message.Id,
-            text: text,
+            text: MessageService.GetEventDescription(appEvent),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegEventDescr, appEvent.Id),
             cancellationToken: container.Token);
     }

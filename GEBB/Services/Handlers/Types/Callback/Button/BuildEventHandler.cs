@@ -205,23 +205,12 @@ public static class BuildEventHandler
             container.Message.Id,
             container.Token);
 
-        string text = $"@{container.AppUser.Username} приглашает на мероприятие!\n" +
-                      $"Название: {appEvent.Title}\n" +
-                      $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
-                      $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n" +
-                      $"Место: {appEvent.Address}\n" +
-                      $"Максимум человек: {appEvent.ParticipantLimit}\n" +
-                      $"Планируемые затраты: {appEvent.Cost}\n" +
-                      (string.IsNullOrEmpty(appEvent.Description)
-                          ? ""
-                          : $"Дополнительная информация: {appEvent.Description}");
-
         foreach (AppUser user in UService.GetInviteList(appEvent))
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(
                 chatId: user.UserId,
-                text: text,
+                text: MessageService.GetUserInvitesToEventString(container.AppUser, appEvent),
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.RegisterToEvent, appEvent.Id),
                 cancellationToken: container.Token);
         }
