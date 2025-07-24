@@ -20,13 +20,17 @@ public enum CallbackMenu
     RegEventPart,
     CreEventPart,
     ReportBug,
+    Settings,
+    Alarm,
 }
 
 public static class CallbackMenuExtension
 {
     private const string MainText = "Меню пользователя";
     private const string EventListText = MainText + "\n \u21b3 Список мероприятий";
-    private const string CreateEventText = MainText + "\n    \u21b3 Создание нового мероприятия";
+    private const string CreateEventText = MainText + "\n \u21b3 Создание нового мероприятия";
+    private const string SettingsText = MainText + "\n \u21b3 Настройки";
+    private const string AlarmText = SettingsText + "\n    \u21b3 Оповещения";
     private const string EditEventText = "Редактирование мероприятия\n";
     private const string EventTitleReplaceText = "Название мероприятия уже задано. Изменить?";
     private const string EventDateTimeOfAgainText = "Неправильный формат. Ввести снова?";
@@ -44,6 +48,8 @@ public static class CallbackMenuExtension
             CallbackMenu.Main => MainText,
             CallbackMenu.EventsList => EventListText,
             CallbackMenu.CreateEvent => CreateEventText,
+            CallbackMenu.Settings => SettingsText,
+            CallbackMenu.Alarm => AlarmText,
             CallbackMenu.EditEvent => EditEventText,
             CallbackMenu.EventTitleReplace => EventTitleReplaceText,
             CallbackMenu.EventDateTimeOfAgain => EventDateTimeOfAgainText,

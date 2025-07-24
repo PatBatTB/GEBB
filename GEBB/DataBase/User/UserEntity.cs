@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 
@@ -20,4 +21,6 @@ public sealed class UserEntity
     public ICollection<BuildEventEntity> TempEvents { get; set; } = new List<BuildEventEntity>();
 
     public ICollection<EventEntity> EventsNavigation { get; set; } = new List<EventEntity>();
+
+    public AlarmEntity? Alarm { get; set; }
 }

@@ -75,6 +75,13 @@ public class ReceivingHandler
                     return Task.CompletedTask;
             }
 
+            //ignore messages from bot or user without username
+            if (user.IsBot || user.Username is null || user.Username == string.Empty)
+            {
+                log.Debug($"Message from unknown user [{user.Id}] received. Ignored");
+                return Task.CompletedTask;
+            }
+
             AppUser appUser = UService.Update(user);
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =

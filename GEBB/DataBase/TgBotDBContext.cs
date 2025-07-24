@@ -1,4 +1,5 @@
-﻿using Com.Github.PatBatTB.GEBB.DataBase.Event;
+﻿using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.GitHub.PatBatTB.GEBB.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ public partial class TgBotDbContext : DbContext
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
     public virtual DbSet<BuildEventEntity> TempEvents { get; set; }
+    public virtual DbSet<AlarmEntity> Alarms { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite(AppSettings.DbConnString);
@@ -43,7 +45,7 @@ public partial class TgBotDbContext : DbContext
             entity.Property(e => e.Title).HasColumnType("varchar");
             entity.Property(e => e.Status).HasColumnType("INTEGER");
             entity.HasKey(e => new { e.EventId, e.CreatorId });
-            entity.HasOne(d => d.Creator).WithMany(p => p.TempEvents).HasForeignKey(d => d.CreatorId);
+            entity.HasOne(d => d.Creator).WithMany(p => p.TempEvents).HasForeignKey(d => d.CreatorId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserEntity>(entity =>
@@ -74,6 +76,18 @@ public partial class TgBotDbContext : DbContext
                         j.IndexerProperty<int>("EventId").HasColumnType("INTEGER");
                         j.IndexerProperty<long>("CreatorId").HasColumnType("BIGINT");
                     });
+
+            entity.HasOne(e => e.Alarm).WithOne(e => e.User).HasForeignKey<AlarmEntity>(e => e.UserId);
+        });
+
+        modelBuilder.Entity<AlarmEntity>(entity =>
+        {
+            entity.Property(e => e.UserId).HasColumnType("BIGINT");
+            entity.Property(e => e.ThreeDaysAlarm).HasColumnType("TINYINT");
+            entity.Property(e => e.OneDayAlarm).HasColumnType("TINYINT");
+            entity.Property(e => e.HoursAlarm).HasColumnType("INTEGER");
+
+            entity.HasKey(e => e.UserId);
         });
 
         OnModelCreatingPartial(modelBuilder);
