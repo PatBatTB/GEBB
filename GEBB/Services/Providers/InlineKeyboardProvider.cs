@@ -25,6 +25,7 @@ public static class InlineKeyboardProvider
             [CallbackMenu.ReportBug] = GetFeedbackMarkup,
             [CallbackMenu.Settings] = GetSettingsMarkup,
             [CallbackMenu.Alarm] = GetAlarmMarkup,
+            [CallbackMenu.AlarmHours] = GetAlarmHoursMarkup,
         };
 
     private static readonly Dictionary<CallbackMenu, Func<CallbackMenu, string, InlineKeyboardMarkup>>
@@ -143,10 +144,34 @@ public static class InlineKeyboardProvider
             .GetButton(new CallbackData { Button = CallbackButton.Back, Menu = menu });
         return new InlineKeyboardMarkup(
             [
-                [threeDays],
-                [oneDay],
                 [hours],
+                [oneDay, threeDays],
                 [back],
+            ]
+        );
+    }
+
+    private static InlineKeyboardMarkup GetAlarmHoursMarkup(CallbackMenu menu)
+    {
+        var disable = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Disable, Menu = menu });
+        var one = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.One, Menu = menu });
+        var two = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Two, Menu = menu });
+        var three = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Three, Menu = menu });
+        var four = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Four, Menu = menu });
+        var five = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Five, Menu = menu });
+        var back = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.Back, Menu = menu });
+        return new InlineKeyboardMarkup(
+            [
+                [disable],
+                [one, two, three, four, five],
+                [back]
             ]
         );
     }

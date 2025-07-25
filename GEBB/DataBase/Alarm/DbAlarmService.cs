@@ -1,18 +1,29 @@
+using Com.GitHub.PatBatTB.GEBB.Exceptions;
+
 namespace Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 
 public class DbAlarmService : IAlarmService
 {
-    public AppAlarm Get(long userId)
+    public AppAlarm? Get(long userId)
     {
         using TgBotDbContext db = new();
-        AlarmEntity entity = db.Alarms.First(alarm => alarm.UserId == userId);
-        return EntityToAlarm(entity);
+        return (db.Alarms.Find(userId) is { } alarm) ? EntityToAlarm(alarm) : null; 
     }
 
     public void Update(AppAlarm alarm)
     {
         using TgBotDbContext db = new();
-        db.Add(AlarmToEntity(alarm));
+        if (db.Alarms.Find(alarm.UserId) is { } entity)
+        {
+            entity.HoursAlarm = alarm.HoursAlarm;
+            entity.OneDayAlarm = alarm.OneDayAlarm;
+            entity.ThreeDaysAlarm = alarm.ThreeDaysAlarm;
+            db.Update(entity);
+        }
+        else
+        {
+            db.Add(AlarmToEntity(alarm));
+        }
         db.SaveChanges();
     }
 

@@ -83,8 +83,8 @@ public partial class TgBotDbContext : DbContext
         modelBuilder.Entity<AlarmEntity>(entity =>
         {
             entity.Property(e => e.UserId).HasColumnType("BIGINT");
-            entity.Property(e => e.ThreeDaysAlarm).HasColumnType("TINYINT");
-            entity.Property(e => e.OneDayAlarm).HasColumnType("TINYINT");
+            entity.Property(e => e.ThreeDaysAlarm).HasColumnType("INTEGER");
+            entity.Property(e => e.OneDayAlarm).HasColumnType("INTEGER");
             entity.Property(e => e.HoursAlarm).HasColumnType("INTEGER");
 
             entity.HasKey(e => e.UserId);

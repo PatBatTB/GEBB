@@ -29,6 +29,7 @@ public static class MenuHandler
         [CallbackMenu.RegEventPart] = IndividualEventHandler.HandleRegisteredPart,
         [CallbackMenu.Settings] = SettingsHandler.Handle,
         [CallbackMenu.Alarm] = SettingsHandler.HandleAlarmMenu,
+        [CallbackMenu.AlarmHours] = SettingsHandler.HandleAlarmHours,
     };
 
     private static readonly Dictionary<CallbackMenu, BuildEventStatus> ReplaceStatusDict = new()
