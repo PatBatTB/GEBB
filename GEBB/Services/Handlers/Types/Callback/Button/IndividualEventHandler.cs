@@ -10,6 +10,7 @@ using log4net;
 using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
@@ -22,6 +23,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
     {
         [CallbackButton.PartList] = HandleMyOwnParticipantList,
+        [CallbackButton.SendMessage] = HandleSendMessage,
         [CallbackButton.Edit] = HandleEdit,
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
@@ -30,6 +32,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonPartDict = new()
     {
         [CallbackButton.ToDescr] = HandleMyOwnToDescription,
+        [CallbackButton.SendMessage] = HandleSendMessage,
         [CallbackButton.Edit] = HandleEdit,
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
@@ -38,6 +41,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonDescrDict = new()
     {
         [CallbackButton.PartList] = HandleParticipantList,
+        [CallbackButton.SendMessage] = HandleSendMessage,
         [CallbackButton.CancelReg] = HandleCancelRegistration,
         [CallbackButton.Close] = HandleClose,
     };
@@ -45,6 +49,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonPartDict = new()
     {
         [CallbackButton.ToDescr] = HandleToDescription,
+        [CallbackButton.SendMessage] = HandleSendMessage,
         [CallbackButton.CancelReg] = HandleCancelRegistration,
         [CallbackButton.Close] = HandleClose,
     };
@@ -309,6 +314,18 @@ public static class IndividualEventHandler
         
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+    }
+
+    private static void HandleSendMessage(UpdateContainer container)
+    {
+        DataService.UpdateUserStatus(container, UserStatus.SendingMessage, UService);
+        Thread.Sleep(200);
+        container.BotClient.SendMessage(
+            chatId: container.ChatId,
+            text: "Введите сообщение для отправки:",
+            replyMarkup: new ForceReplyMarkup(),
+            cancellationToken: container.Token);
+        //TODO 
     }
 
     private static void HandleClose(UpdateContainer container)

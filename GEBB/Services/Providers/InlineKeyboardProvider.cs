@@ -181,13 +181,15 @@ public static class InlineKeyboardProvider
             .GetButton(new CallbackData { Button = CallbackButton.PartList, Menu = menu, EventId = eventId });
         var edit = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
+        var sendMessage = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.SendMessage, Menu = menu, EventId = eventId });
         var cancel = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Cancel, Menu = menu, EventId = eventId});
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(
             [
-                [partList],
+                [partList, sendMessage],
                 [edit, cancel],
                 [close],
             ]
@@ -200,13 +202,15 @@ public static class InlineKeyboardProvider
             .GetButton(new CallbackData { Button = CallbackButton.ToDescr, Menu = menu, EventId = eventId });
         var edit = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
+        var sendMessage = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.SendMessage, Menu = menu, EventId = eventId });
         var cancel = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Cancel, Menu = menu, EventId = eventId});
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(
             [
-                [toDescr],
+                [toDescr, sendMessage],
                 [edit, cancel],
                 [close],
             ]
