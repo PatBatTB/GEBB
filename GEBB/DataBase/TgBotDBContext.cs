@@ -11,7 +11,8 @@ public partial class TgBotDbContext : DbContext
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
     public virtual DbSet<BuildEventEntity> TempEvents { get; set; }
-    public virtual DbSet<AlarmEntity> Alarms { get; set; }
+    public virtual DbSet<AlarmSettingsEntity> AlarmSettings { get; set; }
+    public virtual DbSet<AlarmEntity> Alarm { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite(AppSettings.DbConnString);
@@ -31,6 +32,7 @@ public partial class TgBotDbContext : DbContext
 
             entity.HasKey(e => new { e.EventId, e.CreatorId });
             entity.HasOne(d => d.Creator).WithMany(p => p.Events).HasForeignKey(d => d.CreatorId);
+            entity.HasOne(d => d.Alarm).WithOne(p => p.Event).HasForeignKey<AlarmEntity>(d => d.EventId);
         });
 
         modelBuilder.Entity<BuildEventEntity>(entity =>
@@ -77,18 +79,29 @@ public partial class TgBotDbContext : DbContext
                         j.IndexerProperty<long>("CreatorId").HasColumnType("BIGINT");
                     });
 
-            entity.HasOne(e => e.Alarm).WithOne(e => e.User).HasForeignKey<AlarmEntity>(e => e.UserId);
+            entity.HasOne(d => d.AlarmSettings).WithOne(p => p.User).HasForeignKey<AlarmSettingsEntity>(d => d.UserId);
+            entity.HasOne(d => d.Alarm).WithOne(p => p.User).HasForeignKey<AlarmEntity>(d => d.UserId);
         });
 
-        modelBuilder.Entity<AlarmEntity>(entity =>
+        modelBuilder.Entity<AlarmSettingsEntity>(entity =>
         {
             entity.Property(e => e.UserId).HasColumnType("BIGINT");
-            entity.Property(e => e.ThreeDaysAlarm).HasColumnType("INTEGER");
-            entity.Property(e => e.OneDayAlarm).HasColumnType("INTEGER");
-            entity.Property(e => e.HoursAlarm).HasColumnType("INTEGER");
+            entity.Property(e => e.ThreeDays).HasColumnType("INTEGER");
+            entity.Property(e => e.OneDay).HasColumnType("INTEGER");
+            entity.Property(e => e.Hours).HasColumnType("INTEGER");
 
             entity.HasKey(e => e.UserId);
         });
+
+        modelBuilder.Entity<AlarmEntity>(entity =>
+            {
+                entity.Property(e => e.UserId).HasColumnType("BIGINT");
+                entity.Property(e => e.EventId).HasColumnType("INTEGER");
+                entity.Property(e => e.LastAlert).HasColumnType("TIMESTAMP");
+
+                entity.HasKey(e => new { e.UserId, e.EventId });
+            }
+        );
 
         OnModelCreatingPartial(modelBuilder);
     }

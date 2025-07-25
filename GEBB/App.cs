@@ -24,12 +24,8 @@ public class App
         AppDomain.CurrentDomain.ProcessExit += (_, _) => _receivingHandler.HandleExitSignal(cts);
         Console.CancelKeyPress += (_, _) => _receivingHandler.HandleExitSignal(cts);
 
-        _botClient.StartReceiving(
-            _receivingHandler.HandleUpdate,
-            _receivingHandler.HandleError,
-            receiverOptions: BotConfig.ReceiverOptions,
-            cancellationToken: token);
-        log.Info("The bot is running");
+        RunBot(token);
+        RunAlarmService(token);
         try
         {
             await Task.Delay(-1, token).WaitAsync(token);
@@ -38,5 +34,20 @@ public class App
         {
             log.Info("Exiting the App");
         }
+    }
+
+    private void RunBot(CancellationToken token)
+    {
+        _botClient.StartReceiving(
+            _receivingHandler.HandleUpdate,
+            _receivingHandler.HandleError,
+            receiverOptions: BotConfig.ReceiverOptions,
+            cancellationToken: token);
+        log.Info("The bot is running");
+    }
+
+    private void RunAlarmService(CancellationToken token)
+    {
+        log.Info("The alarm service is running");
     }
 }

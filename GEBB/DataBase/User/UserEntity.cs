@@ -22,5 +22,7 @@ public sealed class UserEntity
 
     public ICollection<EventEntity> EventsNavigation { get; set; } = new List<EventEntity>();
 
-    public AlarmEntity? Alarm { get; set; }
+    public AlarmSettingsEntity? AlarmSettings { get; set; }
+
+    public AlarmEntity Alarm { get; set; }
 }
