@@ -81,7 +81,6 @@ public class ReceivingHandler
                 log.Debug($"Message from unknown user [{user.Id}] received. Ignored");
                 return Task.CompletedTask;
             }
-
             AppUser appUser = UService.Update(user);
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
@@ -90,7 +89,7 @@ public class ReceivingHandler
         }
         catch (Exception e)
         {
-            log.Error(e.Message);
+            log.Error(e.Message, e);
         }
 
         return Task.CompletedTask;
@@ -98,7 +97,7 @@ public class ReceivingHandler
 
     internal Task HandleError(ITelegramBotClient botClient, Exception e, CancellationToken token)
     {
-        log.Error(e.Message);
+        log.Error(e.Message, e);
         return Task.CompletedTask;
     }
 
