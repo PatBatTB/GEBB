@@ -1,3 +1,11 @@
+## v0.5.0
+- Добавлено меню для настроек оповещений о приближающихся мероприятиях.
+- Реализован сервис рассылающий оповещения на основании индивидуальных настроек пользователей.
+- В репозиторий добавлен скрипт для обновления БД с более ранних версий. Подробнее в файле [readme](README.md), в разделе `Update`
+___
+- Added a menu for setting notifications about upcoming events.
+- A service has been implemented that sends alerts based on individual user settings.
+- A script has been added to the repository to update the database from earlier versions. For more information, see the [readme](README.md ) file, in the `Update` section
 ## v0.4.1
 - Исправлено: Не находились доступные для регистрации мероприятия без ограничений на количество участников.
 - Удалена ссылка на ConsoleAppender в конфигурации логирования.

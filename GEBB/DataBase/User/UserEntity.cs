@@ -24,5 +24,5 @@ public sealed class UserEntity
 
     public AlarmSettingsEntity? AlarmSettings { get; set; }
 
-    public AlarmEntity Alarm { get; set; }
+    public ICollection<AlarmEntity> Alarms { get; set; } = new List<AlarmEntity>();
 }

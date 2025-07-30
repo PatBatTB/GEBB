@@ -8,6 +8,15 @@ public class DbAlarmSettingsService : IAlarmSettingsService
         return (db.AlarmSettings.Find(userId) is { } alarm) ? EntityToAlarmSettings(alarm) : null; 
     }
 
+    public ICollection<AppAlarmSettings> Get(params long[] userId)
+    {
+        using TgBotDbContext db = new();
+        List<AlarmSettingsEntity> alarmSettingsEntities = db.AlarmSettings
+            .Where(e => userId.Contains(e.UserId))
+            .ToList();
+        return alarmSettingsEntities.Select(EntityToAlarmSettings).ToList();
+    }
+
     public void Update(AppAlarmSettings alarmSettings)
     {
         using TgBotDbContext db = new();

@@ -12,7 +12,7 @@ public partial class TgBotDbContext : DbContext
     public virtual DbSet<UserEntity> Users { get; set; }
     public virtual DbSet<BuildEventEntity> TempEvents { get; set; }
     public virtual DbSet<AlarmSettingsEntity> AlarmSettings { get; set; }
-    public virtual DbSet<AlarmEntity> Alarm { get; set; }
+    public virtual DbSet<AlarmEntity> Alarms { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite(AppSettings.DbConnString);
@@ -32,7 +32,6 @@ public partial class TgBotDbContext : DbContext
 
             entity.HasKey(e => new { e.EventId, e.CreatorId });
             entity.HasOne(d => d.Creator).WithMany(p => p.Events).HasForeignKey(d => d.CreatorId);
-            entity.HasOne(d => d.Alarm).WithOne(p => p.Event).HasForeignKey<AlarmEntity>(d => d.EventId);
         });
 
         modelBuilder.Entity<BuildEventEntity>(entity =>
@@ -80,7 +79,6 @@ public partial class TgBotDbContext : DbContext
                     });
 
             entity.HasOne(d => d.AlarmSettings).WithOne(p => p.User).HasForeignKey<AlarmSettingsEntity>(d => d.UserId);
-            entity.HasOne(d => d.Alarm).WithOne(p => p.User).HasForeignKey<AlarmEntity>(d => d.UserId);
         });
 
         modelBuilder.Entity<AlarmSettingsEntity>(entity =>
@@ -97,9 +95,13 @@ public partial class TgBotDbContext : DbContext
             {
                 entity.Property(e => e.UserId).HasColumnType("BIGINT");
                 entity.Property(e => e.EventId).HasColumnType("INTEGER");
-                entity.Property(e => e.LastAlert).HasColumnType("TIMESTAMP");
+                entity.Property(e => e.CreatorId).HasColumnType("BIGINT");
 
-                entity.HasKey(e => new { e.UserId, e.EventId });
+                entity.HasKey(e => new { e.UserId, e.EventId, e.CreatorId });
+                entity.HasOne<UserEntity>(d => d.User).WithMany(p => p.Alarms)
+                    .HasForeignKey(d => d.UserId);
+                entity.HasOne<EventEntity>(d => d.Event).WithMany(p => p.Alarms)
+                    .HasForeignKey(d => new { d.EventId, d.CreatorId });
             }
         );
 

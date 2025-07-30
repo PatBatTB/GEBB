@@ -32,6 +32,6 @@ public sealed class EventEntity
     public EventStatus Status { get; set; }
 
     public ICollection<UserEntity> RegisteredUsers { get; set; } = new List<UserEntity>();
-    
-    public AlarmEntity Alarm { get; set; }
+
+    public ICollection<AlarmEntity> Alarms { get; set; } = new List<AlarmEntity>();
 }

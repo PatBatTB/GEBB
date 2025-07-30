@@ -1,4 +1,5 @@
 using Com.GitHub.PatBatTB.GEBB.Domain;
+using Com.Github.PatBatTB.GEBB.Services;
 using Com.Github.PatBatTB.GEBB.Services.Handlers;
 using log4net;
 using Telegram.Bot;
@@ -9,12 +10,14 @@ public class App
 {
     private readonly ITelegramBotClient _botClient;
     private readonly ReceivingHandler _receivingHandler;
+    private readonly AlarmSendService _alarmSendService;
     private readonly ILog log = LogManager.GetLogger(typeof(App));
 
     public App()
     {
         _botClient = new TelegramBotClient(BotConfig.BotToken);
         _receivingHandler = new ReceivingHandler();
+        _alarmSendService = new AlarmSendService();
     }
 
     public async Task Run()
@@ -48,6 +51,7 @@ public class App
 
     private void RunAlarmService(CancellationToken token)
     {
+        Task.Run(() => _alarmSendService.Start(_botClient, token), token);
         log.Info("The alarm service is running");
     }
 }
