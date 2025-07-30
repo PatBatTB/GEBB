@@ -308,7 +308,7 @@ public class DbEventService : IEventService
         };
     }
 
-    private (int eventId, long creatorId) ParseEventId(string appEventId)
+    public (int eventId, long creatorId) ParseEventId(string appEventId)
     {
         string[] ids = appEventId.Split(Separator);
         if (ids.Length != 2 || !int.TryParse(ids[0], out int eventId) || !long.TryParse(ids[1], out long creatorId))
@@ -319,9 +319,9 @@ public class DbEventService : IEventService
         return (eventId, creatorId);
     }
 
-    private string CreateEventId(int messageId, long creatorId)
+    public string CreateEventId(int eventId, long creatorId)
     {
-        return messageId + Separator + creatorId;
+        return eventId + Separator + creatorId;
     }
 
     private int GetNextEventId(long creatorId, TgBotDbContext db)

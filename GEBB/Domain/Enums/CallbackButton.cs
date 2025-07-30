@@ -31,7 +31,7 @@ public enum CallbackButton
     PartList,
     CancelReg,
     ToDescr,
-    SendMessage,
+    EventMessage,
 }
 
 public static class CallbackButtonExtension
@@ -70,7 +70,7 @@ public static class CallbackButtonExtension
             CallbackButton.PartList => "Список участников",
             CallbackButton.CancelReg => "Отменить регистрацию",
             CallbackButton.ToDescr => "К описанию",
-            CallbackButton.SendMessage => "Отправить сообщение",
+            CallbackButton.EventMessage => "Сообщение участникам",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }

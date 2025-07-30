@@ -25,19 +25,20 @@ public static class MessageHandler
 
     private static void HandleText(UpdateContainer container)
     {
-        if (container.AppUser.UserStatus == UserStatus.Stop)
+        switch (container.AppUser.UserStatus)
         {
-            container.BotClient.SendMessage(
-                chatId: container.ChatId,
-                text: "Вы приостановили активность бота.\n" +
-                      "Для возобновления воспользуйтесь командой /start");
-            return;
-        }
-
-        if (container.AppUser.UserStatus == UserStatus.CreatingEvent || 
-            container.AppUser.UserStatus == UserStatus.EditingEvent)
-        {
-            BuildingEventStatusHandler.Handle(container);
+            case UserStatus.Stop:
+                container.BotClient.SendMessage(
+                    chatId: container.ChatId,
+                    text: "Вы приостановили активность бота.\n" +
+                          "Для возобновления воспользуйтесь командой /start");
+                break;
+            case UserStatus.CreatingEvent: case UserStatus.EditingEvent:
+                BuildingEventStatusHandler.Handle(container);
+                break;
+            case UserStatus.SendingMessage:
+                new SendEventMessageHandler().Handle(container);
+                break;
         }
     }
 

@@ -181,15 +181,15 @@ public static class InlineKeyboardProvider
             .GetButton(new CallbackData { Button = CallbackButton.PartList, Menu = menu, EventId = eventId });
         var edit = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
-        var sendMessage = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.SendMessage, Menu = menu, EventId = eventId });
+        var eventMessage = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.EventMessage, Menu = menu, EventId = eventId });
         var cancel = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Cancel, Menu = menu, EventId = eventId});
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(
             [
-                [partList, sendMessage],
+                [partList, eventMessage],
                 [edit, cancel],
                 [close],
             ]
@@ -202,15 +202,15 @@ public static class InlineKeyboardProvider
             .GetButton(new CallbackData { Button = CallbackButton.ToDescr, Menu = menu, EventId = eventId });
         var edit = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Edit, Menu = menu, EventId = eventId});
-        var sendMessage = InlineButtonProvider
-            .GetButton(new CallbackData { Button = CallbackButton.SendMessage, Menu = menu, EventId = eventId });
+        var eventMessage = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.EventMessage, Menu = menu, EventId = eventId });
         var cancel = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Cancel, Menu = menu, EventId = eventId});
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(
             [
-                [toDescr, sendMessage],
+                [toDescr, eventMessage],
                 [edit, cancel],
                 [close],
             ]
