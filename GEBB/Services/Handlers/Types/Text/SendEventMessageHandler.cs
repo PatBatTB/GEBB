@@ -27,6 +27,7 @@ public class SendEventMessageHandler
         {
             messageIds.Add(container.Message.ReplyToMessage.Id);
         }
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             container.ChatId,
@@ -54,6 +55,5 @@ public class SendEventMessageHandler
             """Произошла ошибка. Нажмите заново кнопку "Сообщение участникам" в карточке мероприятия и напишите сообщение в ответе за запрос.""",
             cancellationToken: container.Token
         );
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
     }
 }
