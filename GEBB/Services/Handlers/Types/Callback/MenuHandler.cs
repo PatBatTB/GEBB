@@ -27,6 +27,9 @@ public static class MenuHandler
         [CallbackMenu.CreEventPart] = IndividualEventHandler.HandleMyOwnPart,
         [CallbackMenu.RegEventDescr] = IndividualEventHandler.HandleRegisteredDescr,
         [CallbackMenu.RegEventPart] = IndividualEventHandler.HandleRegisteredPart,
+        [CallbackMenu.Settings] = SettingsHandler.Handle,
+        [CallbackMenu.Alarm] = SettingsHandler.HandleAlarmMenu,
+        [CallbackMenu.AlarmHours] = SettingsHandler.HandleAlarmHours,
     };
 
     private static readonly Dictionary<CallbackMenu, BuildEventStatus> ReplaceStatusDict = new()
@@ -74,6 +77,6 @@ public static class MenuHandler
 
     private static void CallbackUnknownMenu(UpdateContainer container)
     {
-        Log.Error("Unknown button");
+        Log.Error("Pressing button in unknown menu.");
     }
 }

@@ -22,4 +22,5 @@ public interface IEventService
     ICollection<AppEvent> GetMyOwnEvents(long creatorId);
     ICollection<AppEvent> GetRegisterEvents(long userId);
     ICollection<AppEvent> GetAvailableEvents(long userId);
+    ICollection<AppEvent> GetActiveEvents();
 }

@@ -75,6 +75,12 @@ public class ReceivingHandler
                     return Task.CompletedTask;
             }
 
+            //ignore messages from bot or user without username
+            if (user.IsBot || user.Username is null || user.Username == string.Empty)
+            {
+                log.Debug($"Message from unknown user [{user.Id}] received. Ignored");
+                return Task.CompletedTask;
+            }
             AppUser appUser = UService.Update(user);
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
@@ -83,7 +89,7 @@ public class ReceivingHandler
         }
         catch (Exception e)
         {
-            log.Error(e.Message);
+            log.Error(e.Message, e);
         }
 
         return Task.CompletedTask;
@@ -91,7 +97,7 @@ public class ReceivingHandler
 
     internal Task HandleError(ITelegramBotClient botClient, Exception e, CancellationToken token)
     {
-        log.Error(e.Message);
+        log.Error(e.Message, e);
         return Task.CompletedTask;
     }
 

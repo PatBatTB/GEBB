@@ -31,6 +31,17 @@ public enum CallbackButton
     PartList,
     CancelReg,
     ToDescr,
+    Settings,
+    Alarm,
+    ThreeDays,
+    OneDay,
+    Hours,
+    Disable,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
 }
 
 public static class CallbackButtonExtension
@@ -69,6 +80,17 @@ public static class CallbackButtonExtension
             CallbackButton.PartList => "Список участников",
             CallbackButton.CancelReg => "Отменить регистрацию",
             CallbackButton.ToDescr => "К описанию",
+            CallbackButton.Settings => "Настройки",
+            CallbackButton.Alarm => "Оповещения",
+            CallbackButton.ThreeDays => "За 3 дня",
+            CallbackButton.OneDay => "За 1 день",
+            CallbackButton.Hours => "За несколько часов",
+            CallbackButton.Disable => "Выключить",
+            CallbackButton.One => "1",
+            CallbackButton.Two => "2",
+            CallbackButton.Three => "3",
+            CallbackButton.Four => "4",
+            CallbackButton.Five => "5",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }

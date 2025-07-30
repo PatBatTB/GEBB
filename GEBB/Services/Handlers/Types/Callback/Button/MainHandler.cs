@@ -15,6 +15,7 @@ public static class MainHandler
     {
         [CallbackButton.Create] = HandleCreate,
         [CallbackButton.List] = HandleList,
+        [CallbackButton.Settings] = HandleSettings,
         [CallbackButton.Close] = HandleClose,
     };
 
@@ -88,6 +89,17 @@ public static class MainHandler
             messageId: container.Message.Id,
             text: CallbackMenu.EventsList.Text(),
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EventsList),
+            cancellationToken: container.Token);
+    }
+
+    private static void HandleSettings(UpdateContainer container)
+    {
+        Thread.Sleep(200);
+        container.BotClient.EditMessageText(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            text: CallbackMenu.Settings.Text(),
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.Settings),
             cancellationToken: container.Token);
     }
 

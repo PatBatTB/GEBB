@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
@@ -44,6 +45,7 @@ public static class BuildEventHandler
 
     private static readonly IUserService UService = new DbUserService();
     private static readonly IEventService EService = new DbEventService();
+    private static readonly IAlarmService AService = new DbAlarmService();
 
     public static void Handle(UpdateContainer container)
     {
@@ -204,6 +206,7 @@ public static class BuildEventHandler
             container.ChatId,
             container.Message.Id,
             container.Token);
+        AService.Update(new AppAlarm { Event = appEvent, User = container.AppUser, LastAlert = DateTime.Now} );
 
         foreach (AppUser user in UService.GetInviteList(appEvent))
         {
@@ -239,6 +242,7 @@ public static class BuildEventHandler
                         parseMode: ParseMode.Html,
                         cancellationToken: container.Token);
                 }
+                AService.Update(new AppAlarm { Event = oldEvent, User = container.AppUser, LastAlert = DateTime.Now} );
             }
             else
             {
