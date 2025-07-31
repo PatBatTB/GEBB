@@ -1,5 +1,6 @@
-﻿using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
+using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.Message;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.GitHub.PatBatTB.GEBB.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ public partial class TgBotDbContext : DbContext
     public virtual DbSet<BuildEventEntity> TempEvents { get; set; }
     public virtual DbSet<AlarmSettingsEntity> AlarmSettings { get; set; }
     public virtual DbSet<AlarmEntity> Alarms { get; set; }
+    public virtual DbSet<EventMessageEntity> EventMessages { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlite(AppSettings.DbConnString);
@@ -104,6 +106,19 @@ public partial class TgBotDbContext : DbContext
                     .HasForeignKey(d => new { d.EventId, d.CreatorId });
             }
         );
+
+        modelBuilder.Entity<EventMessageEntity>(entity =>
+        {
+            entity.Property(e => e.UserId).HasColumnType("BIGINT");
+            entity.Property(e => e.EventId).HasColumnType("INTEGER");
+            entity.Property(e => e.CreatorId).HasColumnType("BIGINT");
+
+            entity.HasKey(e => e.UserId);
+
+            entity.HasOne(d => d.User).WithOne(p => p.EventMessage).HasForeignKey<EventMessageEntity>(d => d.UserId);
+            entity.HasOne(d => d.Event).WithMany(p => p.EventMessages)
+                .HasForeignKey(d => new { d.EventId, d.CreatorId });
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

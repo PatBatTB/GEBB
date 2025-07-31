@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.Message;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
@@ -11,6 +12,7 @@ using log4net;
 using Microsoft.Data.Sqlite;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
@@ -19,11 +21,13 @@ public static class IndividualEventHandler
     private static readonly IEventService EService = new DbEventService();
     private static readonly IUserService UService = new DbUserService();
     private static readonly IAlarmService AService = new DbAlarmService();
+    private static readonly IEventMessageService EsSerivce = new DbEventMessageService();
     private static readonly ILog Log = LogManager.GetLogger(typeof(IndividualEventHandler)); 
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
     {
         [CallbackButton.PartList] = HandleMyOwnParticipantList,
+        [CallbackButton.EventMessage] = HandleEventMessage,
         [CallbackButton.Edit] = HandleEdit,
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
@@ -32,6 +36,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonPartDict = new()
     {
         [CallbackButton.ToDescr] = HandleMyOwnToDescription,
+        [CallbackButton.EventMessage] = HandleEventMessage,
         [CallbackButton.Edit] = HandleEdit,
         [CallbackButton.Cancel] = HandleCancel,
         [CallbackButton.Close] = HandleClose,
@@ -40,6 +45,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonDescrDict = new()
     {
         [CallbackButton.PartList] = HandleParticipantList,
+        [CallbackButton.EventMessage] = HandleEventMessage,
         [CallbackButton.CancelReg] = HandleCancelRegistration,
         [CallbackButton.Close] = HandleClose,
     };
@@ -47,6 +53,7 @@ public static class IndividualEventHandler
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonPartDict = new()
     {
         [CallbackButton.ToDescr] = HandleToDescription,
+        [CallbackButton.EventMessage] = HandleEventMessage,
         [CallbackButton.CancelReg] = HandleCancelRegistration,
         [CallbackButton.Close] = HandleClose,
     };
@@ -312,6 +319,22 @@ public static class IndividualEventHandler
         
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
+    }
+
+    private static void HandleEventMessage(UpdateContainer container)
+    {
+        DataService.UpdateUserStatus(container, UserStatus.SendingMessage, UService);
+        EsSerivce.Update(new AppEventMessage
+        {
+            Event = EService.Get(container.CallbackData!.EventId!),
+            User = UService.Get(container.AppUser.UserId)
+        });
+        Thread.Sleep(200);
+        container.BotClient.SendMessage(
+            chatId: container.ChatId,
+            text: "Введите сообщение для отправки:",
+            replyMarkup: new ForceReplyMarkup { InputFieldPlaceholder = "Текст сообщения" },
+            cancellationToken: container.Token);
     }
 
     private static void HandleClose(UpdateContainer container)

@@ -1,10 +1,22 @@
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
+using Com.GitHub.PatBatTB.GEBB.Exceptions;
 
 namespace Com.Github.PatBatTB.GEBB.DataBase.User;
 
 public class DbUserService : IUserService
 {
+    public AppUser Get(long userId)
+    {
+        using TgBotDbContext db = new();
+        if (db.Users.Find(userId) is not { } user)
+        {
+            throw new EntityNotFoundException("User not found");
+        }
+
+        return EntityToUser(user);
+    }
+
     public AppUser Update(Telegram.Bot.Types.User tgUser)
     {
         using TgBotDbContext db = new();

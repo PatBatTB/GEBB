@@ -238,7 +238,7 @@ public class DbEventService : IEventService
         return eventEntities.Select(EntityToEvent).ToList();
     }
 
-    private EventEntity EventToEntity(AppEvent appEvent)
+    public EventEntity EventToEntity(AppEvent appEvent)
     {
         (int eventId, long creatorId) = ParseEventId(appEvent.Id);
         ICollection<UserEntity> userEntities = appEvent.RegisteredUsers.Select(_dbUserService.UserToEntity).ToList();

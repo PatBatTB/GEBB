@@ -42,6 +42,7 @@ public enum CallbackButton
     Three,
     Four,
     Five,
+    EventMessage,
 }
 
 public static class CallbackButtonExtension
@@ -91,6 +92,7 @@ public static class CallbackButtonExtension
             CallbackButton.Three => "3",
             CallbackButton.Four => "4",
             CallbackButton.Five => "5",
+            CallbackButton.EventMessage => "Сообщение участникам",
             _ => throw new ArgumentException("Incorrect CallBackButton enum")
         };
     }
