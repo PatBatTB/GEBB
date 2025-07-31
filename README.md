@@ -92,6 +92,22 @@ chmod +x ./start.sh
 ___
 Launch the `start.sh` file
 
+## Update
+При выпуске новых версий бота так же может поменяться схема базы данных. Например, может быть добавлена новая таблица.
+При обновлении с более ранних версий, когда база данных не может быть развернута с нуля - необходимо обновить базу данных до актуальной структуры.
+Скрипты для обновления базы данных можно найти в папке `DatabaseUpdate` репозитория.
+Имя файла повторяет версию программы, на которой произошли изменения в БД. 
+Что бы обновить структуру базы данных до требуемой версии - нужно запустить поочередно в порядке возрастания все скрипты, 
+версия которых выше вашей текущей версии программы.
+___
+When new versions of the bot are released, the database structure may also change. For example, a new table may be added.
+When updating the program from earlier versions, when the database cannot be deployed from scratch, it is necessary to update the database to the current structure.
+Scripts for updating the database can be found in the "DatabaseUpdate` folder of the repository.
+The file name repeats the version of the program on which the changes occurred in the database.
+To update the database structure to the required version, you need to run all the scripts in ascending order.,
+the version of which is higher than your current version of the program.
+___
+
 ## Troubleshooting
 ...
 

@@ -55,6 +55,14 @@ public static class MessageService
                       : $"Дополнительная информация: {appEvent.Description}");
     }
 
+    public static string GetEventShortDescription(AppEvent appEvent)
+    {
+        return $"Название: {appEvent.Title}\n" +
+               $"Организатор: @{appEvent.Creator.Username}\n" +
+               $"Дата: {appEvent.DateTimeOf!.Value.ToString("ddd dd MMMM yyyy", new CultureInfo("ru-RU"))}\n" +
+               $"Время: {appEvent.DateTimeOf!.Value:HH:mm}\n";
+    }
+
     private static string GetParticipantLimitString(int? participantLimit)
     {
         string? limitString = (participantLimit is null or 0)

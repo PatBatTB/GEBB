@@ -1,4 +1,5 @@
-﻿using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
+using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.Message;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.GitHub.PatBatTB.GEBB.Domain;
@@ -11,6 +12,8 @@ public partial class TgBotDbContext : DbContext
     public virtual DbSet<EventEntity> Events { get; set; }
     public virtual DbSet<UserEntity> Users { get; set; }
     public virtual DbSet<BuildEventEntity> TempEvents { get; set; }
+    public virtual DbSet<AlarmSettingsEntity> AlarmSettings { get; set; }
+    public virtual DbSet<AlarmEntity> Alarms { get; set; }
     public virtual DbSet<EventMessageEntity> EventMessages { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -45,7 +48,7 @@ public partial class TgBotDbContext : DbContext
             entity.Property(e => e.Title).HasColumnType("varchar");
             entity.Property(e => e.Status).HasColumnType("INTEGER");
             entity.HasKey(e => new { e.EventId, e.CreatorId });
-            entity.HasOne(d => d.Creator).WithMany(p => p.TempEvents).HasForeignKey(d => d.CreatorId);
+            entity.HasOne(d => d.Creator).WithMany(p => p.TempEvents).HasForeignKey(d => d.CreatorId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserEntity>(entity =>
@@ -76,7 +79,33 @@ public partial class TgBotDbContext : DbContext
                         j.IndexerProperty<int>("EventId").HasColumnType("INTEGER");
                         j.IndexerProperty<long>("CreatorId").HasColumnType("BIGINT");
                     });
+
+            entity.HasOne(d => d.AlarmSettings).WithOne(p => p.User).HasForeignKey<AlarmSettingsEntity>(d => d.UserId);
         });
+
+        modelBuilder.Entity<AlarmSettingsEntity>(entity =>
+        {
+            entity.Property(e => e.UserId).HasColumnType("BIGINT");
+            entity.Property(e => e.ThreeDays).HasColumnType("INTEGER");
+            entity.Property(e => e.OneDay).HasColumnType("INTEGER");
+            entity.Property(e => e.Hours).HasColumnType("INTEGER");
+
+            entity.HasKey(e => e.UserId);
+        });
+
+        modelBuilder.Entity<AlarmEntity>(entity =>
+            {
+                entity.Property(e => e.UserId).HasColumnType("BIGINT");
+                entity.Property(e => e.EventId).HasColumnType("INTEGER");
+                entity.Property(e => e.CreatorId).HasColumnType("BIGINT");
+
+                entity.HasKey(e => new { e.UserId, e.EventId, e.CreatorId });
+                entity.HasOne<UserEntity>(d => d.User).WithMany(p => p.Alarms)
+                    .HasForeignKey(d => d.UserId);
+                entity.HasOne<EventEntity>(d => d.Event).WithMany(p => p.Alarms)
+                    .HasForeignKey(d => new { d.EventId, d.CreatorId });
+            }
+        );
 
         modelBuilder.Entity<EventMessageEntity>(entity =>
         {

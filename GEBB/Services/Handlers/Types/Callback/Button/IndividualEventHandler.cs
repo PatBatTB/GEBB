@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.Message;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
@@ -19,6 +20,7 @@ public static class IndividualEventHandler
 {
     private static readonly IEventService EService = new DbEventService();
     private static readonly IUserService UService = new DbUserService();
+    private static readonly IAlarmService AService = new DbAlarmService();
     private static readonly IEventMessageService EsSerivce = new DbEventMessageService();
     private static readonly ILog Log = LogManager.GetLogger(typeof(IndividualEventHandler)); 
 
@@ -285,6 +287,7 @@ public static class IndividualEventHandler
                 text: "Вы успешно зарегистрировались на мероприятие.",
                 showAlert: true,
                 cancellationToken: container.Token);
+            AService.Update(new AppAlarm { Event = appEvent, User = container.AppUser, LastAlert = DateTime.Now} );
         }
         catch (EntityNotFoundException)
         {

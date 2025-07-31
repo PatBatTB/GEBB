@@ -228,6 +228,16 @@ public class DbEventService : IEventService
         return eventEntities.Select(EntityToEvent).ToList();
     }
 
+    public ICollection<AppEvent> GetActiveEvents()
+    {
+        using TgBotDbContext db = new();
+        List<EventEntity> eventEntities = db.Events
+            .Include(elem => elem.RegisteredUsers)
+            .Where(elem => elem.DateTimeOf > DateTime.Now)
+            .ToList();
+        return eventEntities.Select(EntityToEvent).ToList();
+    }
+
     public EventEntity EventToEntity(AppEvent appEvent)
     {
         (int eventId, long creatorId) = ParseEventId(appEvent.Id);
