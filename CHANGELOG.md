@@ -1,3 +1,8 @@
+## v0.6.0
+- Реализована отправка сообщений участникам мероприятия
+___
+- Implements message sending to users registered to the event.
+___
 ## v0.5.0
 - Добавлено меню для настроек оповещений о приближающихся мероприятиях.
 - Реализован сервис рассылающий оповещения на основании индивидуальных настроек пользователей.
@@ -6,6 +11,7 @@ ___
 - Added a menu for setting notifications about upcoming events.
 - A service has been implemented that sends alerts based on individual user settings.
 - A script has been added to the repository to update the database from earlier versions. For more information, see the [readme](README.md ) file, in the `Update` section
+___
 ## v0.4.1
 - Исправлено: Не находились доступные для регистрации мероприятия без ограничений на количество участников.
 - Удалена ссылка на ConsoleAppender в конфигурации логирования.
