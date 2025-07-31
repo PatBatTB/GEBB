@@ -323,8 +323,8 @@ public static class IndividualEventHandler
         DataService.UpdateUserStatus(container, UserStatus.SendingMessage, UService);
         EsSerivce.Update(new AppEventMessage
         {
-            EventId = container.CallbackData!.EventId!,
-            UserId = container.AppUser.UserId
+            Event = EService.Get(container.CallbackData!.EventId!),
+            User = UService.Get(container.AppUser.UserId)
         });
         Thread.Sleep(200);
         container.BotClient.SendMessage(

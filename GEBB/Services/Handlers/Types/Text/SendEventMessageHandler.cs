@@ -37,11 +37,25 @@ public class SendEventMessageHandler
     private void SendMessages(UpdateContainer container)
     {
         AppEventMessage eventMessage = EmService.Get(container.ChatId);
-        //TODO get list of recipients, forward the message for them
+        List<long> userIds = eventMessage.Event.RegisteredUsers.Select(e => e.UserId).ToList();
+        userIds.Add(eventMessage.Event.Creator.UserId);
+        userIds.Remove(eventMessage.User.UserId);
+        foreach (long id in userIds)
+        {
+            Thread.Sleep(200);
+            container.BotClient.SendMessage(
+                chatId: id,
+                text: $"Мероприятие: {eventMessage.Event.Title}\n" +
+                      $"Сообщение от: @{eventMessage.User.Username}\n\n" +
+                      $"{container.Message.Text}");
+        }
+        string messageText =
+            userIds.Count > 0 ? "Сообщение отправлено" : "Для данного мероприятия не найдено получателей";
+        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
         Thread.Sleep(200);
         container.BotClient.SendMessage(
             chatId: container.ChatId,
-            text: "Сообщение отправлено",
+            text: messageText,
             cancellationToken: container.Token);
 
     }

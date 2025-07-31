@@ -221,13 +221,15 @@ public static class InlineKeyboardProvider
     {
         var participantList = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.PartList, Menu = menu, EventId = eventId });
+        var eventMessage = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.EventMessage, EventId = eventId, Menu = menu });
         var cancel = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.CancelReg, Menu = menu, EventId = eventId});
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId });
         return new InlineKeyboardMarkup(
             [
-                [participantList],
+                [participantList, eventMessage],
                 [cancel],
                 [close],
             ]
@@ -238,13 +240,15 @@ public static class InlineKeyboardProvider
     {
         var toDescription = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.ToDescr, Menu = menu, EventId = eventId });
+        var eventMessage = InlineButtonProvider
+            .GetButton(new CallbackData { Button = CallbackButton.EventMessage, EventId = eventId, Menu = menu });
         var cancel = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.CancelReg, Menu = menu, EventId = eventId });
         var close = InlineButtonProvider
             .GetButton(new CallbackData { Button = CallbackButton.Close, Menu = menu, EventId = eventId});
         return new InlineKeyboardMarkup(
             [
-                [toDescription],
+                [toDescription, eventMessage],
                 [cancel],
                 [close],
             ]
