@@ -1,4 +1,3 @@
-using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
@@ -42,7 +41,6 @@ public static class MenuHandler
         [CallbackMenu.EventPartLimitReplace] = BuildEventStatus.CreateParticipantLimit,
     };
 
-    private static readonly IEventService EService = new DbEventService();
     private static readonly ILog Log = LogManager.GetLogger(typeof(MenuHandler)); 
 
     public static void Handle(UpdateContainer container)

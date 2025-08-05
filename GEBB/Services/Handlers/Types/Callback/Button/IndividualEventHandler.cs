@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Com.GitHub.PatBatTB.GEBB;
 using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.Message;
@@ -18,10 +19,10 @@ namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
 public static class IndividualEventHandler
 {
-    private static readonly IEventService EService = new DbEventService();
-    private static readonly IUserService UService = new DbUserService();
-    private static readonly IAlarmService AService = new DbAlarmService();
-    private static readonly IEventMessageService EsSerivce = new DbEventMessageService();
+    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
+    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
+    private static readonly IAlarmService AService = App.ServiceFactory.GetAlarmService();
+    private static readonly IEventMessageService EsService = App.ServiceFactory.GetEventMessageService();
     private static readonly ILog Log = LogManager.GetLogger(typeof(IndividualEventHandler)); 
 
     private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
@@ -324,7 +325,7 @@ public static class IndividualEventHandler
     private static void HandleEventMessage(UpdateContainer container)
     {
         DataService.UpdateUserStatus(container, UserStatus.SendingMessage, UService);
-        EsSerivce.Update(new AppEventMessage
+        EsService.Update(new AppEventMessage
         {
             Event = EService.Get(container.CallbackData!.EventId!),
             User = UService.Get(container.AppUser.UserId)

@@ -1,3 +1,4 @@
+using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.GitHub.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Services;
 using Com.Github.PatBatTB.GEBB.Services.Handlers;
@@ -8,17 +9,12 @@ namespace Com.GitHub.PatBatTB.GEBB;
 
 public class App
 {
-    private readonly ITelegramBotClient _botClient;
-    private readonly ReceivingHandler _receivingHandler;
-    private readonly AlarmSendService _alarmSendService;
-    private readonly ILog log = LogManager.GetLogger(typeof(App));
+    public static IServiceFactory ServiceFactory { get; } = new DbServiceFactory();
 
-    public App()
-    {
-        _botClient = new TelegramBotClient(BotConfig.BotToken);
-        _receivingHandler = new ReceivingHandler();
-        _alarmSendService = new AlarmSendService();
-    }
+    private readonly ITelegramBotClient _botClient = new TelegramBotClient(BotConfig.BotToken);
+    private readonly ReceivingHandler _receivingHandler = new(ServiceFactory);
+    private readonly AlarmSendService _alarmSendService = new(ServiceFactory);
+    private readonly ILog log = LogManager.GetLogger(typeof(App));
 
     public async Task Run()
     {
@@ -29,6 +25,7 @@ public class App
 
         RunBot(token);
         RunAlarmService(token);
+        
         try
         {
             await Task.Delay(-1, token).WaitAsync(token);

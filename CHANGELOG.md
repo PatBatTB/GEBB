@@ -1,3 +1,7 @@
+## v0.6.1
+- Рефакторинг: реструктурирован слой сервисов хранения данных. Реализован через интерфейсы и фабрику.
+___
+- Refactoring: The database services' layer has been restructured. Implemented using interfaces and an abstract factory.
 ## v0.6.0
 - Реализована отправка сообщений участникам мероприятия
 ___

@@ -1,3 +1,4 @@
+using Com.GitHub.PatBatTB.GEBB;
 using Com.Github.PatBatTB.GEBB.DataBase.Message;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
@@ -8,8 +9,8 @@ namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Text;
 
 public class SendEventMessageHandler
 {
-    private IUserService UService = new DbUserService();
-    private IEventMessageService EmService = new DbEventMessageService();
+    private readonly IUserService _userService = App.ServiceFactory.GetUserService();
+    private readonly IEventMessageService _eventMessageService = App.ServiceFactory.GetEventMessageService();
     
     public void Handle(UpdateContainer container)
     {
@@ -27,7 +28,7 @@ public class SendEventMessageHandler
         {
             messageIds.Add(container.Message.ReplyToMessage.Id);
         }
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _userService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             container.ChatId,
@@ -36,7 +37,7 @@ public class SendEventMessageHandler
 
     private void SendMessages(UpdateContainer container)
     {
-        AppEventMessage eventMessage = EmService.Get(container.ChatId);
+        AppEventMessage eventMessage = _eventMessageService.Get(container.ChatId);
         List<long> userIds = eventMessage.Event.RegisteredUsers.Select(e => e.UserId).ToList();
         userIds.Add(eventMessage.Event.Creator.UserId);
         userIds.Remove(eventMessage.User.UserId);
@@ -51,7 +52,7 @@ public class SendEventMessageHandler
         }
         string messageText =
             userIds.Count > 0 ? "Сообщение отправлено" : "Для данного мероприятия не найдено получателей";
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _userService);
         Thread.Sleep(200);
         container.BotClient.SendMessage(
             chatId: container.ChatId,
