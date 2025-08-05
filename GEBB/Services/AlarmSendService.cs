@@ -1,17 +1,18 @@
+using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services;
 
-public class AlarmSendService
+public class AlarmSendService(IServiceFactory serviceFactory)
 {
     private readonly int _defaultDelay = 60_000; //in millis.
     private readonly string _dayAlarmTime = "10:00:00"; //time pattern like 10:00:00
-    
-    private readonly IAlarmService AService = new DbAlarmService();
-    private readonly IAlarmSettingsService AsService = new DbAlarmSettingsService();
-    private readonly IEventService EService = new DbEventService();
+
+    private readonly IAlarmService _alarmService = serviceFactory.GetAlarmService();
+    private readonly IAlarmSettingsService _alarmSettingsService = serviceFactory.GetAlarmSettingsService();
+    private readonly IEventService _eventService = serviceFactory.GetEventService();
 
     public void Start(ITelegramBotClient botClient, CancellationToken token)
     {
@@ -25,14 +26,14 @@ public class AlarmSendService
 
     private List<AppAlarm> GetAlarms()
     {
-        ICollection<AppEvent> events = EService.GetActiveEvents();
+        ICollection<AppEvent> events = _eventService.GetActiveEvents();
         IEnumerable<AppAlarm> creatorAlarms = events
             .Select(e => new AppAlarm { Event = e, LastAlert = null, User = e.Creator });
         IEnumerable<AppAlarm> registeredAlarms = events.SelectMany(
             e => e.RegisteredUsers,
             (e, u) => new AppAlarm { Event = e, LastAlert = null, User = u });
         List<AppAlarm> alarms = creatorAlarms.Union(registeredAlarms, new AlarmComparator()).ToList();
-        List<AppAlarm> resultAlarms = AService.GetAlarmsForActiveEvents().ToList();
+        List<AppAlarm> resultAlarms = _alarmService.GetAlarmsForActiveEvents().ToList();
         resultAlarms = resultAlarms
             .Intersect(alarms, new AlarmComparator())
             .Union(alarms, new AlarmComparator())
@@ -42,7 +43,7 @@ public class AlarmSendService
 
     private void SendNotifications(ITelegramBotClient botClient, List<AppAlarm> alarms, CancellationToken token)
     {
-        ICollection<AppAlarmSettings> settings = AsService.Get(alarms.Select(e => e.User.UserId).ToArray());
+        ICollection<AppAlarmSettings> settings = _alarmSettingsService.Get(alarms.Select(e => e.User.UserId).ToArray());
         foreach (AppAlarm alarm in alarms)
         {
             AppAlarmSettings? userSettings = settings.FirstOrDefault(e => e!.UserId == alarm.User.UserId, null);
@@ -54,7 +55,7 @@ public class AlarmSendService
             {
                 SendNotificationMessage(alarm, botClient, token);
                 alarm.LastAlert = DateTime.Now;
-                AService.Update(alarm);
+                _alarmService.Update(alarm);
             }
         }
     }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Com.GitHub.PatBatTB.GEBB;
 using Com.Github.PatBatTB.GEBB.DataBase.Alarm;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
@@ -43,9 +44,9 @@ public static class BuildEventHandler
         [(CallbackButton.Close, EventStatus.Editing)] = HandleClose,
     };
 
-    private static readonly IUserService UService = new DbUserService();
-    private static readonly IEventService EService = new DbEventService();
-    private static readonly IAlarmService AService = new DbAlarmService();
+    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
+    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
+    private static readonly IAlarmService AService = App.ServiceFactory.GetAlarmService();
 
     public static void Handle(UpdateContainer container)
     {

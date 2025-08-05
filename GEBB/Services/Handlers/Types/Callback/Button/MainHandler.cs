@@ -1,3 +1,4 @@
+using Com.GitHub.PatBatTB.GEBB;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
@@ -19,8 +20,8 @@ public static class MainHandler
         [CallbackButton.Close] = HandleClose,
     };
 
-    private static readonly IUserService UService = new DbUserService();
-    private static readonly IEventService EService = new DbEventService();
+    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
+    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
     private static readonly ILog Log = LogManager.GetLogger(typeof(MainHandler));
 
     public static void Handle(UpdateContainer container)

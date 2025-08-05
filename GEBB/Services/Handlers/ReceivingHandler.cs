@@ -1,3 +1,4 @@
+using Com.Github.PatBatTB.GEBB.DataBase;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using log4net;
@@ -7,9 +8,9 @@ using Telegram.Bot.Types.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers;
 
-public class ReceivingHandler
+public class ReceivingHandler(IServiceFactory serviceFactory)
 {
-    private IUserService UService = new DbUserService();
+    private readonly IUserService _userService = serviceFactory.GetUserService();
     private readonly ILog log = LogManager.GetLogger(typeof(ReceivingHandler));
 
     public Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken token)
@@ -81,7 +82,7 @@ public class ReceivingHandler
                 log.Debug($"Message from unknown user [{user.Id}] received. Ignored");
                 return Task.CompletedTask;
             }
-            AppUser appUser = UService.Update(user);
+            AppUser appUser = _userService.Update(user);
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
                 new(botClient, update, chatId, message, appUser, token, callbackData);

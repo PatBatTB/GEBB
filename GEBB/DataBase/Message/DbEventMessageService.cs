@@ -7,8 +7,8 @@ namespace Com.Github.PatBatTB.GEBB.DataBase.Message;
 
 public class DbEventMessageService : IEventMessageService
 {
-    private readonly DbEventService _dbEventService = new DbEventService();
-    private readonly DbUserService _dbUserService = new DbUserService();
+    private readonly DbEventService _dbEventService = new();
+    private readonly DbUserService _dbUserService = new();
     
     public AppEventMessage Get(long userId)
     {
