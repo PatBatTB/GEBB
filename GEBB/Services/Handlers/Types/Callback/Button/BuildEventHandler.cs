@@ -14,41 +14,50 @@ using Telegram.Bot.Types.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
-public static class BuildEventHandler
+public  class BuildEventHandler
 {
-    private static readonly ILog Log = LogManager.GetLogger(typeof(BuildEventHandler)); 
-    
-    private static readonly Dictionary<(CallbackButton, EventStatus), Action<UpdateContainer>> ButtonHandlerDict = new()
+    private readonly Dictionary<(CallbackButton, EventStatus), Action<UpdateContainer>> _buttonHandlerDict;
+
+    private readonly IUserService _uService;
+    private readonly IEventService _eService;
+    private readonly IAlarmService _aService;
+
+    private readonly ILog _log;
+
+    public BuildEventHandler()
     {
-        [(CallbackButton.Title, EventStatus.Creating)] = HandleTitle,
-        [(CallbackButton.TitleDone, EventStatus.Creating)] = HandleTitleDone,
-        [(CallbackButton.DateTimeOf, EventStatus.Creating)] = HandleDateTime,
-        [(CallbackButton.DateTimeOfDone, EventStatus.Creating)] = HandleDateTimeDone,
-        [(CallbackButton.Address, EventStatus.Creating)] = HandleAddress,
-        [(CallbackButton.AddressDone, EventStatus.Creating)] = HandleAddressDone,
-        [(CallbackButton.Cost, EventStatus.Creating)] = HandleCost,
-        [(CallbackButton.CostDone, EventStatus.Creating)] = HandleCostDone,
-        [(CallbackButton.PartLimit, EventStatus.Creating)] = HandleParticipantLimit,
-        [(CallbackButton.PartLimitDone, EventStatus.Creating)] = HandleParticipantLimitDone,
-        [(CallbackButton.Descr, EventStatus.Creating)] = HandleDescription,
-        [(CallbackButton.DescrDone, EventStatus.Creating)] = HandleDescriptionDone,
-        [(CallbackButton.FinishBuilding, EventStatus.Creating)] = HandleFinishCreating,
-        [(CallbackButton.Close, EventStatus.Creating)] = HandleClose,
-        [(CallbackButton.Title, EventStatus.Editing)] = HandleEditTitle,
-        [(CallbackButton.DateTimeOf, EventStatus.Editing)] = HandleEditDateTimeOf,
-        [(CallbackButton.Address, EventStatus.Editing)] = HandleEditAddress,
-        [(CallbackButton.Cost, EventStatus.Editing)] = HandleEditCost,
-        [(CallbackButton.PartLimit, EventStatus.Editing)] = HandleEditParticipantLimit,
-        [(CallbackButton.Descr, EventStatus.Editing)] = HandleEditDescription,
-        [(CallbackButton.FinishBuilding, EventStatus.Editing)] = HandleFinishEditing,
-        [(CallbackButton.Close, EventStatus.Editing)] = HandleClose,
-    };
+        _uService = App.ServiceFactory.GetUserService();
+        _eService = App.ServiceFactory.GetEventService();
+        _aService = App.ServiceFactory.GetAlarmService();
+        _log = LogManager.GetLogger(typeof(BuildEventHandler));
+        _buttonHandlerDict = new Dictionary<(CallbackButton, EventStatus), Action<UpdateContainer>>
+        {
+            [(CallbackButton.Title, EventStatus.Creating)] = HandleTitle,
+            [(CallbackButton.TitleDone, EventStatus.Creating)] = HandleTitleDone,
+            [(CallbackButton.DateTimeOf, EventStatus.Creating)] = HandleDateTime,
+            [(CallbackButton.DateTimeOfDone, EventStatus.Creating)] = HandleDateTimeDone,
+            [(CallbackButton.Address, EventStatus.Creating)] = HandleAddress,
+            [(CallbackButton.AddressDone, EventStatus.Creating)] = HandleAddressDone,
+            [(CallbackButton.Cost, EventStatus.Creating)] = HandleCost,
+            [(CallbackButton.CostDone, EventStatus.Creating)] = HandleCostDone,
+            [(CallbackButton.PartLimit, EventStatus.Creating)] = HandleParticipantLimit,
+            [(CallbackButton.PartLimitDone, EventStatus.Creating)] = HandleParticipantLimitDone,
+            [(CallbackButton.Descr, EventStatus.Creating)] = HandleDescription,
+            [(CallbackButton.DescrDone, EventStatus.Creating)] = HandleDescriptionDone,
+            [(CallbackButton.FinishBuilding, EventStatus.Creating)] = HandleFinishCreating,
+            [(CallbackButton.Close, EventStatus.Creating)] = HandleClose,
+            [(CallbackButton.Title, EventStatus.Editing)] = HandleEditTitle,
+            [(CallbackButton.DateTimeOf, EventStatus.Editing)] = HandleEditDateTimeOf,
+            [(CallbackButton.Address, EventStatus.Editing)] = HandleEditAddress,
+            [(CallbackButton.Cost, EventStatus.Editing)] = HandleEditCost,
+            [(CallbackButton.PartLimit, EventStatus.Editing)] = HandleEditParticipantLimit,
+            [(CallbackButton.Descr, EventStatus.Editing)] = HandleEditDescription,
+            [(CallbackButton.FinishBuilding, EventStatus.Editing)] = HandleFinishEditing,
+            [(CallbackButton.Close, EventStatus.Editing)] = HandleClose,
+        };
+    }
 
-    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
-    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
-    private static readonly IAlarmService AService = App.ServiceFactory.GetAlarmService();
-
-    public static void Handle(UpdateContainer container)
+    public void Handle(UpdateContainer container)
     {
         (EventStatus status, string text) = (container.CallbackData!.Menu!) switch
         {
@@ -56,7 +65,7 @@ public static class BuildEventHandler
             CallbackMenu.EditEvent => (EventStatus.Editing, "редактирования" ),
             _ => throw new InvalidOperationException("Invalid menu in event building.")
         };
-        container.Events.AddRange(EService.GetBuildEvents(container.AppUser.UserId, status)); 
+        container.Events.AddRange(_eService.GetBuildEvents(container.AppUser.UserId, status)); 
 
         int count = container.Events.Count;
         if (count is 0 or > 1)
@@ -67,8 +76,8 @@ public static class BuildEventHandler
                 container.Message.MessageId,
                 container.Token);
             
-            EService.Remove(container.Events);
-            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+            _eService.Remove(container.Events);
+            DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
             
             string message = (count == 0)
                 ? $"Ошибка. Не обнаружено мероприятий в режиме {text}.\nПопробуйте снова через команду /menu"
@@ -83,104 +92,104 @@ public static class BuildEventHandler
 
         if (container.CallbackData?.Button is not { } button)
         {
-            Log.Error("CallbackData doesn't have button");
+            _log.Error("CallbackData doesn't have button");
             throw new NullReferenceException("CallbackData doesn't have button");
         }
-        ButtonHandlerDict.GetValueOrDefault((button, container.Events[0].Status), CreateEventMenuUnknownButton)
+        _buttonHandlerDict.GetValueOrDefault((button, container.Events[0].Status), CreateEventMenuUnknownButton)
             .Invoke(container);
     }
 
-    private static void HandleTitle(UpdateContainer container)
+    private void HandleTitle(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.CreateTitle);
     }
 
-    private static void HandleTitleDone(UpdateContainer container)
+    private void HandleTitleDone(UpdateContainer container)
     {
         MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventTitleReplace);
     }
 
-    private static void HandleDateTime(UpdateContainer container)
+    private void HandleDateTime(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.CreateDateTimeOf);
     }
 
-    private static void HandleDateTimeDone(UpdateContainer container)
+    private void HandleDateTimeDone(UpdateContainer container)
     {
         MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventDateTimeOfReplace);
     }
 
-    private static void HandleAddress(UpdateContainer container)
+    private void HandleAddress(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.CreateAddress);
     }
 
-    private static void HandleAddressDone(UpdateContainer container)
+    private void HandleAddressDone(UpdateContainer container)
     {
         MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventAddressReplace);
     }
 
-    private static void HandleCost(UpdateContainer container)
+    private void HandleCost(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.CreateCost);
     }
 
-    private static void HandleCostDone(UpdateContainer container)
+    private void HandleCostDone(UpdateContainer container)
     {
         MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventCostReplace);
     }
 
-    private static void HandleParticipantLimit(UpdateContainer container)
+    private void HandleParticipantLimit(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.CreateParticipantLimit);
     }
 
-    private static void HandleParticipantLimitDone(UpdateContainer container)
+    private void HandleParticipantLimitDone(UpdateContainer container)
     {
         MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventPartLimitReplace);
     }
 
-    private static void HandleDescription(UpdateContainer container)
+    private void HandleDescription(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.CreateDescription);
     }
 
-    private static void HandleDescriptionDone(UpdateContainer container)
+    private void HandleDescriptionDone(UpdateContainer container)
     {
         MessageSender.SendReplaceDataMenu(container, CallbackMenu.EventDescrReplace);
     }
 
-    private static void HandleEditTitle(UpdateContainer container)
+    private void HandleEditTitle(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.EditTitle);
     }
 
-    private static void HandleEditDateTimeOf(UpdateContainer container)
+    private void HandleEditDateTimeOf(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.EditDateTimeOf);
     }
 
-    private static void HandleEditAddress(UpdateContainer container)
+    private void HandleEditAddress(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.EditAddress);
     }
 
-    private static void HandleEditCost(UpdateContainer container)
+    private void HandleEditCost(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.EditCost);
     }
 
-    private static void HandleEditParticipantLimit(UpdateContainer container)
+    private void HandleEditParticipantLimit(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.EditParticipantLimit);
     }
 
-    private static void HandleEditDescription(UpdateContainer container)
+    private void HandleEditDescription(UpdateContainer container)
     {
         MessageSender.SendEnterDataRequest(container, BuildEventStatus.EditDescription);
     }
 
-    private static void HandleFinishCreating(UpdateContainer container)
+    private void HandleFinishCreating(UpdateContainer container)
     {
         AppEvent appEvent = container.Events[0];
         string message;
@@ -200,16 +209,16 @@ public static class BuildEventHandler
         container.BotClient.AnswerCallbackQuery(container.CallbackData!.CallbackId!, message, true,
             cancellationToken: container.Token);
         Thread.Sleep(200);
-        EService.FinishCreating(appEvent);
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        _eService.FinishCreating(appEvent);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
             container.ChatId,
             container.Message.Id,
             container.Token);
-        AService.Update(new AppAlarm { Event = appEvent, User = container.AppUser, LastAlert = DateTime.Now} );
+        _aService.Update(new AppAlarm { Event = appEvent, User = container.AppUser, LastAlert = DateTime.Now} );
 
-        foreach (AppUser user in UService.GetInviteList(appEvent))
+        foreach (AppUser user in _uService.GetInviteList(appEvent))
         {
             Thread.Sleep(200);
             container.BotClient.SendMessage(
@@ -220,11 +229,11 @@ public static class BuildEventHandler
         }
     }
 
-    private static void HandleFinishEditing(UpdateContainer container)
+    private void HandleFinishEditing(UpdateContainer container)
     {
         try
         {
-            EService.FinishEditing(container.Events[0], out AppEvent oldEvent, out AppEvent newEvent);
+            _eService.FinishEditing(container.Events[0], out AppEvent oldEvent, out AppEvent newEvent);
             if (GetChangesHeader(oldEvent, newEvent, out string messageText))
             {
                 Thread.Sleep(200);
@@ -243,10 +252,11 @@ public static class BuildEventHandler
                         parseMode: ParseMode.Html,
                         cancellationToken: container.Token);
                 }
-                AService.Update(new AppAlarm { Event = oldEvent, User = container.AppUser, LastAlert = DateTime.Now} );
+                _aService.Update(new AppAlarm { Event = oldEvent, User = container.AppUser, LastAlert = DateTime.Now} );
             }
             else
             {
+                Thread.Sleep(200);
                 container.BotClient.AnswerCallbackQuery(
                     callbackQueryId: container.CallbackData!.CallbackId!,
                     text: "Редактирование отменено.\nВы не внесли никаких изменений.",
@@ -254,7 +264,7 @@ public static class BuildEventHandler
                     cancellationToken: container.Token);
             }
             
-            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+            DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
         }
         catch (EntityNotFoundException)
         {
@@ -268,21 +278,21 @@ public static class BuildEventHandler
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
     }
 
-    private static void HandleClose(UpdateContainer container)
+    private void HandleClose(UpdateContainer container)
     {
         var chatId = container.ChatId;
         var messageId = container.Message.Id;
-        var eventId = container.CallbackData!.EventId!;
+        Thread.Sleep(200);
         container.BotClient.DeleteMessage(
             chatId,
             messageId,
             container.Token);
 
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
-        EService.RemoveInBuilding(container.ChatId, container.Events[0].Status);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
+        _eService.RemoveInBuilding(container.ChatId, container.Events[0].Status);
     }
 
-    private static bool GetChangesHeader(AppEvent oldEvent, AppEvent newEvent, out string messageText)
+    private bool GetChangesHeader(AppEvent oldEvent, AppEvent newEvent, out string messageText)
     {
         StringBuilder messageTextBuilder = new();
         bool isChanged = false;
@@ -356,8 +366,8 @@ public static class BuildEventHandler
         return isChanged;
     }
 
-    private static void CreateEventMenuUnknownButton(UpdateContainer container)
+    private void CreateEventMenuUnknownButton(UpdateContainer container)
     {
-        Log.Error("Unknown button");
+        _log.Error("Unknown button");
     }
 }

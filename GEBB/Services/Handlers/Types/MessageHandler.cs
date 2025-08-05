@@ -3,47 +3,47 @@ using Com.Github.PatBatTB.GEBB.Domain.Enums;
 using Com.GitHub.PatBatTB.GEBB.Extensions;
 using Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Text;
 using log4net;
-using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types;
 
-public static class MessageHandler
+public class MessageHandler
 {
-    private static readonly Dictionary<ContentMessageType, Action<UpdateContainer>> TypeDict = new()
-    {
-        [ContentMessageType.Command] = CommandHandler.Handle,
-        [ContentMessageType.Text] = HandleText,
-        [ContentMessageType.Unknown] = HandleUnknown,
-    };
-    
-    private static readonly ILog Log = LogManager.GetLogger(typeof(MessageHandler));
+    private readonly Dictionary<ContentMessageType, Action<UpdateContainer>> _typeDict;
+    private readonly ILog _log = LogManager.GetLogger(typeof(MessageHandler));
 
-    public static void Handle(UpdateContainer container)
+    public MessageHandler()
     {
-        TypeDict[container.Message.TextType()].Invoke(container);
+        _typeDict = new Dictionary<ContentMessageType, Action<UpdateContainer>>
+        {
+            [ContentMessageType.Command] = new CommandHandler().Handle,
+            [ContentMessageType.Text] = HandleText,
+            [ContentMessageType.Unknown] = HandleUnknown,
+        };
     }
 
-    private static void HandleText(UpdateContainer container)
+    public void Handle(UpdateContainer container)
+    {
+        _typeDict[container.Message.TextType()].Invoke(container);
+    }
+
+    private void HandleText(UpdateContainer container)
     {
         switch (container.AppUser.UserStatus)
         {
-            case UserStatus.Stop:
-                container.BotClient.SendMessage(
-                    chatId: container.ChatId,
-                    text: "Вы приостановили активность бота.\n" +
-                          "Для возобновления воспользуйтесь командой /start");
-                break;
             case UserStatus.CreatingEvent: case UserStatus.EditingEvent:
-                BuildingEventStatusHandler.Handle(container);
+                new BuildingEventStatusHandler().Handle(container);
                 break;
             case UserStatus.SendingMessage:
                 new SendEventMessageHandler().Handle(container);
                 break;
+            default:
+                _log.Error("Unknown UserStatus");
+                break;
         }
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private void HandleUnknown(UpdateContainer container)
     {
-        Log.Error("Unknown message type");
+        _log.Error("Unknown message type");
     }
 }

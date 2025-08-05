@@ -9,30 +9,39 @@ using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
-public static class EventsListHandler
+public class EventsListHandler
 {
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonDict = new()
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _buttonDict;
+
+    private readonly IEventService _eService;
+    private readonly IUserService _uService;
+    
+    private readonly ILog _log;
+
+    public EventsListHandler()
     {
-        [CallbackButton.MyEvents] = HandleMyEvents,
-        [CallbackButton.MyRegs] = HandleMyRegistrations,
-        [CallbackButton.AvailEvents] = HandleAvailableEvents,
-        [CallbackButton.Back] = HandleBack,
-    };
+        _uService = App.ServiceFactory.GetUserService();
+        _eService = App.ServiceFactory.GetEventService();
+        _log = LogManager.GetLogger(typeof(EventsListHandler));
+        _buttonDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.MyEvents] = HandleMyEvents,
+            [CallbackButton.MyRegs] = HandleMyRegistrations,
+            [CallbackButton.AvailEvents] = HandleAvailableEvents,
+            [CallbackButton.Back] = HandleBack,
+        };
+    }
 
-    private static readonly ILog Log = LogManager.GetLogger(typeof(EventsListHandler));
-    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
-    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
-
-    public static void Handle(UpdateContainer container)
+    public void Handle(UpdateContainer container)
     {
         if (container.CallbackData!.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        ButtonDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _buttonDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
     
-    private static void HandleMyEvents(UpdateContainer container)
+    private void HandleMyEvents(UpdateContainer container)
     {
-        container.Events.AddRange(EService.GetMyOwnEvents(container.AppUser.UserId));
+        container.Events.AddRange(_eService.GetMyOwnEvents(container.AppUser.UserId));
         if (container.Events.Count > 0)
         {
             foreach (AppEvent appEvent in container.Events)
@@ -61,10 +70,10 @@ public static class EventsListHandler
         }
     }
     
-    private static void HandleMyRegistrations(UpdateContainer container)
+    private void HandleMyRegistrations(UpdateContainer container)
     {
         List<AppEvent> eventList = container.Events;
-        eventList.AddRange(EService.GetRegisterEvents(container.AppUser.UserId));
+        eventList.AddRange(_eService.GetRegisterEvents(container.AppUser.UserId));
         if (eventList.Count == 0)
         {
             string noEventsText = "Вы не зарегистрированы ни на одно мероприятие.";
@@ -88,13 +97,13 @@ public static class EventsListHandler
             }
             Thread.Sleep(200);
             container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+            DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
         }
     }
     
-    private static void HandleAvailableEvents(UpdateContainer container)
+    private void HandleAvailableEvents(UpdateContainer container)
     {
-        container.Events.AddRange(EService.GetAvailableEvents(container.AppUser.UserId));
+        container.Events.AddRange(_eService.GetAvailableEvents(container.AppUser.UserId));
         if (container.Events.Count == 0)
         {
             Thread.Sleep(200);
@@ -116,11 +125,11 @@ public static class EventsListHandler
             }
             Thread.Sleep(200);
             container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
-            DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+            DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
         }
     }
 
-    private static void HandleBack(UpdateContainer container)
+    private void HandleBack(UpdateContainer container)
     {
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
@@ -130,8 +139,8 @@ public static class EventsListHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private void HandleUnknown(UpdateContainer container)
     {
-        Log.Error("Unknown button");
+        _log.Error("Unknown button");
     }
 }

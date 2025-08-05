@@ -18,7 +18,6 @@ public class ReceivingHandler(IServiceFactory serviceFactory)
         try
         {
             long chatId;
-            string? username;
             User user;
             Message message;
             CallbackQuery? callbackQuery = null;
@@ -42,7 +41,7 @@ public class ReceivingHandler(IServiceFactory serviceFactory)
                     }
 
                     user = message.From;
-                    username = user.Username;
+                    string? username = user.Username;
 
                     if (message.Text is not { } text)
                     {
@@ -86,7 +85,8 @@ public class ReceivingHandler(IServiceFactory serviceFactory)
             CallbackData callbackData = new(callbackQuery!);
             UpdateContainer updateContainer =
                 new(botClient, update, chatId, message, appUser, token, callbackData);
-            TypeHandler.Handle(updateContainer);
+            TypeHandler typeHandler = new();
+            typeHandler.Handle(updateContainer);
         }
         catch (Exception e)
         {

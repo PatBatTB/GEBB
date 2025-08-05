@@ -11,32 +11,40 @@ using Telegram.Bot.Types.Enums;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types;
 
-public static class CommandHandler
+public class CommandHandler
 {
-    private static readonly Dictionary<string, Action<UpdateContainer>> TypeHandlerDict = new()
-    {
-        [Command.Start.Name()] = HandleStart,
-        [Command.Stop.Name()] = HandleStop,
-        [Command.Menu.Name()] = HandleMenu,
-        [Command.Report.Name()] = HandleReport,
-        [Command.CancelCreate.Name()] = HandleCancel,
-    };
+    private readonly Dictionary<string, Action<UpdateContainer>> _typeHandlerDict;
+    private readonly IUserService _uService;
+    private readonly IEventService _eService;
+    private readonly ILog _log ;
 
-    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
-    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
-    private static readonly ILog Log = LogManager.GetLogger(typeof(CommandHandler));
-
-    public static void Handle(UpdateContainer container)
+    public CommandHandler()
     {
-        TypeHandlerDict.GetValueOrDefault(container.Message.Text!, HandleUnknown).Invoke(container);
+        _typeHandlerDict = new Dictionary<string, Action<UpdateContainer>>
+        {
+            [Command.Start.Name()] = HandleStart,
+            [Command.Stop.Name()] = HandleStop,
+            [Command.Menu.Name()] = HandleMenu,
+            [Command.Report.Name()] = HandleReport,
+            [Command.CancelCreate.Name()] = HandleCancel,
+        };
+        _uService = App.ServiceFactory.GetUserService();
+        _eService = App.ServiceFactory.GetEventService();
+        _log = LogManager.GetLogger(typeof(CommandHandler));
     }
 
-    private static void HandleStart(UpdateContainer container)
+    public void Handle(UpdateContainer container)
+    {
+        _typeHandlerDict.GetValueOrDefault(container.Message.Text!, HandleUnknown).Invoke(container);
+    }
+
+    private void HandleStart(UpdateContainer container)
     {
         string text;
         if (!Command.Start.Scope().Contains(container.AppUser.UserStatus))
         {
             text = "Вам недоступна данная команда.";
+            Thread.Sleep(200);
             container.BotClient.SendMessage(
                 container.ChatId,
                 text,
@@ -50,15 +58,16 @@ public static class CommandHandler
             UserStatus.Stop => "С возвращением!\nДля вызова меню воспользуйтесь командой /menu",
             _ => throw new InvalidConstraintException("Value must be newuser or stop")
         };
+        Thread.Sleep(200);
         container.BotClient.SendMessage(
             container.ChatId,
             text,
             cancellationToken: container.Token);
 
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
     }
 
-    private static void HandleStop(UpdateContainer container)
+    private void HandleStop(UpdateContainer container)
     {
         string text;
         if (!Command.Stop.Scope().Contains(container.AppUser.UserStatus))
@@ -79,15 +88,16 @@ public static class CommandHandler
             text,
             cancellationToken: container.Token);
         
-        DataService.UpdateUserStatus(container, UserStatus.Stop, UService);
-        ICollection<int> idList = EService.RemoveInBuilding(container.AppUser.UserId);
+        DataService.UpdateUserStatus(container, UserStatus.Stop, _uService);
+        ICollection<int> idList = _eService.RemoveInBuilding(container.AppUser.UserId);
+        Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
             messageIds: idList,
             cancellationToken: container.Token);
     }
 
-    private static void HandleMenu(UpdateContainer container)
+    private void HandleMenu(UpdateContainer container)
     {
         string text;
         if (!Command.Menu.Scope().Contains(container.AppUser.UserStatus))
@@ -100,9 +110,10 @@ public static class CommandHandler
             return;
         }
 
-        DataService.UpdateUserStatus(container, UserStatus.OpenedMenu, UService);
+        DataService.UpdateUserStatus(container, UserStatus.OpenedMenu, _uService);
 
         text = CallbackMenu.Main.Text();
+        Thread.Sleep(200);
         container.BotClient.SendMessage(
             container.ChatId,
             text,
@@ -110,7 +121,7 @@ public static class CommandHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleReport(UpdateContainer container)
+    private void HandleReport(UpdateContainer container)
     {
         Thread.Sleep(200);
         container.BotClient.SendMessage(
@@ -121,20 +132,21 @@ public static class CommandHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleCancel(UpdateContainer container)
+    private void HandleCancel(UpdateContainer container)
     {
         string text;
         if (!Command.CancelCreate.Scope().Contains(container.AppUser.UserStatus))
         {
             text = "Вам недоступна данная команда.";
+            Thread.Sleep(200);
             container.BotClient.SendMessage(
                 container.ChatId,
                 text,
                 cancellationToken: container.Token);
             return;
         }
-        ICollection<int> idList = EService.RemoveInBuilding(container.AppUser.UserId);
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        ICollection<int> idList = _eService.RemoveInBuilding(container.AppUser.UserId);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
         Thread.Sleep(200);
         container.BotClient.DeleteMessages(
             chatId: container.ChatId,
@@ -142,8 +154,8 @@ public static class CommandHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private void HandleUnknown(UpdateContainer container)
     {
-        Log.Error("Unknown command");
+        _log.Error("Unknown command");
     }
 }

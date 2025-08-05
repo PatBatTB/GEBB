@@ -17,92 +17,98 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
-public static class IndividualEventHandler
+public class IndividualEventHandler
 {
-    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
-    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
-    private static readonly IAlarmService AService = App.ServiceFactory.GetAlarmService();
-    private static readonly IEventMessageService EsService = App.ServiceFactory.GetEventMessageService();
-    private static readonly ILog Log = LogManager.GetLogger(typeof(IndividualEventHandler)); 
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _myOwnButtonDict;
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _myOwnButtonPartDict;
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _registeredButtonDescrDict;
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _registeredButtonPartDict;
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _registerButtonDist;
+    
+    private readonly IEventService _eService = App.ServiceFactory.GetEventService();
+    private readonly IUserService _uService = App.ServiceFactory.GetUserService();
+    private readonly IAlarmService _aService = App.ServiceFactory.GetAlarmService();
+    private readonly IEventMessageService _esService = App.ServiceFactory.GetEventMessageService();
+    
+    private readonly ILog _log = LogManager.GetLogger(typeof(IndividualEventHandler));
 
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonDict = new()
+    public IndividualEventHandler()
     {
-        [CallbackButton.PartList] = HandleMyOwnParticipantList,
-        [CallbackButton.EventMessage] = HandleEventMessage,
-        [CallbackButton.Edit] = HandleEdit,
-        [CallbackButton.Cancel] = HandleCancel,
-        [CallbackButton.Close] = HandleClose,
-    };
+        _myOwnButtonDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.PartList] = HandleMyOwnParticipantList,
+            [CallbackButton.EventMessage] = HandleEventMessage,
+            [CallbackButton.Edit] = HandleEdit,
+            [CallbackButton.Cancel] = HandleCancel,
+            [CallbackButton.Close] = HandleClose,
+        };
+        _myOwnButtonPartDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.ToDescr] = HandleMyOwnToDescription,
+            [CallbackButton.EventMessage] = HandleEventMessage,
+            [CallbackButton.Edit] = HandleEdit,
+            [CallbackButton.Cancel] = HandleCancel,
+            [CallbackButton.Close] = HandleClose,
+        };
+        _registeredButtonDescrDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.PartList] = HandleParticipantList,
+            [CallbackButton.EventMessage] = HandleEventMessage,
+            [CallbackButton.CancelReg] = HandleCancelRegistration,
+            [CallbackButton.Close] = HandleClose,
+        };
+        _registeredButtonPartDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.ToDescr] = HandleToDescription,
+            [CallbackButton.EventMessage] = HandleEventMessage,
+            [CallbackButton.CancelReg] = HandleCancelRegistration,
+            [CallbackButton.Close] = HandleClose,
+        };
+        _registerButtonDist = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.Reg] = HandleRegisterToEvent,
+            [CallbackButton.Close] = HandleClose,
+        };
+    }
 
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> MyOwnButtonPartDict = new()
-    {
-        [CallbackButton.ToDescr] = HandleMyOwnToDescription,
-        [CallbackButton.EventMessage] = HandleEventMessage,
-        [CallbackButton.Edit] = HandleEdit,
-        [CallbackButton.Cancel] = HandleCancel,
-        [CallbackButton.Close] = HandleClose,
-    };
-
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonDescrDict = new()
-    {
-        [CallbackButton.PartList] = HandleParticipantList,
-        [CallbackButton.EventMessage] = HandleEventMessage,
-        [CallbackButton.CancelReg] = HandleCancelRegistration,
-        [CallbackButton.Close] = HandleClose,
-    };
-
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisteredButtonPartDict = new()
-    {
-        [CallbackButton.ToDescr] = HandleToDescription,
-        [CallbackButton.EventMessage] = HandleEventMessage,
-        [CallbackButton.CancelReg] = HandleCancelRegistration,
-        [CallbackButton.Close] = HandleClose,
-    };
-
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> RegisterButtonDist = new()
-    {
-        [CallbackButton.Reg] = HandleRegisterToEvent,
-        [CallbackButton.Close] = HandleClose,
-    };
-
-    public static void HandleMyOwn(UpdateContainer container)
+    public void HandleMyOwn(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        MyOwnButtonDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _myOwnButtonDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    public static void HandleMyOwnPart(UpdateContainer container)
+    public void HandleMyOwnPart(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        MyOwnButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _myOwnButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    public static void HandleRegisteredDescr(UpdateContainer container)
+    public void HandleRegisteredDescr(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        RegisteredButtonDescrDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _registeredButtonDescrDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    public static void HandleRegisteredPart(UpdateContainer container)
+    public void HandleRegisteredPart(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        RegisteredButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _registeredButtonPartDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    public static void HandleRegister(UpdateContainer container)
+    public void HandleRegister(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        RegisterButtonDist.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _registerButtonDist.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    private static void HandleMyOwnParticipantList(UpdateContainer container)
+    private void HandleMyOwnParticipantList(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
+        AppEvent appEvent = _eService.Get(container.CallbackData!.EventId!);
         string participantList = GetParticipantList(appEvent);
         string text = $"Название: {appEvent.Title}\n" +
                       $"Участники:\n" +
@@ -116,9 +122,9 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleMyOwnToDescription(UpdateContainer container)
+    private void HandleMyOwnToDescription(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
+        AppEvent appEvent = _eService.Get(container.CallbackData!.EventId!);
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
@@ -128,13 +134,13 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleEdit(UpdateContainer container)
+    private void HandleEdit(UpdateContainer container)
     {
         try
         {
-            container.Events.Add(EService.Get(container.CallbackData!.EventId!));
+            container.Events.Add(_eService.Get(container.CallbackData!.EventId!));
             List<AppEvent> appEvents = new();
-            appEvents.AddRange(EService.GetBuildEvents(container.ChatId, EventStatus.Editing));
+            appEvents.AddRange(_eService.GetBuildEvents(container.ChatId, EventStatus.Editing));
             if (appEvents.Count > 0) throw new InvalidOperationException();
             Thread.Sleep(200);
             Message sent = container.BotClient.SendMessage(
@@ -142,14 +148,14 @@ public static class IndividualEventHandler
                 text: $"Редактирование мероприятия:\n{container.Events[0].Title}",
                 cancellationToken: container.Token).Result;
             container.Events[0].MessageId = sent.Id;
-            container.Events[0] = EService.Edit(container.Events[0]);
+            container.Events[0] = _eService.Edit(container.Events[0]);
             Thread.Sleep(100);
             container.BotClient.EditMessageReplyMarkup(
                 chatId: container.ChatId,
                 messageId: sent.Id,
                 replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.EditEvent, container.Events[0].Id),
                 cancellationToken: container.Token);
-            DataService.UpdateUserStatus(container, UserStatus.EditingEvent, UService);
+            DataService.UpdateUserStatus(container, UserStatus.EditingEvent, _uService);
         }
         catch (EntityNotFoundException)
         {
@@ -168,17 +174,17 @@ public static class IndividualEventHandler
                 text: "Произошла ошибка. В базе найдено другое мероприятие, которые вы редактируете. Попробуйте снова.",
                 showAlert: true,
                 cancellationToken: container.Token);
-            ICollection<int> editingIds = EService.RemoveInBuilding(container.AppUser.UserId, EventStatus.Editing);
+            ICollection<int> editingIds = _eService.RemoveInBuilding(container.AppUser.UserId, EventStatus.Editing);
             container.BotClient.DeleteMessages(container.ChatId, editingIds, container.Token);
         }
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
     }
 
-    private static void HandleCancel(UpdateContainer container)
+    private void HandleCancel(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
-        EService.Remove(container.CallbackData!.EventId!);
+        AppEvent appEvent = _eService.Get(container.CallbackData!.EventId!);
+        _eService.Remove(container.CallbackData!.EventId!);
         if (appEvent.DateTimeOf > DateTime.Now)
         {
             Thread.Sleep(200);
@@ -214,9 +220,9 @@ public static class IndividualEventHandler
         HandleClose(container);
     }
 
-    private static void HandleParticipantList(UpdateContainer container)
+    private void HandleParticipantList(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
+        AppEvent appEvent = _eService.Get(container.CallbackData?.EventId!);
         string participantList = GetParticipantList(appEvent);
         
         string text = $"Название: {appEvent.Title}\n" +
@@ -232,10 +238,10 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleCancelRegistration(UpdateContainer container)
+    private void HandleCancelRegistration(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
-        EService.CancelRegistration(appEvent, container.AppUser);
+        AppEvent appEvent = _eService.Get(container.CallbackData?.EventId!);
+        _eService.CancelRegistration(appEvent, container.AppUser);
         container.BotClient.DeleteMessage(
             chatId: container.ChatId,
             messageId: container.Message.Id,
@@ -248,9 +254,9 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleToDescription(UpdateContainer container)
+    private void HandleToDescription(UpdateContainer container)
     {
-        AppEvent appEvent = EService.Get(container.CallbackData?.EventId!);
+        AppEvent appEvent = _eService.Get(container.CallbackData?.EventId!);
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
@@ -260,11 +266,11 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleRegisterToEvent(UpdateContainer container)
+    private void HandleRegisterToEvent(UpdateContainer container)
     {
         try
         {
-            AppEvent appEvent = EService.Get(container.CallbackData!.EventId!);
+            AppEvent appEvent = _eService.Get(container.CallbackData!.EventId!);
             
             if (appEvent.Status == EventStatus.Deleted)
             {
@@ -281,14 +287,14 @@ public static class IndividualEventHandler
                 throw new EventNotValidException("К сожалению, места на это мероприятие закончились.");
             }
             
-            EService.RegisterUser(appEvent, container.AppUser);
+            _eService.RegisterUser(appEvent, container.AppUser);
             Thread.Sleep(200);
             container.BotClient.AnswerCallbackQuery(
                 callbackQueryId: container.CallbackData!.CallbackId!,
                 text: "Вы успешно зарегистрировались на мероприятие.",
                 showAlert: true,
                 cancellationToken: container.Token);
-            AService.Update(new AppAlarm { Event = appEvent, User = container.AppUser, LastAlert = DateTime.Now} );
+            _aService.Update(new AppAlarm { Event = appEvent, User = container.AppUser, LastAlert = DateTime.Now} );
         }
         catch (EntityNotFoundException)
         {
@@ -322,13 +328,13 @@ public static class IndividualEventHandler
         container.BotClient.DeleteMessage(container.ChatId, container.Message.Id, container.Token);
     }
 
-    private static void HandleEventMessage(UpdateContainer container)
+    private void HandleEventMessage(UpdateContainer container)
     {
-        DataService.UpdateUserStatus(container, UserStatus.SendingMessage, UService);
-        EsService.Update(new AppEventMessage
+        DataService.UpdateUserStatus(container, UserStatus.SendingMessage, _uService);
+        _esService.Update(new AppEventMessage
         {
-            Event = EService.Get(container.CallbackData!.EventId!),
-            User = UService.Get(container.AppUser.UserId)
+            Event = _eService.Get(container.CallbackData!.EventId!),
+            User = _uService.Get(container.AppUser.UserId)
         });
         Thread.Sleep(200);
         container.BotClient.SendMessage(
@@ -338,7 +344,7 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleClose(UpdateContainer container)
+    private void HandleClose(UpdateContainer container)
     {
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
@@ -347,7 +353,7 @@ public static class IndividualEventHandler
             cancellationToken: container.Token);
     }
 
-    private static string GetParticipantList(AppEvent appEvent)
+    private string GetParticipantList(AppEvent appEvent)
     {
         StringBuilder participantList = new();
         foreach (AppUser appUser in appEvent.RegisteredUsers)
@@ -358,8 +364,8 @@ public static class IndividualEventHandler
         return participantList.ToString();
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private void HandleUnknown(UpdateContainer container)
     {
-        Log.Error("Unknown button");
+        _log.Error("Unknown button");
     }
 }
