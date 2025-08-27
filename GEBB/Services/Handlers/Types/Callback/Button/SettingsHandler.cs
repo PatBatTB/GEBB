@@ -8,155 +8,73 @@ using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
-public static class SettingsHandler
+public class SettingsHandler
 {
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonHandlerDict = new()
-    {
-        [CallbackButton.Alarm] = HandleAlarm,
-        [CallbackButton.Back] = HandleBack,
-    };
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _buttonHandlerDict;
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _alarmButtonHandlerDict;
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _alarmHoursHandlerDict;
 
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> AlarmButtonHandlerDict = new()
-    {
-        [CallbackButton.ThreeDays] = HandleThreeDays,
-        [CallbackButton.OneDay] = HandleOneDay,
-        [CallbackButton.Hours] = HandleHours,
-        [CallbackButton.Back] = HandleAlarmBack,
-    };
-
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> AlarmHoursHandlerDict = new()
-    {
-        [CallbackButton.Disable] = HandleDisableHours,
-        [CallbackButton.One] = HandleOneHour,
-        [CallbackButton.Two] = HandleTwoHours,
-        [CallbackButton.Three] = HandleThreeHours,
-        [CallbackButton.Four] = HandleFourHours,
-        [CallbackButton.Five] = HandleFiveHours,
-        [CallbackButton.Back] = HandleAlarmHoursBack,
-    };
+    private readonly IAlarmSettingsService _asService = App.ServiceFactory.GetAlarmSettingsService();
     
-    private static readonly ILog Log = LogManager.GetLogger(typeof(SettingsHandler));
-    private static readonly IAlarmSettingsService AsService = App.ServiceFactory.GetAlarmSettingsService();
+    private readonly ILog _log = LogManager.GetLogger(typeof(SettingsHandler));
 
-    private static void UpdateAlarmHours(AppAlarmSettings alarmSettings, int hours)
+    public SettingsHandler()
     {
-        alarmSettings.Hours = hours;
-        AsService.Update(alarmSettings);
-    }
-
-    private static void HandleFiveHours(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
+        _buttonHandlerDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
         {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        UpdateAlarmHours(alarm, 5);
-        HandleAlarmHoursBack(container);
-    }
-
-    private static void HandleFourHours(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
+            [CallbackButton.Alarm] = HandleAlarm,
+            [CallbackButton.Back] = HandleBack,
+        };
+        _alarmButtonHandlerDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
         {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        UpdateAlarmHours(alarm, 4);
-        HandleAlarmHoursBack(container);
-    }
-
-    private static void HandleThreeHours(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
+            [CallbackButton.ThreeDays] = HandleThreeDays,
+            [CallbackButton.OneDay] = HandleOneDay,
+            [CallbackButton.Hours] = HandleHours,
+            [CallbackButton.Back] = HandleAlarmBack,
+        };
+        _alarmHoursHandlerDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
         {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        UpdateAlarmHours(alarm, 3);
-        HandleAlarmHoursBack(container);
+            [CallbackButton.Disable] = HandleDisableHours,
+            [CallbackButton.One] = HandleOneHour,
+            [CallbackButton.Two] = HandleTwoHours,
+            [CallbackButton.Three] = HandleThreeHours,
+            [CallbackButton.Four] = HandleFourHours,
+            [CallbackButton.Five] = HandleFiveHours,
+            [CallbackButton.Back] = HandleAlarmHoursBack,
+        };
     }
 
-    private static void HandleTwoHours(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
-        {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        UpdateAlarmHours(alarm, 2);
-        HandleAlarmHoursBack(container);
-    }
-
-    private static void HandleOneHour(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
-        {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        UpdateAlarmHours(alarm, 1);
-        HandleAlarmHoursBack(container);
-    }
-
-    private static void HandleDisableHours(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
-        {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        UpdateAlarmHours(alarm, 0);
-        HandleAlarmHoursBack(container);
-    }
-
-    private static void HandleAlarmHoursBack(UpdateContainer container)
-    {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
-        if (alarm is null)
-        {
-            throw new Exception("Alarm for user doesn't exist");
-        }
-        string message = $"{CallbackMenu.Alarm.Text()}\n\n" +
-                         GetAlarmInfoMessage(alarm);
-        Thread.Sleep(200);
-        container.BotClient.EditMessageText(
-            chatId: container.ChatId,
-            messageId: container.Message.Id,
-            text: message,
-            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.Alarm),
-            cancellationToken: container.Token);
-    }
-
-    public static void Handle(UpdateContainer container)
+    public void Handle(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
-            throw new NullReferenceException("CallbackData doesn't have button");
-        ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown)
+        {
+            throw new NullReferenceException("CallbackData doesn't have button");   
+        }
+        _buttonHandlerDict.GetValueOrDefault(button, HandleUnknown)
             .Invoke(container);
     }
 
-    public static void HandleAlarmMenu(UpdateContainer container)
+    public void HandleAlarmMenu(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
         {
             throw new NullReferenceException("CallbackData doesn't have button.");
         }
-        AlarmButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _alarmButtonHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    public static void HandleAlarmHours(UpdateContainer container)
+    public void HandleAlarmHours(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
         {
             throw new NullReferenceException("CallbackData doesn't have button.");
         }
-        AlarmHoursHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
+        _alarmHoursHandlerDict.GetValueOrDefault(button, HandleUnknown).Invoke(container);
     }
 
-    private static void HandleAlarm(UpdateContainer container)
+    private void HandleAlarm(UpdateContainer container)
     {
-        AppAlarmSettings? alarm = AsService.Get(container.ChatId);
+        AppAlarmSettings? alarm = _asService.Get(container.ChatId);
         if (alarm is null)
         {
             alarm = new()
@@ -166,7 +84,7 @@ public static class SettingsHandler
                 OneDay = false,
                 Hours = 0
             };
-            AsService.Update(alarm);
+            _asService.Update(alarm);
         }
         
         string message = $"{CallbackMenu.Alarm.Text()}\n\n" +
@@ -180,7 +98,97 @@ public static class SettingsHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleBack(UpdateContainer container)
+    private void UpdateAlarmHours(AppAlarmSettings alarmSettings, int hours)
+    {
+        alarmSettings.Hours = hours;
+        _asService.Update(alarmSettings);
+    }
+
+    private void HandleFiveHours(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        UpdateAlarmHours(alarm, 5);
+        HandleAlarmHoursBack(container);
+    }
+
+    private void HandleFourHours(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        UpdateAlarmHours(alarm, 4);
+        HandleAlarmHoursBack(container);
+    }
+
+    private void HandleThreeHours(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        UpdateAlarmHours(alarm, 3);
+        HandleAlarmHoursBack(container);
+    }
+
+    private void HandleTwoHours(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        UpdateAlarmHours(alarm, 2);
+        HandleAlarmHoursBack(container);
+    }
+
+    private void HandleOneHour(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        UpdateAlarmHours(alarm, 1);
+        HandleAlarmHoursBack(container);
+    }
+
+    private void HandleDisableHours(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        UpdateAlarmHours(alarm, 0);
+        HandleAlarmHoursBack(container);
+    }
+
+    private void HandleAlarmHoursBack(UpdateContainer container)
+    {
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
+        if (alarm is null)
+        {
+            throw new Exception("Alarm for user doesn't exist");
+        }
+        string message = $"{CallbackMenu.Alarm.Text()}\n\n" +
+                         GetAlarmInfoMessage(alarm);
+        Thread.Sleep(200);
+        container.BotClient.EditMessageText(
+            chatId: container.ChatId,
+            messageId: container.Message.Id,
+            text: message,
+            replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.Alarm),
+            cancellationToken: container.Token);
+    }
+
+    private void HandleBack(UpdateContainer container)
     {
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
@@ -191,7 +199,7 @@ public static class SettingsHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleHours(UpdateContainer container)
+    private void HandleHours(UpdateContainer container)
     {
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
@@ -202,15 +210,15 @@ public static class SettingsHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleOneDay(UpdateContainer container)
+    private void HandleOneDay(UpdateContainer container)
     {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
         if (alarm is null)
         {
             throw new Exception("Alarm for user doesn't exist");
         }
         alarm.OneDay = alarm.OneDay != true;
-        AsService.Update(alarm);
+        _asService.Update(alarm);
         string message = $"{CallbackMenu.Alarm.Text()}\n\n" +
                          GetAlarmInfoMessage(alarm);
         Thread.Sleep(200);
@@ -222,15 +230,15 @@ public static class SettingsHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleThreeDays(UpdateContainer container)
+    private void HandleThreeDays(UpdateContainer container)
     {
-        AppAlarmSettings? alarm = AsService.Get(container.AppUser.UserId);
+        AppAlarmSettings? alarm = _asService.Get(container.AppUser.UserId);
         if (alarm is null)
         {
             throw new Exception("Alarm for user doesn't exist");
         }
         alarm.ThreeDays = alarm.ThreeDays != true;
-        AsService.Update(alarm);
+        _asService.Update(alarm);
         string message = $"{CallbackMenu.Alarm.Text()}\n\n" +
                          GetAlarmInfoMessage(alarm);
         Thread.Sleep(200);
@@ -242,7 +250,7 @@ public static class SettingsHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleAlarmBack(UpdateContainer container)
+    private void HandleAlarmBack(UpdateContainer container)
     {
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
@@ -253,12 +261,12 @@ public static class SettingsHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private void HandleUnknown(UpdateContainer container)
     {
-        Log.Error("Unknown button");
+        _log.Error("Unknown button");
     }
 
-    private static string GetAlarmInfoMessage(AppAlarmSettings alarmSettings)
+    private string GetAlarmInfoMessage(AppAlarmSettings alarmSettings)
     {
         return $"Текущие настройки:\n" +
                $"{CallbackButton.Hours.Text()}: {GetHoursAlarmText(alarmSettings.Hours)}\n" +
@@ -266,12 +274,12 @@ public static class SettingsHandler
                $"{CallbackButton.ThreeDays.Text()}: {GetBooleanAlarmText(alarmSettings.ThreeDays)}";
     }
 
-    private static string GetBooleanAlarmText(bool value)
+    private string GetBooleanAlarmText(bool value)
     {
         return value == true ? "Вкл." : "Выкл.";
     }
 
-    private static string GetHoursAlarmText(int value)
+    private string GetHoursAlarmText(int value)
     {
         string hoursName = value switch
         {

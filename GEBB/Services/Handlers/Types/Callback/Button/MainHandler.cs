@@ -10,35 +10,44 @@ using Telegram.Bot.Types;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback.Button;
 
-public static class MainHandler
+public class MainHandler
 {
-    private static readonly Dictionary<CallbackButton, Action<UpdateContainer>> ButtonHandlerDict = new()
+    private readonly Dictionary<CallbackButton, Action<UpdateContainer>> _buttonHandlerDict;
+
+    private readonly IUserService _uService;
+    private readonly IEventService _eService;
+    
+    private readonly ILog _log;
+
+    public MainHandler()
     {
-        [CallbackButton.Create] = HandleCreate,
-        [CallbackButton.List] = HandleList,
-        [CallbackButton.Settings] = HandleSettings,
-        [CallbackButton.Close] = HandleClose,
-    };
+        _uService = App.ServiceFactory.GetUserService();
+        _eService = App.ServiceFactory.GetEventService();
+        _log = LogManager.GetLogger(typeof(MainHandler));
+        _buttonHandlerDict = new Dictionary<CallbackButton, Action<UpdateContainer>>
+        {
+            [CallbackButton.Create] = HandleCreate,
+            [CallbackButton.List] = HandleList,
+            [CallbackButton.Settings] = HandleSettings,
+            [CallbackButton.Close] = HandleClose,
+        };
+    }
 
-    private static readonly IUserService UService = App.ServiceFactory.GetUserService();
-    private static readonly IEventService EService = App.ServiceFactory.GetEventService();
-    private static readonly ILog Log = LogManager.GetLogger(typeof(MainHandler));
-
-    public static void Handle(UpdateContainer container)
+    public void Handle(UpdateContainer container)
     {
         if (container.CallbackData?.Button is not { } button)
             throw new NullReferenceException("CallbackData doesn't have button");
-        ButtonHandlerDict.GetValueOrDefault(button, HandleUnknown)
+        _buttonHandlerDict.GetValueOrDefault(button, HandleUnknown)
             .Invoke(container);
     }
     
-    private static void HandleCreate(UpdateContainer container)
+    private void HandleCreate(UpdateContainer container)
     {
         long chatId = container.ChatId;
         int messageId = container.Message.Id;
         CancellationToken token = container.Token;
         
-        container.Events.AddRange(EService.GetBuildEvents(container.AppUser.UserId, EventStatus.Creating));
+        container.Events.AddRange(_eService.GetBuildEvents(container.AppUser.UserId, EventStatus.Creating));
         
         Thread.Sleep(200);
         container.BotClient.DeleteMessage(
@@ -62,9 +71,9 @@ public static class MainHandler
                 text: "Ошибка. Обнаружено мероприятие в режиме создания.\nПопробуйте снова через команду /menu",
                 cancellationToken: token);
 
-            EService.RemoveInBuilding(chatId, EventStatus.Creating);
+            _eService.RemoveInBuilding(chatId, EventStatus.Creating);
 
-            Log.Warn("Attempting to create multiple events at the same time");
+            _log.Warn("Attempting to create multiple events at the same time");
         }
         
         Thread.Sleep(200);
@@ -72,7 +81,7 @@ public static class MainHandler
             chatId,
             CallbackMenu.CreateEvent.Text(),
             cancellationToken: token).Result;
-        AppEvent appEvent = EService.Create(container.AppUser.UserId, sent.Id);
+        AppEvent appEvent = _eService.Create(container.AppUser.UserId, sent.Id);
         Thread.Sleep(100);
         container.BotClient.EditMessageReplyMarkup(
             chatId: container.ChatId,
@@ -80,10 +89,10 @@ public static class MainHandler
             replyMarkup: InlineKeyboardProvider.GetMarkup(CallbackMenu.CreateEvent, appEvent.Id),
             cancellationToken: container.Token);
 
-        DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, UService);
+        DataService.UpdateUserStatus(container, UserStatus.CreatingEvent, _uService);
     }
 
-    private static void HandleList(UpdateContainer container)
+    private void HandleList(UpdateContainer container)
     {
         container.BotClient.EditMessageText(
             chatId: container.ChatId,
@@ -93,7 +102,7 @@ public static class MainHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleSettings(UpdateContainer container)
+    private void HandleSettings(UpdateContainer container)
     {
         Thread.Sleep(200);
         container.BotClient.EditMessageText(
@@ -104,7 +113,7 @@ public static class MainHandler
             cancellationToken: container.Token);
     }
 
-    private static void HandleClose(UpdateContainer container)
+    private void HandleClose(UpdateContainer container)
     {
         var chatId = container.ChatId;
         var messageId = container.Message.Id;
@@ -112,11 +121,11 @@ public static class MainHandler
             chatId,
             messageId,
             container.Token);
-        DataService.UpdateUserStatus(container, UserStatus.Active, UService);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
     }
 
-    private static void HandleUnknown(UpdateContainer container)
+    private void HandleUnknown(UpdateContainer container)
     {
-        Log.Error("Unknown button");
+        _log.Error("Unknown button");
     }
 }

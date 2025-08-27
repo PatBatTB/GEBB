@@ -6,55 +6,69 @@ using Telegram.Bot;
 
 namespace Com.Github.PatBatTB.GEBB.Services.Handlers.Types.Callback;
 
-public static class MenuHandler
+public class MenuHandler
 {
-    private static readonly Dictionary<CallbackMenu, Action<UpdateContainer>> MenuHandlerDict = new()
+    private readonly Dictionary<CallbackMenu, Action<UpdateContainer>> _menuHandlerDict;
+    private readonly Dictionary<CallbackMenu, BuildEventStatus> _replaceStatusDict;
+    private readonly IndividualEventHandler _individualEventHandler;
+    private readonly ILog _log;
+
+    public MenuHandler()
     {
-        [CallbackMenu.Main] = MainHandler.Handle,
-        [CallbackMenu.CreateEvent] = BuildEventHandler.Handle,
-        [CallbackMenu.EventsList] = EventsListHandler.Handle,
-        [CallbackMenu.EditEvent] = BuildEventHandler.Handle,
-        [CallbackMenu.EventTitleReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventDateTimeOfAgain] = HandleEventReplaceMenu,
-        [CallbackMenu.EventDateTimeOfReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventAddressReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventCostReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventPartLimitReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.EventDescrReplace] = HandleEventReplaceMenu,
-        [CallbackMenu.RegisterToEvent] = HandleEventRegisterMenu,
-        [CallbackMenu.CreatedEvent] = IndividualEventHandler.HandleMyOwn,
-        [CallbackMenu.CreEventPart] = IndividualEventHandler.HandleMyOwnPart,
-        [CallbackMenu.RegEventDescr] = IndividualEventHandler.HandleRegisteredDescr,
-        [CallbackMenu.RegEventPart] = IndividualEventHandler.HandleRegisteredPart,
-        [CallbackMenu.Settings] = SettingsHandler.Handle,
-        [CallbackMenu.Alarm] = SettingsHandler.HandleAlarmMenu,
-        [CallbackMenu.AlarmHours] = SettingsHandler.HandleAlarmHours,
-    };
+        _individualEventHandler = new IndividualEventHandler();
+        MainHandler mainHandler = new();
+        BuildEventHandler buildEventHandler = new();
+        EventsListHandler eventsListHandler = new();
+        SettingsHandler settingsHandler = new();
+        
+        _menuHandlerDict = new Dictionary<CallbackMenu, Action<UpdateContainer>>
+        {
+            [CallbackMenu.Main] = mainHandler.Handle,
+            [CallbackMenu.CreateEvent] = buildEventHandler.Handle,
+            [CallbackMenu.EventsList] = eventsListHandler.Handle,
+            [CallbackMenu.EditEvent] = buildEventHandler.Handle,
+            [CallbackMenu.EventTitleReplace] = HandleEventReplaceMenu,
+            [CallbackMenu.EventDateTimeOfAgain] = HandleEventReplaceMenu,
+            [CallbackMenu.EventDateTimeOfReplace] = HandleEventReplaceMenu,
+            [CallbackMenu.EventAddressReplace] = HandleEventReplaceMenu,
+            [CallbackMenu.EventCostReplace] = HandleEventReplaceMenu,
+            [CallbackMenu.EventPartLimitReplace] = HandleEventReplaceMenu,
+            [CallbackMenu.EventDescrReplace] = HandleEventReplaceMenu,
+            [CallbackMenu.RegisterToEvent] = HandleEventRegisterMenu,
+            [CallbackMenu.CreatedEvent] = _individualEventHandler.HandleMyOwn,
+            [CallbackMenu.CreEventPart] = _individualEventHandler.HandleMyOwnPart,
+            [CallbackMenu.RegEventDescr] = _individualEventHandler.HandleRegisteredDescr,
+            [CallbackMenu.RegEventPart] = _individualEventHandler.HandleRegisteredPart,
+            [CallbackMenu.Settings] = settingsHandler.Handle,
+            [CallbackMenu.Alarm] = settingsHandler.HandleAlarmMenu,
+            [CallbackMenu.AlarmHours] = settingsHandler.HandleAlarmHours,
+        };
+        
+        _replaceStatusDict = new Dictionary<CallbackMenu, BuildEventStatus>
+        {
+            [CallbackMenu.EventTitleReplace] = BuildEventStatus.CreateTitle,
+            [CallbackMenu.EventDateTimeOfAgain] = BuildEventStatus.CreateDateTimeOf,
+            [CallbackMenu.EventDateTimeOfReplace] = BuildEventStatus.CreateDateTimeOf,
+            [CallbackMenu.EventAddressReplace] = BuildEventStatus.CreateAddress,
+            [CallbackMenu.EventCostReplace] = BuildEventStatus.CreateCost,
+            [CallbackMenu.EventPartLimitReplace] = BuildEventStatus.CreateParticipantLimit,
+        };
+        
+        _log = LogManager.GetLogger(typeof(MenuHandler));
+    }
 
-    private static readonly Dictionary<CallbackMenu, BuildEventStatus> ReplaceStatusDict = new()
-    {
-        [CallbackMenu.EventTitleReplace] = BuildEventStatus.CreateTitle,
-        [CallbackMenu.EventDateTimeOfAgain] = BuildEventStatus.CreateDateTimeOf,
-        [CallbackMenu.EventDateTimeOfReplace] = BuildEventStatus.CreateDateTimeOf,
-        [CallbackMenu.EventAddressReplace] = BuildEventStatus.CreateAddress,
-        [CallbackMenu.EventCostReplace] = BuildEventStatus.CreateCost,
-        [CallbackMenu.EventPartLimitReplace] = BuildEventStatus.CreateParticipantLimit,
-    };
-
-    private static readonly ILog Log = LogManager.GetLogger(typeof(MenuHandler)); 
-
-    public static void Handle(UpdateContainer container)
+    public void Handle(UpdateContainer container)
     {
         if (container.CallbackData?.Menu is not { } menu)
             throw new NullReferenceException("CallbackData doesn't have menu");
-        MenuHandlerDict.GetValueOrDefault(menu, CallbackUnknownMenu).Invoke(container);
+        _menuHandlerDict.GetValueOrDefault(menu, CallbackUnknownMenu).Invoke(container);
     }
 
-    private static void HandleEventReplaceMenu(UpdateContainer container)
+    private void HandleEventReplaceMenu(UpdateContainer container)
     {
-        if (!ReplaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out BuildEventStatus status))
+        if (!_replaceStatusDict.TryGetValue(container.CallbackData!.Menu!.Value, out BuildEventStatus status))
         {
-            Log.Error("Unknown CallbackMenu");
+            _log.Error("Unknown CallbackMenu");
         }
 
         Thread.Sleep(200);
@@ -68,13 +82,13 @@ public static class MenuHandler
         }
     }
 
-    private static void HandleEventRegisterMenu(UpdateContainer container)
+    private void HandleEventRegisterMenu(UpdateContainer container)
     {
-        IndividualEventHandler.HandleRegister(container);
+        _individualEventHandler.HandleRegister(container);
     }
 
-    private static void CallbackUnknownMenu(UpdateContainer container)
+    private void CallbackUnknownMenu(UpdateContainer container)
     {
-        Log.Error("Pressing button in unknown menu.");
+        _log.Error("Pressing button in unknown menu.");
     }
 }
