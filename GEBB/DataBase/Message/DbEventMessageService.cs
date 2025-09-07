@@ -43,6 +43,14 @@ public class DbEventMessageService : IEventMessageService
         db.SaveChanges();
     }
 
+    public void Remove(long userId)
+    {
+        using TgBotDbContext db = new();
+        var eventMessageEntities = db.EventMessages.Where(e => e.UserId == userId);
+        db.RemoveRange(eventMessageEntities);
+        db.SaveChanges();
+    }
+
     public AppEventMessage EntityToEventMessage(EventMessageEntity entity)
     {
         return new AppEventMessage

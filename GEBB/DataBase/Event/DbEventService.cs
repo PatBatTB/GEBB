@@ -119,7 +119,7 @@ public class DbEventService : IEventService
             db.TempEvents.AsEnumerable()
                 .Where(elem =>
                     elem.CreatorId == creatorId && statusList.Contains(elem.Status)));
-        messageIdList.AddRange(eventList.Select(elem => elem.EventId).ToList());
+        messageIdList.AddRange(eventList.Select(elem => elem.MessageId).ToList());
         db.RemoveRange(eventList);
         db.SaveChanges();
         return messageIdList;

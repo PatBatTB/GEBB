@@ -4,7 +4,7 @@ public enum Command
 {
     Start,
     Menu,
-    CancelCreate,
+    Cancel,
     Report,
     Stop,
 }
@@ -17,7 +17,7 @@ public static class CommandExtension
         {
             Command.Start => "/start",
             Command.Menu => "/menu",
-            Command.CancelCreate => "/cancel",
+            Command.Cancel => "/cancel",
             Command.Report => "/report",
             Command.Stop => "/stop",
             _ => throw new ArgumentException("Incorrect command enum")
@@ -30,7 +30,7 @@ public static class CommandExtension
         {
             Command.Start => "\u27a1\ufe0f Запустить",
             Command.Menu => "\ud83d\udccb Открыть меню",
-            Command.CancelCreate => "\u21a9\ufe0f Отменить создание",
+            Command.Cancel => "\u21a9\ufe0f Отменить",
             Command.Report => "\uD83D\uDCDD Сообщить об ошибке",
             Command.Stop => "\ud83d\udeab Остановить",
             _ => throw new ArgumentException("Incorrect command enum")
@@ -43,9 +43,9 @@ public static class CommandExtension
         {
             Command.Start => [UserStatus.Newuser, UserStatus.Stop],
             Command.Menu => [UserStatus.Active, UserStatus.OpenedMenu],
-            Command.CancelCreate => [UserStatus.CreatingEvent, UserStatus.EditingEvent],
+            Command.Cancel => [UserStatus.CreatingEvent, UserStatus.EditingEvent, UserStatus.SendingMessage],
             Command.Report => [UserStatus.Active, UserStatus.CreatingEvent, UserStatus.EditingEvent, UserStatus.OpenedMenu],
-            Command.Stop => [UserStatus.Active, UserStatus.OpenedMenu, UserStatus.CreatingEvent, UserStatus.EditingEvent],
+            Command.Stop => [UserStatus.Active, UserStatus.OpenedMenu],
             _ => throw new ArgumentException("Incorrect command enum")
         };
     }

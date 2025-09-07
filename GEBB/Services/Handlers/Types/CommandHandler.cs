@@ -1,6 +1,7 @@
 using System.Data;
 using Com.GitHub.PatBatTB.GEBB;
 using Com.Github.PatBatTB.GEBB.DataBase.Event;
+using Com.Github.PatBatTB.GEBB.DataBase.Message;
 using Com.Github.PatBatTB.GEBB.DataBase.User;
 using Com.Github.PatBatTB.GEBB.Domain;
 using Com.Github.PatBatTB.GEBB.Domain.Enums;
@@ -16,7 +17,10 @@ public class CommandHandler
     private readonly Dictionary<string, Action<UpdateContainer>> _typeHandlerDict;
     private readonly IUserService _uService;
     private readonly IEventService _eService;
+    private readonly IEventMessageService _emService;
     private readonly ILog _log ;
+
+    private readonly string _unavailableCommandText;
 
     public CommandHandler()
     {
@@ -26,10 +30,12 @@ public class CommandHandler
             [Command.Stop.Name()] = HandleStop,
             [Command.Menu.Name()] = HandleMenu,
             [Command.Report.Name()] = HandleReport,
-            [Command.CancelCreate.Name()] = HandleCancel,
+            [Command.Cancel.Name()] = HandleCancel,
         };
         _uService = App.ServiceFactory.GetUserService();
         _eService = App.ServiceFactory.GetEventService();
+        _emService = App.ServiceFactory.GetEventMessageService();
+        _unavailableCommandText = "Вам недоступна данная команда.\nСписок доступных команд можно увидеть нажав на кнопку \"Menu\"";
         _log = LogManager.GetLogger(typeof(CommandHandler));
     }
 
@@ -43,11 +49,10 @@ public class CommandHandler
         string text;
         if (!Command.Start.Scope().Contains(container.AppUser.UserStatus))
         {
-            text = "Вам недоступна данная команда.";
             Thread.Sleep(200);
             container.BotClient.SendMessage(
                 container.ChatId,
-                text,
+                _unavailableCommandText,
                 cancellationToken: container.Token);
             return;
         }
@@ -72,10 +77,9 @@ public class CommandHandler
         string text;
         if (!Command.Stop.Scope().Contains(container.AppUser.UserStatus))
         {
-            text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
                 container.ChatId,
-                text,
+                _unavailableCommandText,
                 cancellationToken: container.Token);
             return;
         }
@@ -102,10 +106,9 @@ public class CommandHandler
         string text;
         if (!Command.Menu.Scope().Contains(container.AppUser.UserStatus))
         {
-            text = "Вам недоступна данная команда.";
             container.BotClient.SendMessage(
                 container.ChatId,
-                text,
+                _unavailableCommandText,
                 cancellationToken: container.Token);
             return;
         }
@@ -134,17 +137,28 @@ public class CommandHandler
 
     private void HandleCancel(UpdateContainer container)
     {
-        string text;
-        if (!Command.CancelCreate.Scope().Contains(container.AppUser.UserStatus))
+        if (!Command.Cancel.Scope().Contains(container.AppUser.UserStatus))
         {
-            text = "Вам недоступна данная команда.";
             Thread.Sleep(200);
             container.BotClient.SendMessage(
                 container.ChatId,
-                text,
+                _unavailableCommandText,
                 cancellationToken: container.Token);
             return;
         }
+
+        Action<UpdateContainer> action = (container.AppUser.UserStatus) switch
+        {
+            UserStatus.CreatingEvent => HandleCancelCreating,
+            UserStatus.EditingEvent => HandleCancelCreating,
+            UserStatus.SendingMessage => HandleCancelSendMessage,
+            _ => HandleUnknownUserStatus
+        };
+        action.Invoke(container);
+    }
+
+    private void HandleCancelCreating(UpdateContainer container)
+    {
         ICollection<int> idList = _eService.RemoveInBuilding(container.AppUser.UserId);
         DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
         Thread.Sleep(200);
@@ -152,6 +166,17 @@ public class CommandHandler
             chatId: container.ChatId,
             messageIds: idList,
             cancellationToken: container.Token);
+    }
+
+    private void HandleCancelSendMessage(UpdateContainer container)
+    {
+        _emService.Remove(container.AppUser.UserId);
+        DataService.UpdateUserStatus(container, UserStatus.Active, _uService);
+    }
+
+    private void HandleUnknownUserStatus(UpdateContainer container)
+    {
+        _log.Error("Unknown user status.");
     }
 
     private void HandleUnknown(UpdateContainer container)
