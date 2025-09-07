@@ -1,7 +1,17 @@
+## v0.6.2
+- Добавлена команда `/cancel` для отмены отправки сообщения участникам мероприятия.
+- Обновлено сообщение, когда команада недоступна пользователю.
+- Исправлена ошибка, когда при отмене создания мероприятия командой `/cancel` не удалялось сообщение-меню.
+___
+- The command `/cancel` has been added for canceling sending message to event participants.
+- Changed "unavailable command" message to more informative one.
+- The bug fixed, where a menu-message wasn't deleted when using the `/cancel` command.
+
 ## v0.6.1
 - Рефакторинг: реструктурирован слой сервисов хранения данных. Реализован через интерфейсы и фабрику.
 ___
 - Refactoring: The database services' layer has been restructured. Implemented using interfaces and an abstract factory.
+___
 ## v0.6.0
 - Реализована отправка сообщений участникам мероприятия
 ___
