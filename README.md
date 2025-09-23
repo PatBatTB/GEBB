@@ -47,7 +47,7 @@ ___
 - Clone the repo.
 
 ```bash
-git clone https://gitlab.com/PatBatTB/GEBB.git
+git clone https://github.com/PatBatTB/GEBB.git
 ```
 
 - В скрипте ниже измените `path_to_output_dir` на путь к существующей директории.
